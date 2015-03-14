@@ -3,4 +3,4 @@
 PY=python
 
 default:
-	$(PY) test_dynamic_dict.py
+	$(PY) -m unittest discover .
