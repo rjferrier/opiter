@@ -1,13 +1,21 @@
+"""
+In the core modules, classes are uncoupled for unit testing
+purposes.  Here they are finally coupled together using dependency
+injection.
+"""
 
-class OptionError(Exception):
+from dynamic_dict import DynamicDict
+from base import OptionException
+from option import _Option
+from option_sequence import _OptionSequence
+
+class OptionCreationError(OptionException):
     def __init__(self, msg):
-        self.msg = msg
-    def __str__(self):
-        return self.msg
-
-class _Option:
+        OptionException.__init__(self, msg)
+        
+class Option(_Option):
     """
-    _Option(name, dictionary={})
+    Option(name, dictionary={})
 
     Defines one possible state out of several in an OptionSequence.
     Upon instantiation, the Option is given a name.  Additionally
@@ -22,43 +30,28 @@ class _Option:
     key-value relationship.
     """
 
-    # this attribute will be set directly by _OptionSequence.
-    _parent = None
-
     def __init__(self, name, dictionary={}):
         if not isinstance(name, str):
-            raise OptionError("name argument must be a string.")
+            raise OptionCreationError(
+                "name argument must be a string.")
         if not isinstance(dictionary, dict):
-            raise OptionError("dictionary argument must be a dict.")
-        self._name = name
-        self._dict = dictionary
-    
-    def __repr__(self):
-        """
-        Returns a unique ID based on the object's address in the parent
-        structure.  If there is no parent, just return the object's
-        name.
-        """
-        if self._parent:
-            return repr(self._parent)+'.'+self._name
-        else:
-            return self._name
-    
-    def __getitem__(self, key):
-        return self._dict[key]
+            raise OptionCreationError(
+                "dictionary argument must be a dict.")
+        _Option.__init__(self, name, DynamicDict(dictionary))
 
-    def __setitem__(self, key, value):
-        self._dict[key] = value
 
+class OptionSequenceCreationError(OptionException):
+    def __init__(self, msg):
+        OptionException.__init__(self, msg)
         
-class _OptionSequence:
+class OptionSequence(_OptionSequence):
     """
-    _OptionSequence(name, options)
+    OptionSequence(name, options)
 
     Defines an sequence of _Options.  The options argument may be
-    _Options or the names of _Options.
+    Options or the names of Options.
     """
-    
+
     def __init__(self, name, options):
         self._name = name
         self._options = []
@@ -70,16 +63,3 @@ class _OptionSequence:
             opt = _Option(opt)
             opt._parent = self
             self._options.append(opt)
-    
-    def __repr__(self):
-        return self._name
-
-    def __iter__(self):
-        for opt in self._options:
-            yield opt
-
-    def __getitem__(self, key):
-        return {}[key]
-
-    def __setitem__(self, key, value):
-        pass

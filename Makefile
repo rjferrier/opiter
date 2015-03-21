@@ -1,15 +1,8 @@
-.PHONY: test
 
-define header
-@echo
-@printf '%70s\n' | tr ' ' =
-@echo " $1"
-@printf '%70s\n' | tr ' ' =
-@echo
-endef
+default: test
 
-test:
-	$(call header,"unit tests")
-	cd unittest && $(MAKE)
-	$(call header,"functional tests")
-	cd functest && $(MAKE)
+%:
+	cd optree   && $(MAKE) $@
+	cd unittest && $(MAKE) $@
+	cd inttest  && $(MAKE) $@
+	cd functest && $(MAKE) $@

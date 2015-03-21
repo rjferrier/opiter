@@ -2,7 +2,8 @@ import sys
 sys.path.append('../src')
 
 import unittest
-from dynamic_dict import DynamicDict, CallableEntry
+from dynamic_dict import DynamicDict
+from callable_entry import CallableEntry
 
 
 class TestDynamicDict(unittest.TestCase):

@@ -34,15 +34,16 @@ functionality.  Entries can be defined as "dynamic", updating
 automatically according to the values of others.  For instance, we
 might define such a dynamic entry at the root of a tree:
 
-  main = Option('main', {'distance': lambda self: \
-             float(self['speed']) * float(self['travel_time'])})
+  main = Option('main', {
+      'distance': lambda self: self['speed'] * self['travel_time'],
+      })
 
 Then we might build and iterate over the rest of the tree as follows:
 
   options = main * \
-            OptionSequence('speed', ['30', '40', '60']) * \
-            OptionSequence('travel_time', ['0.5', '1', '1.5'])
+            OptionSequence('speed', [30, 40, 60]) * \
+            OptionSequence('travel_time', [0.5, 1, 1.5])
   for opt in options:
-      print opt['distance']
+      print opt[distance]
 
-This prints out the values 15, 30, 45, 20, 40, ...
+This prints out the values 15, 30, 45, 20, 40, etc.

@@ -1,6 +1,2 @@
-
-# PY=~/anaconda/bin/python
-PY=python
-
-default:
-	$(PY) -m unittest discover .
+export TESTINGSTAGE="unit tests"
+include ../testing.mk
