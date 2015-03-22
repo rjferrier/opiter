@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from optree import Option, OptionCreationError
+from optree import create_option, OptionCreationError
 
 
 class TestOptionCreation(unittest.TestCase):
@@ -13,7 +13,7 @@ class TestOptionCreation(unittest.TestCase):
         error should be raised.
         """
         self.assertRaises(OptionCreationError, 
-                          lambda: Option({'foo': 'bar'}))
+                          lambda: create_option({'foo': 'bar'}))
     
     def test_create_from_non_dict(self):
         """
@@ -21,5 +21,5 @@ class TestOptionCreation(unittest.TestCase):
         dict, an error should be raised.
         """
         self.assertRaises(OptionCreationError,
-                          lambda: Option('2D', 'bar'))
+                          lambda: create_option('2D', 'bar'))
         

@@ -5,8 +5,6 @@ testing purposes.  Here they are finally coupled together using
 dependency injection.
 """
 
-from dynamic_dict import DynamicDict
-from callable_entry import CallableEntry
-from factory import Option, OptionSequence, OptionCreationError, \
-    OptionSequenceCreationError
-
+from dynamic_dict import DynamicDict, CallableEntry
+from factory import create_option, create_option_sequence, \
+    OptionCreationError

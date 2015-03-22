@@ -1,11 +1,11 @@
 from base import IOption, OptionException
 
 
-class _Option(IOption):
+class Option(IOption):
 
     _name = None
     _dict = {}
-    # the parent attribute will be set directly by _OptionSequence.
+    # the parent attribute will be set directly by OptionSequence.
     _parent = None
 
     def __init__(self, name, dictionary={}):
@@ -30,12 +30,12 @@ class _Option(IOption):
         self._dict[key] = value
 
 
-class _OptionSequence:
+class OptionSequence:
     """
-    _OptionSequence(name, options)
+    OptionSequence(name, options)
 
-    Defines an sequence of _Options.  The options argument may be
-    _Options or the names of _Options.
+    Defines an sequence of Options.  The options argument may be
+    Options or the names of Options.
     """
     _name = None
     _options = None

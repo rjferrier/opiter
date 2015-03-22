@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from optree import Option
+from optree import create_option
 
 
 class TestOption(unittest.TestCase):
@@ -11,7 +11,7 @@ class TestOption(unittest.TestCase):
         """
         I create an Option using a name and a dict.
         """
-        self.opt = Option('temperature', {
+        self.opt = create_option('temperature', {
                 'fahrenheit': lambda d: d['celsius']*9./5 + 32.})
     
     def test_use_option_as_dynamic_dict(self):

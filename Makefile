@@ -1,3 +1,4 @@
+.PHONY: default
 
 default: test
 

@@ -1,4 +1,4 @@
-test: 
+test: clean
 	@echo
 	@printf '%70s\n' | tr ' ' =
 	@echo " $(TESTINGSTAGE)"

@@ -2,8 +2,8 @@ import sys
 sys.path.append('..')
 
 import unittest
-from optree import OptionSequence, OptionSequenceCreationError
-from optree import Option
+from optree import create_option_sequence, OptionCreationError
+from optree.options import Option
 
 
 class TestOptionSequenceCreation(unittest.TestCase):
@@ -14,9 +14,9 @@ class TestOptionSequenceCreation(unittest.TestCase):
         name (even when I also correctly supply a tuple or list of
         options) an error should be raised.
         """
-        create_opt_seq = lambda: OptionSequence(
-            {'foo': 'bar'}, ('1D', '2D', '3D'))
-        self.assertRaises(OptionSequenceCreationError, create_opt_seq)
+        self.assertRaises(OptionCreationError,
+                          lambda: create_option_sequence(
+                              {'foo': 'bar'}, ('1D', '2D', '3D')))
 
         
 class TestOptionSequenceWithOptionNames(unittest.TestCase):
@@ -26,7 +26,8 @@ class TestOptionSequenceWithOptionNames(unittest.TestCase):
         I create an OptionSequence from a name and a list of Option
         names.
         """
-        self.opt_seq = OptionSequence('space', ('1D', '2D', '3D'))
+        self.opt_seq = create_option_sequence('space',
+                                              ('1D', '2D', '3D'))
 
     def test_iterate_options_and_check_type(self):
         """

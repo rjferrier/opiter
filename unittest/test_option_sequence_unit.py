@@ -3,22 +3,23 @@ sys.path.append('..')
 
 import unittest
 from mock import Mock
-from base import IOption
-from optree.option_sequence import _OptionSequence
+from optree.base import IOption
+from optree.options import OptionSequence
 
-            
-class TestOptionSequence(unittest.TestCase):
+
+class TestOptionSequenceUnit(unittest.TestCase):
             
     def setUp(self):
         """
         I create an OptionSequence from a list of Options.
         """
-        opt1 = Mock(spec=IOption)
-        opt2 = Mock(spec=IOption)
-        opt3 = Mock(spec=IOption)
-        # opt2 = _Option('2D', {'geometry': 'square'})
-        # opt3 = _Option('3D', {'geometry': 'cube'})
-        self.opt_seq = _OptionSequence('space', ('1D', '2D', '3D'))
+        options = []
+        for name in ('1D', '2D', '3D'):
+            opt = Mock(spec=IOption)
+            options.append(opt)
+        # opt2 = Option('2D', {'geometry': 'square'})
+        # opt3 = Option('3D', {'geometry': 'cube'})
+        self.opt_seq = OptionSequence('space', options)
 
     def test_name(self):
         """
@@ -42,17 +43,4 @@ class TestOptionSequence(unittest.TestCase):
         so trying to access 'geometry' should raise a KeyError.
         """
         self.assertRaises(KeyError, lambda: self.opt_seq['geometry']) 
-
-    def test_iterate_options_and_check_ID(self):
-        """
-        I should be able to iterate over the options and each should
-        return an ID in the format 'sequence_name.option_name'.
-        """
-        opt_names = ('1D', '2D', '3D')
-        # for opt, nm in zip(self.opt_seq, opt_names):
-        #     ref_ID = 'space.'+nm
-        #     self.assertEqual(repr(opt), ref_ID)
         
-
-class TestSimpleTreeCreation(unittest.TestCase):
-    pass

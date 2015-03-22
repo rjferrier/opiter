@@ -2,7 +2,7 @@ import sys
 sys.path.append('../optree')
 
 import unittest
-from option import _Option
+from optree.options import Option
 
     
 
@@ -12,7 +12,7 @@ class TestOptionWithNameOnly(unittest.TestCase):
         """
         I create an Option using just a name.
         """
-        self.opt = _Option('2D')
+        self.opt = Option('2D')
 
     def test_ID(self):
         """
@@ -46,7 +46,7 @@ class TestOptionWithNameAndDict(unittest.TestCase):
         """
         I create an Option using a name and a dict.
         """
-        self.opt = _Option('2D', {'geometry': 'square'})
+        self.opt = Option('2D', {'geometry': 'square'})
 
     def test_as_dict(self):
         """

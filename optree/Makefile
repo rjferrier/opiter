@@ -1,4 +1,4 @@
-test: 
+test: clean
 
 clean:
 	rm *.pyc -f

@@ -6,60 +6,56 @@ injection.
 
 from dynamic_dict import DynamicDict
 from base import OptionException
-from option import _Option
-from option_sequence import _OptionSequence
+from optree.options import Option, OptionSequence
+
 
 class OptionCreationError(OptionException):
     def __init__(self, msg):
         OptionException.__init__(self, msg)
+
         
-class Option(_Option):
+def create_option(name, dictionary={}):
     """
-    Option(name, dictionary={})
+    create_option(name, dictionary={})
 
     Defines one possible state out of several in an OptionSequence.
     Upon instantiation, the Option is given a name.  Additionally
     there may be dependent variables defined in a dict or a
     DynamicDict.
 
-    When an _Option is used to instantiate an _OptionSequence, it
+    When an Option is used to instantiate an OptionSequence, it
     acquires a reference to the sequence as its parent.  The parent's
     name can then be looked up in the dictionary to retrieve the name
-    of the _Option at hand.  Thus the parent-child relationship
-    between _OptionSequence and _Option may also be considered a
+    of the Option at hand.  Thus the parent-child relationship
+    between OptionSequence and Option may also be considered a
     key-value relationship.
     """
+    if not isinstance(name, str):
+        raise OptionCreationError(
+            "name argument must be a string.")
+    if not isinstance(dictionary, dict):
+        raise OptionCreationError(
+            "dictionary argument must be a dict.")
+    return Option(name, DynamicDict(dictionary))
 
-    def __init__(self, name, dictionary={}):
-        if not isinstance(name, str):
-            raise OptionCreationError(
-                "name argument must be a string.")
-        if not isinstance(dictionary, dict):
-            raise OptionCreationError(
-                "dictionary argument must be a dict.")
-        _Option.__init__(self, name, DynamicDict(dictionary))
-
-
-class OptionSequenceCreationError(OptionException):
-    def __init__(self, msg):
-        OptionException.__init__(self, msg)
         
-class OptionSequence(_OptionSequence):
+def create_option_sequence(name, options):
     """
     OptionSequence(name, options)
 
-    Defines an sequence of _Options.  The options argument may be
+    Defines an sequence of Options.  The options argument may be
     Options or the names of Options.
     """
-
-    def __init__(self, name, options):
-        self._name = name
-        self._options = []
-        for opt in options:
-            # instantiate a new _Option.  If opt is a string, this is
-            # needed anyway.  If opt is already an _Option object, a
-            # copy will be made.  This has the benefit of preventing
-            # side effects if opt persists elsewhere.
-            opt = _Option(opt)
-            opt._parent = self
-            self._options.append(opt)
+    if not isinstance(name, str):
+        raise OptionCreationError(
+            "name argument must be a string.")
+    options = []
+    for opt in options:
+        # instantiate a new Option.  If opt is a string, this is
+        # needed anyway.  If opt is already an Option object, a copy
+        # will be made.  This has the benefit of preventing side
+        # effects if opt persists elsewhere.
+        opt = Option(opt)
+        opt._parent = self
+        self.options.append(opt)
+    return OptionSequence(name, options)
