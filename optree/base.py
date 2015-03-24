@@ -12,6 +12,9 @@ class OptionException(Exception):
         return self.msg
 
 class IOption:
+    def __str__(self):
+        pass
+        
     def __repr__(self):
         pass
         

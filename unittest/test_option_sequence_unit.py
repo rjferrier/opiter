@@ -16,9 +16,9 @@ class TestOptionSequenceUnit(unittest.TestCase):
         options = []
         for name in ('1D', '2D', '3D'):
             opt = Mock(spec=IOption)
+            opt.__str__ = Mock(return_value=name)
+            # opt.__repr__.return_value = name
             options.append(opt)
-        # opt2 = Option('2D', {'geometry': 'square'})
-        # opt3 = Option('3D', {'geometry': 'cube'})
         self.opt_seq = OptionSequence('space', options)
 
     def test_name(self):
@@ -43,4 +43,12 @@ class TestOptionSequenceUnit(unittest.TestCase):
         so trying to access 'geometry' should raise a KeyError.
         """
         self.assertRaises(KeyError, lambda: self.opt_seq['geometry']) 
+
+    def test_iteration(self):
+        """
+        I should be able to iterate over the options.
+        """
+        names = ('1D', '2D', '3D')
+        for opt, nm in zip(self.opt_seq, names):
+            self.assertEqual(str(opt), nm)
         

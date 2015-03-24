@@ -42,7 +42,7 @@ class TestOptionSequenceWithOptionNames(unittest.TestCase):
         I should be able to iterate over the options and each should
         return an ID in the format 'sequence_name.option_name'.
         """
-        opt_names = ('1D', '2D', '3D')
-        for opt, nm in zip(self.opt_seq, opt_names):
+        names = ('1D', '2D', '3D')
+        for opt, nm in zip(self.opt_seq, names):
             ref_ID = 'space.'+nm
             self.assertEqual(repr(opt), ref_ID)

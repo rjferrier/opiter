@@ -12,6 +12,9 @@ class Option(IOption):
         self._name = name
         self._dict = dictionary
     
+    def __str__(self):
+        return self._name
+    
     def __repr__(self):
         """
         Returns a unique ID based on the object's address in the parent
