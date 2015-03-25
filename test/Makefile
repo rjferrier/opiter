@@ -1,7 +1,8 @@
+
 test: clean
 	@echo
 	@printf '%70s\n' | tr ' ' =
-	@echo " $(TESTINGSTAGE)"
+	@echo " Testing "
 	@printf '%70s\n' | tr ' ' =
 	@echo
 	python -m unittest discover .

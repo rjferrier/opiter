@@ -1,11 +1,12 @@
 =======================================================================
- optree: options tree creation and iteration
- ======================================================================
+ optionsdict
+=======================================================================
 
-The classes in this module can be used to build a tree of options to
-iterate over.  Each level of the tree is represented by an
-OptionSequence containing several Options.  Each Option may have a
-child OptionSequence, and so on down to an arbitrary number of levels.
+The classes in this module can be used to build a tree of options
+dictionaries to iterate over.  Each level of the tree is represented
+by an OptionSequence containing several Options.  Each Option may have
+a child OptionSequence, and so on down to an arbitrary number of
+levels.
 
 
 *** THE FUNCTIONALITY DESCRIBED BELOW HAS NOT BEEN IMPLEMENTED YET ***
