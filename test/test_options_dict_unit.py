@@ -21,7 +21,7 @@ class TestOptionsDictBasics(unittest.TestCase):
         than a dict, an error should be raised.
         """
         create_od = lambda: OptionsDict('foo', 'bar')
-        self.assertRaises(OptionsDictException, create_od)
+        self.assertRaises(ValueError, create_od)
 
     def test_empty(self):
         """

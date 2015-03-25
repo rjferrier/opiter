@@ -32,11 +32,9 @@ class OptionsDict(dict):
         else:
             raise OptionsDictException(
                 "name argument must be a string.")
-        try:
-            dict.__init__(self, entries)
-        except ValueError:
-            raise OptionsDictException(
-                "entries argument must be a dict.")
+        # the dict superclass will check that the entries argument is
+        # acceptable
+        dict.__init__(self, entries)
 
     def __repr__(self):
         return self.name
@@ -65,25 +63,28 @@ class CallableEntry:
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
 
+    
         
-class OptionsDictSequence(list):
+def create_sequence(optionsdicts_or_names, common_entries={}):
     """
-    OptionsDictSequence(optionsdicts_or_names)
+    create_sequence(optionsdicts_or_names, common_entries={})
 
-    This is a list of OptionsDicts.  It includes methods for operating
-    on the ensemble.
+    Creates a list of OptionsDicts after type-checking the arguments
+    and converting to OptionsDicts if necessary.  The optional
+    common_entries argument is passed to all the OptionsDicts.
     """
-    def __init__(self, optionsdicts_or_names):
-        ods = []
-        for od_or_nm in optionsdicts_or_names:
-            # create an OptionsDict from od_or_nm
-            if isinstance(od_or_nm, OptionsDict):
-                # If od_or_nm is already an OptionsDict object, make a
-                # copy.  This has the benefit of preventing side
-                # effects if od_or_nm persists elsewhere.
-                od = copy(od_or_nm)
-            else:
-                # instantiate a new OptionsDict
-                od = OptionsDict(od_or_nm)
-            ods.append(od)
-        list.__init__(self, ods)
+    options_dict_list = []
+    for od_or_nm in optionsdicts_or_names:
+        # create an OptionsDict from od_or_nm
+        if isinstance(od_or_nm, OptionsDict):
+            # If od_or_nm is already an OptionsDict object, make a
+            # copy.  This has the benefit of preventing side
+            # effects if od_or_nm persists elsewhere.
+            od = copy(od_or_nm)
+            od.update(common_entries)
+        else:
+            # instantiate a new OptionsDict
+            od = OptionsDict(od_or_nm, common_entries)
+        options_dict_list.append(od)
+    return options_dict_list
+
