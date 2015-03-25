@@ -9,16 +9,16 @@ class TestOptionsDictBasics(unittest.TestCase):
     
     def test_create_from_non_name(self):
         """
-        When I create an Option using something other than a name, an
-        error should be raised.
+        When I create an OptionsDict using something other than a name,
+        an error should be raised.
         """
         create_od = lambda: OptionsDict({'foo': 'bar'})
         self.assertRaises(OptionsDictException, create_od)
     
     def test_create_from_non_dict(self):
         """
-        When I create an Option using a name and something other than a
-        dict, an error should be raised.
+        When I create an OptionsDict using a name and something other
+        than a dict, an error should be raised.
         """
         create_od = lambda: OptionsDict('foo', 'bar')
         self.assertRaises(OptionsDictException, create_od)
@@ -103,7 +103,7 @@ class TestOptionsDictGetItem(unittest.TestCase):
         
     def test_nested_object(self):
         """
-        Suppose I use optionsdict to create a new OptionsDict.  The new
+        Suppose I use self.od to create a new OptionsDict.  The new
         object should be equivalent, but not identical to, the old
         object.  That is, it should be a copy.
         """

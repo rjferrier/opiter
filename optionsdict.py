@@ -1,4 +1,5 @@
 from types import FunctionType 
+from copy import copy 
 
 
 class OptionsDictException(Exception):
@@ -47,7 +48,7 @@ class OptionsDict(dict):
             return value(self)
         else:
             return value
-
+            
             
 class CallableEntry:
     """
@@ -63,3 +64,26 @@ class CallableEntry:
         
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
+
+        
+class OptionsDictSequence(list):
+    """
+    OptionsDictSequence(optionsdicts_or_names)
+
+    This is a list of OptionsDicts.  It includes methods for operating
+    on the ensemble.
+    """
+    def __init__(self, optionsdicts_or_names):
+        ods = []
+        for od_or_nm in optionsdicts_or_names:
+            # create an OptionsDict from od_or_nm
+            if isinstance(od_or_nm, OptionsDict):
+                # If od_or_nm is already an OptionsDict object, make a
+                # copy.  This has the benefit of preventing side
+                # effects if od_or_nm persists elsewhere.
+                od = copy(od_or_nm)
+            else:
+                # instantiate a new OptionsDict
+                od = OptionsDict(od_or_nm)
+            ods.append(od)
+        list.__init__(self, ods)
