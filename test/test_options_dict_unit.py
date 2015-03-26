@@ -5,7 +5,7 @@ import unittest
 from optionsdict import OptionsDict, OptionsDictException
 
 
-class TestOptionsDictBasics(unittest.TestCase):
+class TestOptionsDictCreation(unittest.TestCase):
     
     def test_create_from_non_name(self):
         """
@@ -23,16 +23,64 @@ class TestOptionsDictBasics(unittest.TestCase):
         create_od = lambda: OptionsDict('foo', 'bar')
         self.assertRaises(ValueError, create_od)
 
-    def test_empty(self):
-        """
-        I create an empty OptionsDict.  When it is string-formatted,
-        its name should be returned.
-        """
-        od = OptionsDict('foo')
-        self.assertEqual(str(od), 'foo')
-
         
-class TestOptionsDictGetItem(unittest.TestCase):
+class TestOptionsDictBasics(unittest.TestCase):
+
+    def setUp(self):
+        """I create a simple OptionsDict."""
+        self.od = OptionsDict('foo', {'bar': 1})
+
+    def test_str(self):
+        self.assertEqual(str(self.od), 'foo')
+
+    def test_repr(self):
+        self.assertEqual(repr(self.od), 'foo{\'bar\': 1}')
+
+    def test_equal_names_and_dicts(self):
+        self.assertEqual(self.od, OptionsDict('foo', {'bar': 1}))
+
+    def test_equal_names_but_unequal_dicts(self):
+        self.assertNotEqual(self.od, OptionsDict('foo', {'bar': 2}))
+
+    def test_unequal_names_but_equal_dicts(self):
+        self.assertNotEqual(self.od, OptionsDict('baz', {'bar': 1}))
+
+
+class TestOptionsDictAddition(unittest.TestCase):
+        
+    def setUp(self):
+        """
+        I create two OptionsDicts, A and B.  One of the keys appears
+        in both dictionaries but with different corresponding values.
+        I add the OptionsDicts together and store the result as C.
+        """
+        self.A = OptionsDict('A', {'foo': 1, 'bar': 2})
+        self.B = OptionsDict('B', {'foo': 3, 'baz': 4})
+        self.C = self.A + self.B
+        
+    def test_name(self):
+        """
+        The string representation of C should be 'A_B'.
+        """
+        self.assertEqual(str(self.C), 'A_B')
+
+    def test_right_overrides_left(self):
+        """
+        Looking up the shared key in the C should return B's value.
+        """
+        self.assertEqual(self.C['foo'], 3)
+
+    def test_incremental_addition(self):
+        """
+        Doing an incremental addition should produce the same result
+        as C.
+        """
+        self.A += self.B
+        self.assertEqual(self.A, self.C)
+
+
+    
+class TestOptionsDictDynamicEntries(unittest.TestCase):
     
     def setUp(self):
         """
@@ -117,7 +165,7 @@ class TestOptionsDictGetItem(unittest.TestCase):
         dd['celsius'] = 100.
         self.assertAlmostEqual(dd['fahrenheit'], 212.)
         self.assertAlmostEqual(self.od['fahrenheit'], 32.)
-
+        
         
 if __name__ == '__main__':
     unittest.main()

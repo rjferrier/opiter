@@ -1,6 +1,8 @@
 from types import FunctionType 
 from copy import copy 
 
+name_separator = '_'
+
 
 class OptionsDictException(Exception):
     def __init__(self, msg):
@@ -41,16 +43,34 @@ class OptionsDict(dict):
         dict.__init__(self, entries)
 
     def __repr__(self):
+        return self.name + dict.__repr__(self)
+
+    def __str__(self):
         return self.name
             
     def __getitem__(self, key):
         value = dict.__getitem__(self, key)
         # recurse until the return value is no longer a function
         if isinstance(value, FunctionType):
+            # dynamic entry
             return value(self)
         else:
+            # normal entry
             return value
-            
+
+    def __eq__(self, other):
+        eq_names = str(self)==str(other)
+        eq_dicts = dict.__eq__(self, other)
+        return eq_names and eq_dicts
+
+    def __ne__(self, other):
+        return not self==other
+
+    def __add__(self, other):
+        result = OptionsDict(str(self)+name_separator+str(other), self) 
+        result.update(other)
+        return result
+
             
 class CallableEntry:
     """
