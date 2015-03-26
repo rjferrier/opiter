@@ -10,7 +10,7 @@ class TestOptionsDictCreation(unittest.TestCase):
     def test_create_from_non_name(self):
         """
         When I create an OptionsDict using something other than a
-        string, an error should be raised.
+        string or None, an error should be raised.
         """
         create_od = lambda: OptionsDict({'foo': 'bar'})
         self.assertRaises(OptionsDictException, create_od)
@@ -64,6 +64,14 @@ class TestOptionsDictAddition(unittest.TestCase):
         """
         self.assertEqual(str(self.C), 'A_B')
         
+    def test_add_nameless(self):
+        """
+        I add another OptionsDict, but I give it 
+
+        The string representation of C should be 'A_B'.
+        """
+        self.assertEqual(str(self.C), 'A_B')
+        
     def test_repr(self):
         """
         repr(C) should be 'A_B:{<contents>}'.
@@ -92,6 +100,26 @@ class TestOptionsDictAddition(unittest.TestCase):
         """
         self.assertEqual(sum([self.A, self.B]), self.C)
 
+        
+class TestAnonymousOptionsDict(unittest.TestCase):
+    
+    def setUp(self):
+        """I create an anonymous OptionsDict."""
+        self.od = OptionsDict(None, {'foo': 'bar'})
+        
+    def test_name(self):
+        self.assertEqual(str(self.od), '')
+
+    def test_repr(self):
+        self.assertEqual(repr(self.od), ":{'foo': 'bar'}")
+
+    def test_add_names(self):
+        A = OptionsDict('A')
+        B = OptionsDict('B')
+        C = A + self.od + B
+        self.assertEqual(str(self.od + self.od), "")
+        self.assertEqual(str(self.od + A), "A")
+        self.assertEqual(str(A + self.od + B), "A_B")
 
     
 class TestOptionsDictDynamicEntries(unittest.TestCase):

@@ -14,6 +14,7 @@ class OptionsDictException(Exception):
 class OptionsDict(dict):
     """
     OptionsDict(name, entries={})
+    OptionsDict.anonymous(entries={})
     
     An OptionsDict inherits from a conventional dict, but it has a few
     enhancements:
@@ -30,14 +31,17 @@ class OptionsDict(dict):
     (3) A combination of OptionsDicts can be added together, in which
     case the names are concatenated to form a unique ID and the
     entries merged.
-    
     """
+
+    name = ''
+    
     def __init__(self, name, entries={}):
-        if isinstance(name, str):
-            self.name = name
-        else:
-            raise OptionsDictException(
-                "name argument must be a string.")
+        if name:
+            if isinstance(name, str):
+                self.name = name
+            else:
+                raise OptionsDictException(
+                    "name argument must be a string (or None).")
         # the dict superclass will check that the entries argument is
         # acceptable
         dict.__init__(self, entries)
@@ -67,7 +71,12 @@ class OptionsDict(dict):
         return not self==other
 
     def __add__(self, other):
-        result = OptionsDict(str(self) + name_separator + str(other), self)
+        names = (str(self), str(other))
+        if all(names):
+            new_name = name_separator.join(names)
+        else:
+            new_name = ''.join(names)
+        result = OptionsDict(new_name, self)
         result.update(other)
         return result
 
@@ -76,7 +85,6 @@ class OptionsDict(dict):
             return self
         else:
             return self + other
-
         
 class CallableEntry:
     """
@@ -144,3 +152,17 @@ def combine_elements(client_function):
         arg = sum(args)
         return client_function(arg)
     return decorator
+
+
+def create_lookup(key):
+    """
+    create_lookup(key)
+
+    Returns a function that simply looks up a key when it is passed a
+    combination of OptionsDicts.
+    """
+    @combine_elements
+    def lookup(opt):
+        return opt[key]
+    return lookup
+
