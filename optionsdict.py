@@ -43,7 +43,7 @@ class OptionsDict(dict):
         dict.__init__(self, entries)
 
     def __repr__(self):
-        return self.name + dict.__repr__(self)
+        return self.name + ':' + dict.__repr__(self)
 
     def __str__(self):
         return self.name
@@ -67,11 +67,17 @@ class OptionsDict(dict):
         return not self==other
 
     def __add__(self, other):
-        result = OptionsDict(str(self)+name_separator+str(other), self) 
+        result = OptionsDict(str(self) + name_separator + str(other), self)
         result.update(other)
         return result
 
-            
+    def __radd__(self, other):
+        if not other:
+            return self
+        else:
+            return self + other
+
+        
 class CallableEntry:
     """
     CallableEntry(function)
@@ -88,7 +94,6 @@ class CallableEntry:
         return self.function(*args, **kwargs)
 
     
-        
 def create_sequence(sequence_key, elements):
     """
     create_sequence(sequence_key, elements)
@@ -120,3 +125,22 @@ def create_sequence(sequence_key, elements):
         options_dict_list.append(od)
     return options_dict_list
 
+
+def combine_elements(client_function):
+    """
+    combine_elements(client_function)
+
+    A decorator that simply sums the elements of a collection, passing
+    the result to the client function.
+    
+    This may be useful in situations where one wants to use itertools
+    to iterate over combinations of OptionDicts.  The handling of
+    lists of OptionsDicts should not be something that the client
+    function has to deal with.  This decorator merges those
+    OptionsDicts into one convenient dictionary that the client can
+    use.
+    """
+    def decorator(args):
+        arg = sum(args)
+        return client_function(arg)
+    return decorator

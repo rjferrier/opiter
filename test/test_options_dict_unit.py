@@ -3,14 +3,14 @@ sys.path.append('..')
 
 import unittest
 from optionsdict import OptionsDict, OptionsDictException
-
+from re import search
 
 class TestOptionsDictCreation(unittest.TestCase):
     
     def test_create_from_non_name(self):
         """
-        When I create an OptionsDict using something other than a name,
-        an error should be raised.
+        When I create an OptionsDict using something other than a
+        string, an error should be raised.
         """
         create_od = lambda: OptionsDict({'foo': 'bar'})
         self.assertRaises(OptionsDictException, create_od)
@@ -30,11 +30,11 @@ class TestOptionsDictBasics(unittest.TestCase):
         """I create a simple OptionsDict."""
         self.od = OptionsDict('foo', {'bar': 1})
 
-    def test_str(self):
+    def test_name(self):
         self.assertEqual(str(self.od), 'foo')
 
     def test_repr(self):
-        self.assertEqual(repr(self.od), 'foo{\'bar\': 1}')
+        self.assertEqual(repr(self.od), "foo:{'bar': 1}")
 
     def test_equal_names_and_dicts(self):
         self.assertEqual(self.od, OptionsDict('foo', {'bar': 1}))
@@ -63,10 +63,17 @@ class TestOptionsDictAddition(unittest.TestCase):
         The string representation of C should be 'A_B'.
         """
         self.assertEqual(str(self.C), 'A_B')
+        
+    def test_repr(self):
+        """
+        repr(C) should be 'A_B:{<contents>}'.
+        """
+        dict_pattern = "{['a-z: 0-9,]*}"
+        self.assertIsNotNone(search('A_B:'+dict_pattern, repr(self.C)))
 
     def test_right_overrides_left(self):
         """
-        Looking up the shared key in the C should return B's value.
+        Looking up the shared key in C should return B's value.
         """
         self.assertEqual(self.C['foo'], 3)
 
@@ -77,6 +84,13 @@ class TestOptionsDictAddition(unittest.TestCase):
         """
         self.A += self.B
         self.assertEqual(self.A, self.C)
+
+    def test_sum(self):
+        """
+        Summing a list containing A and B should produce the same
+        result as C.
+        """
+        self.assertEqual(sum([self.A, self.B]), self.C)
 
 
     

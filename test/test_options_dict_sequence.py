@@ -17,7 +17,7 @@ class TestOptionsDictSequence(unittest.TestCase):
         od = OptionsDict('some_dict', {'foo': 'bar'})
         self.values = ['A', od, 2, 3.14]
         self.seq = create_sequence('random_thing', self.values)
-
+        
     def test_element_types(self):
         """
         Each element in the sequence should be an OptionsDict.
