@@ -10,93 +10,59 @@ class TestOptionsDictSequence(unittest.TestCase):
 
     def setUp(self):
         """
-        I create a list of names for constructing OptionsDicts.
+        I create an OptionsDict sequence from a list of
+        different-typed values, one of which is already an
+        OptionsDict.
         """
-        self.names = ['A', 'B', 'C']
-        
-    def test_create_with_incompatible_element(self):
-        """
-        When I pass create_sequence a list and one of the elements is
-        something other than an OptionsDict or a string, an error
-        should be raised.
-        """
-        src = [self.names[0], OptionsDict(self.names[1]), {'foo': 'bar'}]
-        self.assertRaises(OptionsDictException, lambda: create_sequence(src))
+        od = OptionsDict('some_dict', {'foo': 'bar'})
+        self.values = ['A', od, 2, 3.14]
+        self.seq = create_sequence('random_thing', self.values)
 
-    def test_create_with_incompatible_common_dict(self):
+    def test_element_types(self):
         """
-        When pass create_sequence an acceptable list but the second
-        argument is something other than a dict, an error should be
-        raised.
+        Each element in the sequence should be an OptionsDict.
         """
-        lambda: self.create_and_check_sequence(self.names)
-        self.assertRaises(ValueError,
-                          lambda: create_sequence(self.names, 'foo'))
+        for el in self.seq:
+            self.assertIsInstance(el, OptionsDict)
 
-    def create_and_check_sequence(self, src):
+    def test_element_names(self):
         """
-        This is a helper function that feeds a list into
-        create_sequence and checks the resulting elements.
+        The name of each element, given by its string representation,
+        should be identical to the string representation of the
+        corresponding initial value.
         """
-        ods = create_sequence(src)
-        for od, nm in zip(ods, self.names):
-            self.assertIsInstance(od, OptionsDict)
-            self.assertEqual(str(od), nm)
+        for el, v in zip(self.seq, self.values):
+            self.assertEqual(str(el), str(v))
 
-    def test_create_from_names(self):
+    def test_element_dicts(self):
         """
-        I pass create_sequence a list of names.  The elements should
-        have the correct type and name.
+        While all the elements should be dictionaries, only the
+        preexisting OptionsDict should have the {'foo': 'bar'} entry.
         """
-        self.create_and_check_sequence(self.names)
-
-    def test_create_from_options_dicts(self):
-        """
-        I pass create_sequence a list of names.  The elements should
-        have the correct type and name.
-        """
-        src = []
-        for nm in self.names:
-            src.append(OptionsDict(nm))
-        self.create_and_check_sequence(src)
-
-    def create_mixed_list(self):
-        """
-        Helper function that creates a mixed list of things for
-        constructing OptionsDicts.
-        """
-        src = []
-        for nm in self.names:
-            if nm=='B':
-                src.append(OptionsDict(nm, {'special_key':
-                                            'special_value'}))
+        for i, el in enumerate(self.seq):
+            lookup = lambda: el['foo']
+            if i==1:
+                self.assertEqual(lookup(), 'bar')
             else:
-                src.append(nm)
-        return src
+                self.assertRaises(KeyError, lookup)
+
+    def test_lookup_sequence_key(self):
+        """
+        When the sequence key is looked up in each element, the
+        element should return the corresponding initial value.  The
+        initial value representation of the preexisting OptionsDict is
+        simply its name.
+        """
+        for i, el in enumerate(self.seq):
+            result = el['random_thing']
+            if i==1:
+                self.assertEqual(result, 'some_dict')
+            elif i==3:
+                # careful with floats
+                self.assertAlmostEqual(result, 3.14)
+            else:
+                self.assertEqual(result, self.values[i])
         
-    def test_create_from_mixed(self):
-        """
-        I pass create_sequence a list of mixed types.  The elements
-        should have the correct type and name.
-        """
-        self.create_and_check_sequence(self.create_mixed_list())
-
-    def test_dicts(self):
-        """
-        I pass create_sequence a list of mixed types and a common
-        dictionary.  All the elements should return the entry in the
-        common dict in addition to any preexisting entries.
-        """
-        ods = create_sequence(self.create_mixed_list(),
-                              {'global_key': 'global_value'})
-        for od in ods:
-            self.assertEqual(od['global_key'], 'global_value')
-            if str(od)=='B':
-                self.assertEqual(od['special_key'], 'special_value')
-
-
-    
-
         
 if __name__ == '__main__':
     unittest.main()

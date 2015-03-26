@@ -20,10 +20,14 @@ class OptionsDict(dict):
     in the dict.  Each of these special values is specified by a
     function accepting a single dictionary argument (i.e. the
     OptionsDict itself).  The dictionary argument is used to look
-    things up dynamically.  
+    things up dynamically.
 
-    (2) OptionsDicts can be added together, in which case their names
-    will be concatenated and their entries merged.
+    (2) An OptionsDict has a name which distinguishes it from possible
+    siblings in an iterable sequence.
+
+    (3) A combination of OptionsDicts can be added together, in which
+    case the names are concatenated to form a unique ID and the
+    entries merged.
     
     """
     def __init__(self, name, entries={}):
@@ -65,26 +69,34 @@ class CallableEntry:
 
     
         
-def create_sequence(optionsdicts_or_names, common_entries={}):
+def create_sequence(sequence_key, elements):
     """
-    create_sequence(optionsdicts_or_names, common_entries={})
+    create_sequence(sequence_key, elements)
 
-    Creates a list of OptionsDicts after type-checking the arguments
-    and converting to OptionsDicts if necessary.  The optional
-    common_entries argument is passed to all the OptionsDicts.
+    Creates a list of OptionsDicts, converting the given elements if
+    necessary.  That is, if a element is not already an OptionsDict, it
+    is converted to a string which becomes the name of a new
+    OptionsDict.
+
+    An important feature is that for each element, the corresponding
+    OptionsDict acquires the entry {sequence_key: element.name} if the
+    element is already OptionsDict, and {sequence_key: element}
+    otherwise.
     """
     options_dict_list = []
-    for od_or_nm in optionsdicts_or_names:
-        # create an OptionsDict from od_or_nm
-        if isinstance(od_or_nm, OptionsDict):
-            # If od_or_nm is already an OptionsDict object, make a
-            # copy.  This has the benefit of preventing side
-            # effects if od_or_nm persists elsewhere.
-            od = copy(od_or_nm)
-            od.update(common_entries)
+    for el in elements:
+        if isinstance(el, OptionsDict):
+            # If the element is already an OptionsDict object, make a
+            # copy.  This has the benefit of preventing side effects
+            # if the element persists elsewhere.
+            od = copy(el)
+            # add a special entry using sequence_key
+            od.update({sequence_key: str(el)})
         else:
-            # instantiate a new OptionsDict
-            od = OptionsDict(od_or_nm, common_entries)
+            # instantiate a new OptionsDict with the string
+            # represention of the element acting as its name, and the
+            # original element stored under sequence_key
+            od = OptionsDict(str(el), {sequence_key: el})
         options_dict_list.append(od)
     return options_dict_list
 
