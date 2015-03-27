@@ -4,7 +4,7 @@ sys.path.append('..')
 import unittest
 from optionsdict import create_sequence, OptionsDict, \
     OptionsDictException
-
+from re import sub
 
 class TestOptionsDictSequence(unittest.TestCase):
 
@@ -63,6 +63,40 @@ class TestOptionsDictSequence(unittest.TestCase):
             else:
                 self.assertEqual(result, self.values[i])
         
+
+class TestOptionsDictSequenceNameFormatting(unittest.TestCase):
+
+    def test_format_names_with_string(self):
+        """
+        I create an OptionsDict sequence 'A' using integers 2, 5, 10.
+        Format the element names as A02, A05, A10.
+        """
+        seq = create_sequence('A', [2, 5, 10], name_format='A{:02g}')
+        expected_names = ['A02', 'A05', 'A10']
+        for el, expected in zip(seq, expected_names):
+            self.assertEqual(str(el), expected)
+
+    def test_format_names_with_function(self):
+        """
+        I create an OptionsDict sequence 'A' using floats 1, 2.5,
+        6.25.  Format the element names as 1p00, 2p50, 6p25.
+        """
+        formatter = lambda x: '{:.2f}'.format(x).replace('.', 'p')
+        seq = create_sequence('A', [1., 2.5, 6.25],
+                              name_format=formatter)
+        expected_names = ['1p00', '2p50', '6p25']
+        for el, expected in zip(seq, expected_names):
+            self.assertEqual(str(el), expected)
+
+    def test_format_names_with_bad_formatter(self):
+        """
+        I create an OptionsDict sequence with an inappropriate object
+        as name_format.  An error should be raised.
+        """
+        create_seq = lambda: \
+            create_sequence('A', [1., 2.5, 6.25], name_format=None)
+        self.assertRaises(OptionsDictException, create_seq)
+
         
 if __name__ == '__main__':
     unittest.main()

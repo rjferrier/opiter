@@ -51,7 +51,7 @@ class OptionsDict(dict):
 
     def __str__(self):
         return self.name
-            
+    
     def __getitem__(self, key):
         value = dict.__getitem__(self, key)
         # recurse until the return value is no longer a function
@@ -61,7 +61,7 @@ class OptionsDict(dict):
         else:
             # normal entry
             return value
-
+        
     def __eq__(self, other):
         eq_names = str(self)==str(other)
         eq_dicts = dict.__eq__(self, other)
@@ -102,14 +102,18 @@ class CallableEntry:
         return self.function(*args, **kwargs)
 
     
-def create_sequence(sequence_key, elements):
+def create_sequence(sequence_key, elements, name_format='{}'):
     """
-    create_sequence(sequence_key, elements)
+    create_sequence(sequence_key, elements, name_format='{}')
 
     Creates a list of OptionsDicts, converting the given elements if
     necessary.  That is, if a element is not already an OptionsDict, it
     is converted to a string which becomes the name of a new
     OptionsDict.
+
+    The string conversion is governed by name_format, which can either
+    be a format string or a callable that takes the element value and
+    returns a string.
 
     An important feature is that for each element, the corresponding
     OptionsDict acquires the entry {sequence_key: element.name} if the
@@ -129,7 +133,16 @@ def create_sequence(sequence_key, elements):
             # instantiate a new OptionsDict with the string
             # represention of the element acting as its name, and the
             # original element stored under sequence_key
-            od = OptionsDict(str(el), {sequence_key: el})
+            try:
+                od = OptionsDict(name_format(el),
+                                 {sequence_key: el})
+            except TypeError:
+                try:
+                    od = OptionsDict(name_format.format(el),
+                                     {sequence_key: el})
+                except AttributeError:
+                    raise OptionsDictException(
+                        "name_formatter must be a callable or a format string.")
         options_dict_list.append(od)
     return options_dict_list
 

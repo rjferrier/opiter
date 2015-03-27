@@ -83,9 +83,10 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         will implement a dynamic entry at the root of the tree to
         calculate computation time.
         """
-        dim1 = create_sequence('dim', [1])
-        dim2 = create_sequence('dim', [2])
-        dim3 = create_sequence('dim', [3])
+        dim_format = '{}d'
+        dim1 = create_sequence('dim', [1], dim_format)
+        dim2 = create_sequence('dim', [2], dim_format)
+        dim3 = create_sequence('dim', [3], dim_format)
         res1 = create_sequence('res', [10, 20, 40, 80])
         res2 = create_sequence('res', [10, 20, 40])
         res3 = create_sequence('res', [10, 20])
@@ -102,9 +103,9 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         """I should be able to iterate over the tree and find that the
         resulting OptionsDicts are named according to expected
         position in the tree."""
-        expected_names = ['1_10', '1_20', '1_40', '1_80', 
-                          '2_10', '2_20', '2_40',
-                          '3_10', '3_20']
+        expected_names = ['1d_10', '1d_20', '1d_40', '1d_80', 
+                          '2d_10', '2d_20', '2d_40',
+                          '3d_10', '3d_20']
         for combo, name in zip(self.tree, expected_names):
             opt = sum(combo)
             self.assertEqual(str(opt), name)
