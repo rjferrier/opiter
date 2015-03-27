@@ -2,11 +2,9 @@ import sys
 sys.path.append('..')
 
 import unittest
-from optionsdict import create_sequence, combine_elements, OptionsDict, \
-    create_lookup, flatten
-
-from itertools import product, chain, izip
-
+from optionsdict import create_sequence, OptionsDict
+from optionsdict_itertools import product, chain, flatten, multizip, \
+    combine_elements, create_lookup
 
 class TestOptionsDictTwoSequenceIteration(unittest.TestCase):
     
@@ -83,20 +81,15 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         will implement a dynamic entry at the root of the tree to
         calculate computation time.
         """
-        dim_format = '{}d'
-        dim1 = create_sequence('dim', [1], dim_format)
-        dim2 = create_sequence('dim', [2], dim_format)
-        dim3 = create_sequence('dim', [3], dim_format)
-        res1 = create_sequence('res', [10, 20, 40, 80])
-        res2 = create_sequence('res', [10, 20, 40])
-        res3 = create_sequence('res', [10, 20])
-        branch1 = product(dim1, res1)
-        branch2 = product(dim2, res2)
-        branch3 = product(dim3, res3)
         root = (OptionsDict(None, 
                 {'computation_time': \
                      lambda self: self['res']**self['dim']}),)
-        self.tree = product(root, chain(branch1, branch2, branch3))
+        dims = create_sequence('dim', [1, 2, 3], name_format='{}d')        
+        res1 = create_sequence('res', [10, 20, 40, 80])
+        res2 = create_sequence('res', [10, 20, 40])
+        res3 = create_sequence('res', [10, 20])
+        branches = multizip(dims, (res1, res2, res3))
+        self.tree = product(root, chain(branches))
         
     def test_manual_iteration_and_name_check(self):
         """I should be able to iterate over the tree and find that the

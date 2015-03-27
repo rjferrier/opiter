@@ -1,9 +1,7 @@
 from types import FunctionType
-from collections import Iterable
 from copy import copy
 
 name_separator = '_'
-
 
 class OptionsDictException(Exception):
     def __init__(self, msg):
@@ -149,59 +147,4 @@ def create_sequence(sequence_key, elements, name_format='{}'):
                         "name_formatter must be a callable or a format string.")
         options_dict_list.append(od)
     return options_dict_list
-
-
-
-def flatten(iterable):
-    """
-    flatten(iterable)
-
-    Flatten an arbitrary tree of iterators, e.g. (1, (2, 3)) -> (1, 2,
-    3).  Taken from the webpage below, with an added condition to stop
-    iterating if the iterable is an OptionsDict.
-    
-    http://stackoverflow.com/questions/2158395/
-    flatten-an-irregular-list-of-lists-in-python
-    """
-    for el in iterable:
-        if isinstance(el, Iterable) and \
-                not isinstance(el, basestring) and \
-                not isinstance(el, OptionsDict):
-            for sub in flatten(el):
-                yield sub
-        else:
-            yield el
-
-
-def combine_elements(client_function):
-    """
-    combine_elements(client_function)
-
-    A decorator that flattens and sums the elements of a collection,
-    passing the result to the client function.
-    
-    This may be useful in situations where one wants to use itertools
-    to iterate over combinations of OptionDicts.  The handling of
-    lists of OptionsDicts should not be something that the client
-    function has to deal with.  This decorator merges those
-    OptionsDicts into one convenient dictionary that the client can
-    use.
-    """
-    def decorator(args):
-        arg = sum(flatten(args))
-        return client_function(arg)
-    return decorator
-
-
-def create_lookup(key):
-    """
-    create_lookup(key)
-
-    Returns a function that simply looks up a key when it is passed a
-    combination of OptionsDicts.
-    """
-    @combine_elements
-    def lookup(opt):
-        return opt[key]
-    return lookup
 
