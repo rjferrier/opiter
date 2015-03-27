@@ -3,7 +3,7 @@ sys.path.append('..')
 
 import unittest
 from optionsdict import create_sequence, combine_elements, OptionsDict, \
-    create_lookup
+    create_lookup, flatten
 
 from itertools import product, chain, izip
 
@@ -93,11 +93,10 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         branch1 = product(dim1, res1)
         branch2 = product(dim2, res2)
         branch3 = product(dim3, res3)
-        self.tree = chain(branch1, branch2, branch3)
-        # root = [OptionsDict(None, 
-        #         {'computation_time': \
-        #              lambda self: self['res']**self['dim']})]
-        # self.tree = product(root, *izip(*chain(branch1, branch2, branch3)))
+        root = (OptionsDict(None, 
+                {'computation_time': \
+                     lambda self: self['res']**self['dim']}),)
+        self.tree = product(root, chain(branch1, branch2, branch3))
         
     def test_manual_iteration_and_name_check(self):
         """I should be able to iterate over the tree and find that the
@@ -107,19 +106,20 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
                           '2d_10', '2d_20', '2d_40',
                           '3d_10', '3d_20']
         for combo, name in zip(self.tree, expected_names):
-            opt = sum(combo)
+            opt = sum(flatten(combo))
             self.assertEqual(str(opt), name)
             
-    # def test_combination_mapping_and_lookup(self):
-    #     """I should be able to get the computation time using a map
-    #     and a function that looks up the 'computation_time' entry."""
-    #     expected_times = [10., 20., 40., 80.,
-    #                       100., 400., 1600.,
-    #                       1000., 8000.]
-    #     lookup = create_lookup('computation_time')
-    #     resulting_times = map(lookup, self.tree)
-    #     for result, expected in zip(resulting_times, expected_times):
-    #         self.assertAlmostEqual(result, expected)
+    def test_combination_mapping_and_lookup(self):
+        """I should be able to get the computation time using a map
+        and a function that looks up the 'computation_time' entry."""
+        expected_times = [10., 20., 40., 80.,
+                          100., 400., 1600.,
+                          1000., 8000.]
+        lookup = create_lookup('computation_time')
+        resulting_times = map(lookup, self.tree)
+        for result, expected in zip(resulting_times, expected_times):
+            self.assertAlmostEqual(result, expected)
+
             
 if __name__ == '__main__':
     unittest.main()
