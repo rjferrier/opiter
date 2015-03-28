@@ -4,7 +4,7 @@ sys.path.append('..')
 import unittest
 from optionsdict import create_sequence, OptionsDict
 from optionsdict_itertools import product, chain, flatten, multizip, \
-    combine_elements, create_lookup
+    combine, create_lookup
 
 class TestOptionsDictTwoSequenceIteration(unittest.TestCase):
     
@@ -50,10 +50,10 @@ class TestOptionsDictTwoSequenceIteration(unittest.TestCase):
         """
         I should be able create combinations of speed and travel time
         and calculate the correct distances using a map.  I will use
-        the combine_elements decorator so that my distance calculator
+        the combine decorator so that my distance calculator
         only has to deal with one dictionary.
         """
-        @combine_elements
+        @combine
         def calc(opt):
             return opt['speed'] * opt['travel_time']
         combos = product(self.speed, self.time)

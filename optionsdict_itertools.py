@@ -40,9 +40,9 @@ def multizip(parents, children):
                   children)))
 
 
-def combine_elements(client_function):
+def combine(client_function):
     """
-    combine_elements(client_function)
+    combine(client_function)
 
     A decorator that flattens and sums the elements of a collection,
     passing the result to the client function.
@@ -67,7 +67,7 @@ def create_lookup(key):
     Returns a function that simply looks up a key when it is passed a
     combination of OptionsDicts.
     """
-    @combine_elements
+    @combine
     def lookup(opt):
         return opt[key]
     return lookup
