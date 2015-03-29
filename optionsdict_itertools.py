@@ -7,7 +7,7 @@ def flatten(iterable):
 
     Flatten an arbitrary tree of iterators, e.g. (1, (2, 3)) -> (1, 2,
     3).  Taken from the webpage below, with an added condition to stop
-    iterating if the iterable is an OptionsDict.
+    iterating if the iterable is a dictionary.
     
     http://stackoverflow.com/questions/2158395/
     flatten-an-irregular-list-of-lists-in-python
@@ -27,13 +27,15 @@ def multizip(parents, children):
     multizip(parents, children)
 
     Zips parents with children, and for each of these pairings
-    performs a product.  The results are chained.
+    performs a product.  The results are chained.  Strings and
+    dictionary elements
     """
     def protect(el):
-        # if (isinstance(el, basestring) and len(el) > 1) or \
-        #         isinstance(el, dict):
-        #     yield el
-        return el
+        if (isinstance(el, basestring) and len(el) > 1) or \
+                isinstance(el, dict):
+            return (el,)
+        else:
+            return el
     return chain.from_iterable(
         imap(lambda i: product(*i),
              izip(imap(protect, parents),
@@ -48,9 +50,9 @@ def combine(client_function):
     passing the result to the client function.
     
     This may be useful in situations where one wants to use itertools
-    to iterate over combinations of OptionDicts.  The handling of
-    lists of OptionsDicts should not be something that the client
-    function has to deal with.  This decorator merges those
+    to iterate over trees of OptionDicts.  The handling of (possibly
+    nested) combinations of OptionsDicts should not be something that
+    the client has to deal with.  This decorator merges those
     OptionsDicts into one convenient dictionary that the client can
     use.
     """
