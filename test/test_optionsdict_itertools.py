@@ -3,7 +3,7 @@ sys.path.append('..')
 
 import unittest
 from optionsdict_itertools import flatten, multizip, \
-    combine, create_lookup
+    combine_args, create_lookup
 
 
 class TestOptionsDictIterationTools(unittest.TestCase):
@@ -34,9 +34,9 @@ class TestOptionsDictIterationTools(unittest.TestCase):
         for r, e in zip(result, expected):
             self.assertEqual(tuple(r), e)
 
-    def test_combine(self):
+    def test_combine_args(self):
         src = (1, 2, 3)
-        @combine
+        @combine_args
         def myfunc(x):
             return x
         self.assertEqual(myfunc((1, 2, 3)), 6)

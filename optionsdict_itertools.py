@@ -1,5 +1,6 @@
 from collections import Iterable
 from itertools import imap, izip, chain, product
+from functools import wraps
 
 def flatten(iterable):
     """
@@ -42,7 +43,7 @@ def multizip(parents, children):
                   children)))
 
 
-def combine(client_function):
+def combine_args(client_function):
     """
     combine(client_function)
 
@@ -56,6 +57,7 @@ def combine(client_function):
     OptionsDicts into one convenient dictionary that the client can
     use.
     """
+    @wraps(client_function)
     def decorator(args):
         arg = sum(flatten(args))
         return client_function(arg)
@@ -69,7 +71,7 @@ def create_lookup(key):
     Returns a function that simply looks up a key when it is passed a
     combination of OptionsDicts.
     """
-    @combine
+    @combine_args
     def lookup(opt):
         return opt[key]
     return lookup

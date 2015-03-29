@@ -4,7 +4,7 @@ sys.path.append('..')
 import unittest
 from optionsdict import create_sequence, OptionsDict
 from optionsdict_itertools import product, chain, flatten, multizip, \
-    combine, create_lookup
+    combine_args, create_lookup
 
 class TestOptionsDictTwoSequenceIteration(unittest.TestCase):
     
@@ -53,7 +53,7 @@ class TestOptionsDictTwoSequenceIteration(unittest.TestCase):
         the combine decorator so that my distance calculator
         only has to deal with one dictionary.
         """
-        @combine
+        @combine_args
         def calc(opt):
             return opt['speed'] * opt['travel_time']
         combos = product(self.speed, self.time)

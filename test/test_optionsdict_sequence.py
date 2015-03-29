@@ -6,6 +6,8 @@ from optionsdict import create_sequence, OptionsDict, \
     OptionsDictException
 from re import sub
 
+
+        
 class TestOptionsDictSequence(unittest.TestCase):
 
     def setUp(self):
@@ -64,7 +66,27 @@ class TestOptionsDictSequence(unittest.TestCase):
                 self.assertEqual(result, self.values[i])
         
 
-class TestOptionsDictSequenceNameFormatting(unittest.TestCase):
+class TestOptionsDictSequenceCreationOptions(unittest.TestCase):
+
+    def test_create_with_common_entries(self):
+        """
+        I create an OptionsDict sequence 'A' using three integers and
+        common entry {'foo': 'bar'}.  All elements should have this
+        entry.
+        """
+        seq = create_sequence('A', range(3), {'foo': 'bar'})
+        for el in seq:
+            self.assertEqual(el['foo'], 'bar')
+
+    def test_create_with_bad_common_entries(self):
+        """
+        I create an OptionsDict sequence 'A' using three integers and
+        something that is not a dictionary for the common_entries
+        argument.  An error should be raised.
+        """
+        create_seq = lambda: \
+            create_sequence('A', range(3), 'foo')
+        self.assertRaises(OptionsDictException, create_seq)
 
     def test_format_names_with_string(self):
         """

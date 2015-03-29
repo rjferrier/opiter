@@ -35,15 +35,19 @@ class OptionsDict(dict):
     name = ''
     
     def __init__(self, name, entries={}):
-        if name:
-            if isinstance(name, str):
-                self.name = name
-            else:
+        # check argument types
+        if not name:
+            name = ''
+        elif not isinstance(name, str):
                 raise OptionsDictException(
                     "name argument must be a string (or None).")
-        # the dict superclass will check that the entries argument is
-        # acceptable
+        if not isinstance(entries, dict):
+            raise OptionsDictException(
+                    "entries argument must be a dictionary.")
+        # store name, initialise superclass
+        self.name = name
         dict.__init__(self, entries)
+            
 
     def __repr__(self):
         return self.name + ':' + dict.__repr__(self)
@@ -104,14 +108,17 @@ class CallableEntry:
         return self.function(*args, **kwargs)
 
     
-def create_sequence(sequence_key, elements, name_format='{}'):
+def create_sequence(sequence_key, elements, common_entries={}, 
+                    name_format='{}'):
     """
-    create_sequence(sequence_key, elements, name_format='{}')
+    create_sequence(sequence_key, elements, common_entries={},
+                    name_format='{}',)
 
     Creates a list of OptionsDicts, converting the given elements if
-    necessary.  That is, if a element is not already an OptionsDict, it
-    is converted to a string which becomes the name of a new
-    OptionsDict.
+    necessary.  That is, if a element is not already an OptionsDict,
+    it is converted to a string which becomes the name of a new
+    OptionsDict.  All dicts are initialised with common_entries if
+    this argument is given.
 
     The string conversion is governed by name_format, which can either
     be a format string or a callable that takes the element value and
@@ -145,6 +152,12 @@ def create_sequence(sequence_key, elements, name_format='{}'):
                 except AttributeError:
                     raise OptionsDictException(
                         "name_formatter must be a callable or a format string.")
+        # check and add common_entries
+        if not isinstance(common_entries, dict):
+            raise OptionsDictException(
+                    "common_entries argument must be a dictionary.")
+        od.update(common_entries)
+        # append to the list
         options_dict_list.append(od)
     return options_dict_list
 
