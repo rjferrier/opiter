@@ -208,7 +208,43 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         self.assertAlmostEqual(dd['fahrenheit'], 212.)
         self.assertAlmostEqual(self.od['fahrenheit'], 32.)
         
+
+class TestOptionsDictTemplateExpansion(unittest.TestCase):
+
+    def setUp(self):
+        self.od = OptionsDict(None, {'name': 'Richard',
+                                     'age' : 32,
+                                     'colour_eyes': 'green',
+                                     'colour_hair': 'brown'})
+
+    def test_expand_string(self):
+        template = "My name is $name, and I am $age years old."
+        expected = "My name is Richard, and I am 32 years old."
+        self.assertEqual(self.od.expand_template(template), expected)
+
+    def test_expand_string_missing_entry(self):
+        template = "My name is $name, I am $age years old, "+\
+            "and I come from $place_of_origin."
+        expected = "My name is Richard, I am 32 years old, "+\
+            "and I come from $place_of_origin."
+        self.assertEqual(self.od.expand_template(template), expected)
+
+    def test_expand_nested(self):
+        template = "My name is $name, I am $age years old, "+\
+            "and I have $colour_$feature $feature."
         
+        self.od['feature'] = 'eyes'
+        expected = "My name is Richard, I am 32 years old, "+\
+            "and I have green eyes."
+        self.assertEqual(self.od.expand_template(template), expected)
+
+        self.od['feature'] = 'hair'
+        expected = "My name is Richard, I am 32 years old, "+\
+            "and I have brown hair."
+        self.assertEqual(self.od.expand_template(template), expected)
+        
+        
+    
 if __name__ == '__main__':
     unittest.main()
         

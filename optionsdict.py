@@ -1,7 +1,12 @@
 from types import FunctionType
 from copy import copy
+from string import Template
 
+
+# default settings
 name_separator = '_'
+template_expansion_max_loops = 5
+
 
 class OptionsDictException(Exception):
     def __init__(self, msg):
@@ -33,6 +38,8 @@ class OptionsDict(dict):
     """
 
     name = ''
+    name_separator = name_separator
+    template_expansion_max_loops = template_expansion_max_loops
     
     def __init__(self, name, entries={}):
         # check argument types
@@ -91,6 +98,20 @@ class OptionsDict(dict):
             return self
         else:
             return self + other
+
+    def expand_template(self, buffer_string, 
+                        max_loops=template_expansion_max_loops):
+        """In buffer_string, replaces all substrings prefixed '$' with
+        corresponding values from the dictionary."""
+        n = 0
+        while '$' in buffer_string and n < max_loops:
+            buffer_string = Template(buffer_string)
+            buffer_string = buffer_string.safe_substitute(self)
+            n += 1
+        return buffer_string
+
+
+
         
 class CallableEntry:
     """
@@ -129,7 +150,7 @@ def create_sequence(sequence_key, elements, common_entries={},
     element is already OptionsDict, and {sequence_key: element}
     otherwise.
     """
-    options_dict_list = []
+    optionsdict_list = []
     for el in elements:
         if isinstance(el, OptionsDict):
             # If the element is already an OptionsDict object, make a
@@ -158,6 +179,6 @@ def create_sequence(sequence_key, elements, common_entries={},
                     "common_entries argument must be a dictionary.")
         od.update(common_entries)
         # append to the list
-        options_dict_list.append(od)
-    return options_dict_list
+        optionsdict_list.append(od)
+    return optionsdict_list
 
