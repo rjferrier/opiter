@@ -2,57 +2,55 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-import scipy as sp
 from options import create_sequence
 from tools import merges_dicts
 
 from multiprocessing import Pool
-from time import time
+from time import time, sleep
+from copy import deepcopy
 
 
 ## INPUTS
 
-n_proc = 4
-n_samples = 10
-matrix_size = 200
+n_proc = 2
+n_samples = 4
+job_times = [0.1, 0.1, 0.2]
 
-## SETUP
 
-# define matrices
-def create_random_matrix(matrix_size):
-    A = np.zeros((matrix_size, matrix_size))
-    for i in range(matrix_size):
-        A[i] = np.random.rand(matrix_size)
-    return sp.matrix(A)
-A = create_random_matrix(matrix_size)
-B = create_random_matrix(matrix_size)    
+## PREPROCESSING
 
-# create iterable structure and some operation 
-combos = create_sequence('batch', range(2), {'A': A, 'B': B})
+# create iterable structure and some operation
+combos = create_sequence('sleep_time', job_times)
 @merges_dicts
 def operation(opt):
-    opt['A'] * opt['B']
+    sleep(opt['sleep_time'])
+    
+print "\nIteration over jobs with times {0}:".format(job_times)
 
-
-## PROCESSING
-
-print " trial#     serial      parallel(n={0})".format(n_proc)
 p = Pool(n_proc)
+n_test = 3
+results_fmt = "{0:11.3f}{1:12.3f}{2:12.3f}"
+T = np.array(np.zeros((n_samples, n_test)))
 
-T = np.array(np.zeros((n_samples, 2)))
+print
+print " trial#     serial        parallel(n={0})".format(n_proc)
+print "           forward     forward     reverse"
+    
+## PROCESSING
+    
 for i in range(n_samples):
-    # serial
-    t0 = time()
-    map(operation, combos)
-    T[i,0] = time() - t0
-    # parallel
-    t0 = time()
-    p.map(operation, combos)
-    T[i,1] = time() - t0
+    for j in range(n_test):
+        t0 = time()
+        if j==0:
+            map(operation, combos)
+        elif j==1:
+            p.map(operation, combos)
+        else:
+            p.map(operation, reversed(combos))
+        T[i,j] = time() - t0
     # report
-    print "{0:5g} {1:14.3e}{2:15.3e}".format(i+1, *T[i])
+    print "{0:5g} ".format(i+1) + results_fmt.format(*T[i])
 
 p.close()
 print 
-print "  ave.{1:14.3e}{2:15.3e}".\
-    format(i+1, *T.mean(axis=0))
+print "  ave."+results_fmt.format(*T.mean(axis=0))
