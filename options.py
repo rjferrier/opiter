@@ -1,6 +1,6 @@
 from types import FunctionType
-from copy import copy
 from string import Template
+from copy import copy
 
 
 # default settings
@@ -17,8 +17,8 @@ class OptionsDictException(Exception):
         
 class OptionsDict(dict):
     """
-    OptionsDict(name, entries={})
-    OptionsDict.anonymous(entries={})
+    OptionsDict(entries={})
+    OptionsDict.named(name, entries={})
     
     An OptionsDict inherits from a conventional dict, but it has a few
     enhancements:
@@ -29,19 +29,18 @@ class OptionsDict(dict):
     OptionsDict itself).  The dictionary argument is used to look
     things up dynamically.
 
-    (2) An OptionsDict has a name which distinguishes it from possible
-    siblings in an iterable sequence.
+    (2) An OptionsDict can have a name.  When an OptionsDict is
+    updated using another OptionsDict, its name changes to reflect the
+    new state.  Updating 'A' with 'B' produces 'A_B'.
 
-    (3) A combination of OptionsDicts can be added together, in which
-    case the names are concatenated to form a unique ID and the
-    entries merged.
+    (3) An OptionsDict can expand strings as templates.
     """
 
     name = ''
     name_separator = name_separator
     template_expansion_max_loops = template_expansion_max_loops
     
-    def __init__(self, name, entries={}):
+    def __init__(self, entries={}, name=None):
         # check argument types
         if not name:
             name = ''
@@ -54,7 +53,10 @@ class OptionsDict(dict):
         # store name, initialise superclass
         self.name = name
         dict.__init__(self, entries)
-            
+
+    @classmethod
+    def named(Self, name, entries={}):
+        return Self(entries, name)
 
     def __repr__(self):
         return self.name + ':' + dict.__repr__(self)
@@ -83,21 +85,16 @@ class OptionsDict(dict):
     def __ne__(self, other):
         return not self==other
 
-    def __add__(self, other):
-        names = (str(self), str(other))
-        if all(names):
-            new_name = name_separator.join(names)
-        else:
-            new_name = ''.join(names)
-        result = OptionsDict(new_name, self)
-        result.update(other)
-        return result
-
-    def __radd__(self, other):
-        if not other:
-            return self
-        else:
-            return self + other
+    def update(self, other):
+        if isinstance(other, OptionsDict):
+            # modify name
+            names = (str(self), str(other))
+            if all(names):
+                self.name = name_separator.join(names)
+            else:
+                self.name = ''.join(names)
+        # pass to superclass
+        dict.update(self, other)
 
     def expand_template(self, buffer_string, 
                         max_loops=template_expansion_max_loops):
@@ -109,8 +106,6 @@ class OptionsDict(dict):
             buffer_string = buffer_string.safe_substitute(self)
             n += 1
         return buffer_string
-
-
 
         
 class CallableEntry:
@@ -127,6 +122,16 @@ class CallableEntry:
         
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
+
+
+
+def create_node(name, entries={}):
+    """
+    create_node(name, entries={})
+    
+    Wraps an OptionsDict to return a one-element list.
+    """
+    return [OptionsDict.named(name, entries)]
 
     
 def create_sequence(sequence_key, elements, common_entries={}, 
@@ -164,12 +169,12 @@ def create_sequence(sequence_key, elements, common_entries={},
             # represention of the element acting as its name, and the
             # original element stored under sequence_key
             try:
-                od = OptionsDict(name_format(el),
-                                 {sequence_key: el})
+                od = OptionsDict.named(name_format(el),
+                                       {sequence_key: el})
             except TypeError:
                 try:
-                    od = OptionsDict(name_format.format(el),
-                                     {sequence_key: el})
+                    od = OptionsDict.named(name_format.format(el),
+                                           {sequence_key: el})
                 except AttributeError:
                     raise OptionsDictException(
                         "name_formatter must be a callable or a format string.")

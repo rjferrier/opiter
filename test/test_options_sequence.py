@@ -2,10 +2,9 @@ import sys
 sys.path.append('..')
 
 import unittest
-from optionsdict import create_sequence, OptionsDict, \
+from options import create_sequence, OptionsDict, \
     OptionsDictException
 from re import sub
-
 
         
 class TestOptionsDictSequence(unittest.TestCase):
@@ -16,7 +15,7 @@ class TestOptionsDictSequence(unittest.TestCase):
         different-typed values, one of which is already an
         OptionsDict.
         """
-        od = OptionsDict('some_dict', {'foo': 'bar'})
+        od = OptionsDict.named('some_dict', {'foo': 'bar'})
         self.values = ['A', od, 2, 3.14]
         self.seq = create_sequence('random_thing', self.values)
         

@@ -2,110 +2,33 @@ import sys
 sys.path.append('..')
 
 import unittest
-from optionsdict import OptionsDict, OptionsDictException
+from options import OptionsDict, OptionsDictException
 from re import search
 
 class TestOptionsDictCreation(unittest.TestCase):
-    
-    def test_create_from_non_name(self):
-        """
-        When I create an OptionsDict using something other than a
-        string or None, an error should be raised.
-        """
-        create_od = lambda: OptionsDict({'foo': 'bar'})
-        self.assertRaises(OptionsDictException, create_od)
-    
+
     def test_create_from_non_dict(self):
         """
-        When I create an OptionsDict using a name and something other
-        than a dict, an error should be raised.
+        When I create an OptionsDict using something other than a
+        dict, an error should be raised.
         """
-        create_od = lambda: OptionsDict('foo', 'bar')
+        create_od = lambda: OptionsDict('foo')
         self.assertRaises(OptionsDictException, create_od)
 
-        
-class TestOptionsDictBasics(unittest.TestCase):
-
-    def setUp(self):
-        """I create a simple OptionsDict."""
-        self.od = OptionsDict('foo', {'bar': 1})
-
-    def test_name(self):
-        self.assertEqual(str(self.od), 'foo')
-
-    def test_repr(self):
-        self.assertEqual(repr(self.od), "foo:{'bar': 1}")
-
-    def test_equal_names_and_dicts(self):
-        self.assertEqual(self.od, OptionsDict('foo', {'bar': 1}))
-
-    def test_equal_names_but_unequal_dicts(self):
-        self.assertNotEqual(self.od, OptionsDict('foo', {'bar': 2}))
-
-    def test_unequal_names_but_equal_dicts(self):
-        self.assertNotEqual(self.od, OptionsDict('baz', {'bar': 1}))
+    def test_create_named_from_non_string(self):
+        """
+        When I create a named OptionsDict using something other than a
+        string, an error should be raised.
+        """
+        create_od = lambda: OptionsDict.named({'foo': 'bar'})
+        self.assertRaises(OptionsDictException, create_od)
 
 
-class TestOptionsDictAddition(unittest.TestCase):
-        
-    def setUp(self):
-        """
-        I create two OptionsDicts, A and B.  One of the keys appears
-        in both dictionaries but with different corresponding values.
-        I add the OptionsDicts together and store the result as C.
-        """
-        self.A = OptionsDict('A', {'foo': 1, 'bar': 2})
-        self.B = OptionsDict('B', {'foo': 3, 'baz': 4})
-        self.C = self.A + self.B
-        
-    def test_name(self):
-        """
-        The string representation of C should be 'A_B'.
-        """
-        self.assertEqual(str(self.C), 'A_B')
-        
-    def test_add_nameless(self):
-        """
-        I add another OptionsDict, but I give it 
-
-        The string representation of C should be 'A_B'.
-        """
-        self.assertEqual(str(self.C), 'A_B')
-        
-    def test_repr(self):
-        """
-        repr(C) should be 'A_B:{<contents>}'.
-        """
-        dict_pattern = "{['a-z: 0-9,]*}"
-        self.assertIsNotNone(search('A_B:'+dict_pattern, repr(self.C)))
-
-    def test_right_overrides_left(self):
-        """
-        Looking up the shared key in C should return B's value.
-        """
-        self.assertEqual(self.C['foo'], 3)
-
-    def test_incremental_addition(self):
-        """
-        Doing an incremental addition should produce the same result
-        as C.
-        """
-        self.A += self.B
-        self.assertEqual(self.A, self.C)
-
-    def test_sum(self):
-        """
-        Summing a list containing A and B should produce the same
-        result as C.
-        """
-        self.assertEqual(sum([self.A, self.B]), self.C)
-
-        
 class TestAnonymousOptionsDict(unittest.TestCase):
     
     def setUp(self):
         """I create an anonymous OptionsDict."""
-        self.od = OptionsDict(None, {'foo': 'bar'})
+        self.od = OptionsDict({'foo': 'bar'})
         
     def test_name(self):
         self.assertEqual(str(self.od), '')
@@ -113,13 +36,114 @@ class TestAnonymousOptionsDict(unittest.TestCase):
     def test_repr(self):
         self.assertEqual(repr(self.od), ":{'foo': 'bar'}")
 
-    def test_add_names(self):
-        A = OptionsDict('A')
-        B = OptionsDict('B')
-        C = A + self.od + B
-        self.assertEqual(str(self.od + self.od), "")
-        self.assertEqual(str(self.od + A), "A")
-        self.assertEqual(str(A + self.od + B), "A_B")
+    def test_equal(self):
+        self.assertEqual(self.od, OptionsDict({'foo': 'bar'}))
+
+    def test_unequal(self):
+        self.assertNotEqual(self.od, OptionsDict({'baz', 'bar'}))
+
+
+        
+class TestNamedOptionsDict(unittest.TestCase):
+
+    def setUp(self):
+        """I create a named OptionsDict."""
+        self.od = OptionsDict.named('foo', {'bar': 1})
+
+    def test_name(self):
+        self.assertEqual(str(self.od), 'foo')
+
+    def test_equal_names_and_dicts(self):
+        self.assertEqual(self.od,
+                         OptionsDict.named('foo', {'bar': 1}))
+
+    def test_equal_names_but_unequal_dicts(self):
+        self.assertNotEqual(self.od,
+                            OptionsDict.named('foo', {'bar': 2}))
+
+    def test_unequal_names_but_equal_dicts(self):
+        self.assertNotEqual(self.od,
+                            OptionsDict.named('baz', {'bar': 1}))
+
+
+class TestOptionsDictUpdateFromOptionsDict(unittest.TestCase):
+        
+    def setUp(self):
+        """
+        I create and store an OptionsDict.  I create another
+        OptionsDict, with one entry duplicating a key from the stored
+        dict but having a different corresponding value.  I update the
+        stored dict with the other dict.
+        """
+        self.od = OptionsDict.named('A', {'foo': 1, 'bar': 2})
+        other = OptionsDict.named('B', {'foo': 3, 'baz': 4})
+        self.od.update(other)
+        
+    def test_name(self):
+        self.assertEqual(str(self.od), 'A_B')
+        
+    def test_repr(self):
+        """
+        repr(C) should be 'A_B:{<contents>}'.
+        """
+        dict_pattern = "{['a-z: 0-9,]*}"
+        self.assertIsNotNone(search('A_B:'+dict_pattern, repr(self.od)))
+
+    def test_right_overrides_left(self):
+        """
+        Looking up the shared key should return the other dict's value.
+        """
+        self.assertEqual(self.od['foo'], 3)
+
+        
+class TestOptionsDictUpdateFromDict(unittest.TestCase):
+        
+    def setUp(self):
+        """
+        I create and store an OptionsDict.  I create a standard dict,
+        with one entry duplicating a key from the stored dict but
+        having a different corresponding value.  I update the stored
+        dict with the other dict.
+        """
+        self.od = OptionsDict.named('A', {'foo': 1, 'bar': 2})
+        other = {'foo': 3, 'baz': 4}
+        self.od.update(other)
+        
+    def test_name(self):
+        self.assertEqual(str(self.od), 'A')
+        
+    def test_repr(self):
+        """
+        repr(C) should be 'A:{<contents>}'.
+        """
+        dict_pattern = "{['a-z: 0-9,]*}"
+        self.assertIsNotNone(search('A:'+dict_pattern, repr(self.od)))
+        
+    # def test_add_anonymous(self):
+    #     anon = OptionsDict()
+    #     self.assertEqual(str(self.C + anon), str(self.A + anon + self.B))
+    #     self.assertEqual(str(self.C) + anon, 'A_B')
+
+    # def test_add_names(self):
+    #     A = OptionsDict('A')
+    #     B = OptionsDict('B')
+    #     C = A + self.od + B
+    #     self.assertEqual(str(self.od + self.od), "")
+    #     self.assertEqual(str(self.od + A), "A")
+    #     self.assertEqual(str(A + self.od + B), "A_B")
+
+        
+class TestAnonymousOptionsDict(unittest.TestCase):
+    
+    def setUp(self):
+        """I create an anonymous OptionsDict."""
+        self.od = OptionsDict({'foo': 'bar'})
+        
+    def test_name(self):
+        self.assertEqual(str(self.od), '')
+
+    def test_repr(self):
+        self.assertEqual(repr(self.od), ":{'foo': 'bar'}")
 
     
 class TestOptionsDictDynamicEntries(unittest.TestCase):
@@ -131,8 +155,8 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         (i.e. based on a conventionally defined function).  Both rely
         on the 'celsius' entry, but I haven't defined this yet.
         """
-        self.od = OptionsDict('temperature', {
-            'fahrenheit': lambda d: d['celsius']*9./5 + 32.})
+        self.od = OptionsDict(
+            {'fahrenheit': lambda d: d['celsius']*9./5 + 32.})
         def water_state(d):
             if d['celsius'] < 0.:
                 return 'ice'
@@ -198,7 +222,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         object.  That is, it should be a copy.
         """
         self.od['celsius'] = 0.
-        dd = OptionsDict(str(self.od), self.od)
+        dd = OptionsDict(self.od)
         # test for equivalence and non-identity
         self.assertEqual(dd, self.od)
         self.assertFalse(dd is self.od)
@@ -212,10 +236,10 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
 class TestOptionsDictTemplateExpansion(unittest.TestCase):
 
     def setUp(self):
-        self.od = OptionsDict(None, {'name': 'Richard',
-                                     'age' : 32,
-                                     'colour_eyes': 'green',
-                                     'colour_hair': 'brown'})
+        self.od = OptionsDict({'name': 'Richard',
+                               'age' : 32,
+                               'colour_eyes': 'green',
+                               'colour_hair': 'brown'})
 
     def test_expand_string(self):
         template = "My name is $name, and I am $age years old."

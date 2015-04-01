@@ -2,11 +2,13 @@ import sys
 sys.path.append('..')
 
 import unittest
-from optionsdict import create_sequence, OptionsDict
-from optionsdict_itertools import product, chain, flatten, multizip, \
-    combine_args, create_lookup
+from options import create_sequence, create_node
+from tools import flatten, multizip, merge, merges_dicts, \
+    create_lookup
+from itertools import product, chain
 
-class TestOptionsDictTwoSequenceIteration(unittest.TestCase):
+
+class TestOptionsDictCartesianProductIteration(unittest.TestCase):
     
     def setUp(self):
         """
@@ -26,7 +28,7 @@ class TestOptionsDictTwoSequenceIteration(unittest.TestCase):
         combos = product(self.speed, self.time)
         for combo, expected in zip(combos, self.expected_distances):
             # I can combine the two dictionaries for convenience
-            opt = sum(combo)
+            opt = merge(combo)
             resulting_distance = opt['speed'] * opt['travel_time']
             self.assertAlmostEqual(resulting_distance, expected)
             
@@ -38,12 +40,12 @@ class TestOptionsDictTwoSequenceIteration(unittest.TestCase):
         passing to itertools.product, otherwise the object will return
         an iterator to its dictionary entries and mess things up.
         """
-        calc = (OptionsDict('calculator',
+        calc = create_node('calculator',
                             {'distance': lambda self: \
-                                 self['speed'] * self['travel_time']}),)
+                                 self['speed'] * self['travel_time']})
         combos = product(calc, self.speed, self.time)
         for combo, expected in zip(combos, self.expected_distances):
-            opt = sum(combo)
+            opt = merge(combo)
             self.assertAlmostEqual(opt['distance'], expected)
 
     def test_combination_mapping(self):
@@ -53,7 +55,7 @@ class TestOptionsDictTwoSequenceIteration(unittest.TestCase):
         the combine decorator so that my distance calculator
         only has to deal with one dictionary.
         """
-        @combine_args
+        @merges_dicts
         def calc(opt):
             return opt['speed'] * opt['travel_time']
         combos = product(self.speed, self.time)
@@ -81,25 +83,26 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         will implement a dynamic entry at the root of the tree to
         calculate computation time.
         """
-        root = (OptionsDict(None, 
+        root = create_node('sim', 
                 {'computation_time': \
-                     lambda self: self['res']**self['dim']}),)
+                     lambda self: self['res']**self['dim']})
         dims = create_sequence('dim', [1, 2, 3], name_format='{}d')        
-        res1 = create_sequence('res', [10, 20, 40, 80])
-        res2 = create_sequence('res', [10, 20, 40])
-        res3 = create_sequence('res', [10, 20])
-        branches = multizip(dims, (res1, res2, res3))
+        res1d = create_sequence('res', [10, 20, 40, 80])
+        res2d = create_sequence('res', [10, 20, 40])
+        res3d = create_sequence('res', [10, 20])
+        branches = multizip(dims, (res1d, res2d, res3d))
         self.tree = product(root, chain(branches))
         
     def test_manual_iteration_and_name_check(self):
         """I should be able to iterate over the tree and find that the
         resulting OptionsDicts are named according to expected
         position in the tree."""
-        expected_names = ['1d_10', '1d_20', '1d_40', '1d_80', 
-                          '2d_10', '2d_20', '2d_40',
-                          '3d_10', '3d_20']
+        expected_names = [
+            'sim_1d_10', 'sim_1d_20', 'sim_1d_40', 'sim_1d_80', 
+            'sim_2d_10', 'sim_2d_20', 'sim_2d_40',
+            'sim_3d_10', 'sim_3d_20']
         for combo, name in zip(self.tree, expected_names):
-            opt = sum(flatten(combo))
+            opt = merge(combo)
             self.assertEqual(str(opt), name)
             
     def test_combination_mapping_and_lookup(self):

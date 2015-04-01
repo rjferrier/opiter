@@ -3,8 +3,8 @@ sys.path.append('..')
 
 import numpy as np
 import scipy as sp
-from optionsdict import create_sequence
-from optionsdict_itertools import combine_args
+from options import create_sequence
+from tools import merges_dicts
 
 from multiprocessing import Pool
 from time import time
@@ -12,7 +12,7 @@ from time import time
 
 ## INPUTS
 
-n_proc = 2
+n_proc = 4
 n_samples = 10
 matrix_size = 200
 
@@ -29,7 +29,7 @@ B = create_random_matrix(matrix_size)
 
 # create iterable structure and some operation 
 combos = create_sequence('batch', range(2), {'A': A, 'B': B})
-@combine_args
+@merges_dicts
 def operation(opt):
     opt['A'] * opt['B']
 

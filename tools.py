@@ -1,6 +1,7 @@
 from collections import Iterable
 from itertools import imap, izip, chain, product
 from functools import wraps
+from copy import copy
 
 def flatten(iterable):
     """
@@ -29,7 +30,8 @@ def multizip(parents, children):
 
     Zips parents with children, and for each of these pairings
     performs a product.  The results are chained.  Strings and
-    dictionary elements
+    dictionary elements are protected so that their elements don't
+    explode.
     """
     def protect(el):
         if (isinstance(el, basestring) and len(el) > 1) or \
@@ -43,24 +45,36 @@ def multizip(parents, children):
                   children)))
 
 
-def combine_args(client_function):
+def merge(dict_combination):
     """
-    combine(client_function)
+    merge(dict_combination)
 
-    A decorator that flattens and sums the elements of a collection,
-    passing the result to the client function.
-    
-    This may be useful in situations where one wants to use itertools
-    to iterate over trees of OptionDicts.  The handling of (possibly
-    nested) combinations of OptionsDicts should not be something that
-    the client has to deal with.  This decorator merges those
-    OptionsDicts into one convenient dictionary that the client can
-    use.
+    Flattens and merges a combination of dictionaries.  This may be
+    useful when one wants to iterate over a collection of combinations
+    produced by itertools.
+    """
+    single_dict = None
+    for el in flatten(dict_combination):
+        if single_dict is None:
+            single_dict = copy(el)
+        else:
+            single_dict.update(el)
+    return single_dict
+
+
+def merges_dicts(client_function):
+    """
+    merges_dicts(client_function)
+
+    A decorator that flattens and merges a combination of
+    dictionaries, passing the result to the client function.  This may
+    be useful when one wants to map the function to a collection of
+    combinations produced by itertools.
     """
     @wraps(client_function)
-    def decorator(args):
-        arg = sum(flatten(args))
-        return client_function(arg)
+    def decorator(dict_combination):
+        return client_function(
+            merge(dict_combination))
     return decorator
 
 
@@ -69,10 +83,10 @@ def create_lookup(key):
     create_lookup(key)
 
     Returns a function that simply looks up a key when it is passed a
-    combination of OptionsDicts.
+    combination of dictionaries.
     """
-    @combine_args
-    def lookup(opt):
-        return opt[key]
+    @merges_dicts
+    def lookup(single_dict):
+        return single_dict[key]
     return lookup
 

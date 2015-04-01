@@ -2,11 +2,11 @@ import sys
 sys.path.append('..')
 
 import unittest
-from optionsdict_itertools import flatten, multizip, \
-    combine_args, create_lookup
+from tools import flatten, multizip, merge, merges_dicts, \
+    create_lookup
 
 
-class TestOptionsDictIterationTools(unittest.TestCase):
+class TestIterationTools(unittest.TestCase):
     
     def test_flatten(self):
         tree = [1, ["a string", [{'a': 'dict'}, 4], 5]]
@@ -34,32 +34,29 @@ class TestOptionsDictIterationTools(unittest.TestCase):
         for r, e in zip(result, expected):
             self.assertEqual(tuple(r), e)
 
-    def test_combine_args(self):
-        src = (1, 2, 3)
-        @combine_args
-        def myfunc(x):
-            return x
-        self.assertEqual(myfunc((1, 2, 3)), 6)
+            
+class TestDictTools(unittest.TestCase):
+
+    def setUp(self):
+        d1 = {'a': 1, 'b': 1, 'c': 1}
+        d2 = {'a': 2, 'b': 2}
+        d3 = {'a': 3}
+        self.dicts = [d1, d2, d3]
     
-    class FakeOptionsDict:
-        def __init__(self, n):
-            self.n = n
-        def __add__(self, other):
-            self.n += other.n
-            return self
-        def __radd__(self, other):
-            if not other:
-                return self
-            else:
-                return self + other
-        def __getitem__(self, key):
-            if key=='n':
-                return self.n
+    def test_merge(self):
+        d = merge(self.dicts)
+        self.assertEqual(d['c'], 1)
+        self.assertEqual(d['a'], 3)
+    
+    def test_merges_dicts(self):
+        @merges_dicts
+        def myfunc(d):
+            return d['a'] + d['b'] + d['c']
+        self.assertEqual(myfunc(self.dicts), 6)
     
     def test_create_lookup(self):
-        src = []
-        for x in (1, 2, 3):
-            src.append(self.FakeOptionsDict(x))
-        lookup = create_lookup('n')
-        self.assertEqual(lookup(src), 6)
+        lookup = create_lookup('c')
+        self.assertEqual(lookup(self.dicts), 1)
+        lookup = create_lookup('a')
+        self.assertEqual(lookup(self.dicts), 3)
         
