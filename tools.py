@@ -61,7 +61,7 @@ def merge(dict_combination):
             single_dict.update(el)
     return single_dict
 
-
+    
 def merges_dicts(client_function):
     """
     merges_dicts(client_function)
@@ -78,15 +78,27 @@ def merges_dicts(client_function):
     return decorator
 
 
-def create_lookup(key):
+def identify(dict_combination):
     """
-    create_lookup(key)
+    identify(dict_combination)
 
-    Returns a function that simply looks up a key when it is passed a
-    combination of dictionaries.
+    Simply gets the string representation of a combination of
+    dictionaries.
     """
-    @merges_dicts
-    def lookup(single_dict):
-        return single_dict[key]
-    return lookup
+    return str(merge(dict_combination))
+    
 
+class Lookup:
+    """
+    Lookup(key)
+    
+    Provides a functor that simply looks up a key in a combination of
+    dictionaries.  This functionality was originally implemented as a
+    closure, but the multiprocessing module couldn't pickle it.
+    """
+    def __init__(self, key):
+        self.key = key
+        
+    def __call__(self, dict_combination):
+        opt = merge(dict_combination)
+        return opt[self.key]

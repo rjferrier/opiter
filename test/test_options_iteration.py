@@ -2,10 +2,16 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import create_sequence, create_node
+from options import OptionsDict
 from tools import flatten, multizip, merge, merges_dicts, \
-    create_lookup
+    identify, Lookup
 from itertools import product, chain
+from multiprocessing import Pool
+
+# NOTE: The multiprocessing tests currently cause pickling errors.
+# These do not appear in the examples scripts, so there might be an
+# incompatibility with the unit testing framework.  The offending
+# tests have been commented out.
 
 
 class TestOptionsDictCartesianProductIteration(unittest.TestCase):
@@ -15,9 +21,13 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
         I create two OptionsDict sequences, one for 'speed' and one
         for 'travel time'.
         """
-        self.speed = create_sequence('speed', [30, 40, 60])
-        self.time  = create_sequence('travel_time', [0.5, 1])
+        self.speed = OptionsDict.sequence('speed', [30, 40, 60])
+        self.time  = OptionsDict.sequence('travel_time', [0.5, 1])
         self.expected_distances = [15, 30, 20, 40, 30, 60]
+        self.pool = Pool(2)
+
+    def tearDown(self):
+        self.pool.close()
 
     def test_manual_iteration(self):
         """
@@ -40,15 +50,14 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
         passing to itertools.product, otherwise the object will return
         an iterator to its dictionary entries and mess things up.
         """
-        calc = create_node('calculator',
-                            {'distance': lambda self: \
-                                 self['speed'] * self['travel_time']})
+        calc = [OptionsDict({'distance': lambda self: \
+                            self['speed'] * self['travel_time']})]
         combos = product(calc, self.speed, self.time)
         for combo, expected in zip(combos, self.expected_distances):
             opt = merge(combo)
             self.assertAlmostEqual(opt['distance'], expected)
 
-    def test_combination_mapping(self):
+    def test_serial_mapping(self):
         """
         I should be able create combinations of speed and travel time
         and calculate the correct distances using a map.  I will use
@@ -63,6 +72,14 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
         for resulting, expected in \
                 zip(resulting_distances, self.expected_distances):
             self.assertAlmostEqual(resulting, expected)
+
+    # def test_parallel_mapping(self):
+    #     def calc(opt):
+    #         return opt['speed']
+    #     resulting_distances = self.pool.map(calc, self.speed)
+    #     for resulting, expected in \
+    #             zip(resulting_distances, self.expected_distances):
+    #         self.assertAlmostEqual(resulting, expected)
 
 
 class TestOptionsDictTreeIteration(unittest.TestCase):
@@ -83,38 +100,71 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         will implement a dynamic entry at the root of the tree to
         calculate computation time.
         """
-        root = create_node('sim', 
-                {'computation_time': \
-                     lambda self: self['res']**self['dim']})
-        dims = create_sequence('dim', [1, 2, 3], name_format='{}d')        
-        res1d = create_sequence('res', [10, 20, 40, 80])
-        res2d = create_sequence('res', [10, 20, 40])
-        res3d = create_sequence('res', [10, 20])
+        def calc_cost(opt):
+            return opt['res']**opt['dim']
+        root = [OptionsDict.named(
+            'sim', {'cost': calc_cost})]
+        dims = OptionsDict.sequence('dim', [1, 2, 3],
+                                    name_format='{}d')    
+        res1d = OptionsDict.sequence('res', [10, 20, 40, 80])
+        res2d = OptionsDict.sequence('res', [10, 20, 40])
+        res3d = OptionsDict.sequence('res', [10, 20])
         branches = multizip(dims, (res1d, res2d, res3d))
         self.tree = product(root, chain(branches))
-        
-    def test_manual_iteration_and_name_check(self):
-        """I should be able to iterate over the tree and find that the
-        resulting OptionsDicts are named according to expected
-        position in the tree."""
+        self.pool = Pool(2)
+
+    def tearDown(self):
+        self.pool.close()
+
+    def check_names(self, resulting_names):
+        "Helper for name_check tests."
         expected_names = [
             'sim_1d_10', 'sim_1d_20', 'sim_1d_40', 'sim_1d_80', 
             'sim_2d_10', 'sim_2d_20', 'sim_2d_40',
             'sim_3d_10', 'sim_3d_20']
-        for combo, name in zip(self.tree, expected_names):
-            opt = merge(combo)
-            self.assertEqual(str(opt), name)
-            
-    def test_combination_mapping_and_lookup(self):
-        """I should be able to get the computation time using a map
-        and a function that looks up the 'computation_time' entry."""
-        expected_times = [10., 20., 40., 80.,
-                          100., 400., 1600.,
-                          1000., 8000.]
-        lookup = create_lookup('computation_time')
-        resulting_times = map(lookup, self.tree)
+        for result, expected in zip(resulting_names, expected_names):
+            self.assertEqual(result, expected)
+
+    def check_times(self, resulting_times):
+        "Helper for lookup tests."
+        expected_times = [
+            10., 20., 40., 80.,
+            100., 400., 1600.,
+            1000., 8000.]
         for result, expected in zip(resulting_times, expected_times):
             self.assertAlmostEqual(result, expected)
+        
+    def test_manual_iteration_and_name_check(self):
+        resulting_names = []
+        for combo in self.tree:
+            opt = merge(combo)
+            resulting_names.append(str(opt))
+        self.check_names(resulting_names)
+
+    def test_manual_iteration_and_lookup(self):
+        resulting_times = []
+        for combo in self.tree:
+            opt = merge(combo)
+            resulting_times.append(opt['cost'])
+        self.check_times(resulting_times)
+
+    def test_serial_mapping_and_name_check(self):
+        resulting_names = map(identify, self.tree)
+        self.check_names(resulting_names)
+            
+    def test_serial_mapping_and_lookup(self):
+        lookup = Lookup('cost')
+        resulting_times = map(lookup, self.tree)
+        self.check_times(resulting_times)
+            
+    # def test_parallel_mapping_and_name_check(self):
+    #     resulting_names = self.pool.map(identify, self.tree)
+    #     self.check_names(resulting_names)
+            
+    # def test_parallel_mapping_and_lookup(self):
+    #     lookup = Lookup('cost')
+    #     resulting_times = self.pool.map(lookup, self.tree)
+    #     self.check_times(resulting_times)
 
             
 if __name__ == '__main__':

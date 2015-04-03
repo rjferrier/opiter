@@ -1,4 +1,4 @@
-from types import FunctionType
+from types import FunctionType, LambdaType
 from string import Template
 from copy import copy
 
@@ -25,7 +25,7 @@ class OptionsDict(dict):
 
     (1) Values can be runtime-dependent upon the state of other values
     in the dict.  Each of these special values is specified by a
-    function accepting a single dictionary argument (i.e. the
+    function* accepting a single dictionary argument (i.e. the
     OptionsDict itself).  The dictionary argument is used to look
     things up dynamically.
 
@@ -34,11 +34,17 @@ class OptionsDict(dict):
     new state.  Updating 'A' with 'B' produces 'A_B'.
 
     (3) An OptionsDict can expand strings as templates.
+    
+    * If using the multiprocessing module, it important that dynamic
+      entries are created using defs rather than lambdas.  It seems
+      that lambdas cause pickling problems, and there is currently no
+      way to protect against them.
     """
 
     name = ''
     name_separator = name_separator
     template_expansion_max_loops = template_expansion_max_loops
+
     
     def __init__(self, entries={}, name=None):
         # check argument types
@@ -50,14 +56,81 @@ class OptionsDict(dict):
         if not isinstance(entries, dict):
             raise OptionsDictException(
                     "entries argument must be a dictionary.")
+#         # this doesn't work
+#         for value in entries.itervalues():
+#             if isinstance(value, LambdaType):
+#                 raise OptionsDictException(
+#                     """ 
+# One of more entries is a lambda.  This is currently disallowed,
+# because the multiprocessing module has trouble pickling such objects.
+# Use a def instead.  """)
         # store name, initialise superclass
         self.name = name
         dict.__init__(self, entries)
+
 
     @classmethod
     def named(Self, name, entries={}):
         return Self(entries, name)
 
+
+    @classmethod
+    def sequence(Self, sequence_key, elements, common_entries={}, 
+                 name_format='{}'):
+        """
+        OptionsDict.sequence(sequence_key, elements, 
+                             common_entries={}, name_format='{}')
+
+        Creates a list of OptionsDicts, converting the given elements
+        if necessary.  That is, if a element is not already an
+        OptionsDict, it is converted to a string which becomes the
+        name of a new OptionsDict.  All dicts are initialised with
+        common_entries if this argument is given.
+
+        The string conversion is governed by name_format, which can
+        either be a format string or a callable that takes the element
+        value and returns a string.
+
+        An important feature is that for each element, the
+        corresponding OptionsDict acquires the entry {sequence_key:
+        element.name} if the element is already an OptionsDict, and
+        {sequence_key: element} otherwise.
+        """
+
+        optionsdict_list = []
+        for el in elements:
+            if isinstance(el, Self):
+                # If the element is already an OptionsDict object,
+                # make a copy.  This has the benefit of preventing
+                # side effects if the element persists elsewhere.
+                od = copy(el)
+                # add a special entry using sequence_key
+                od.update({sequence_key: str(el)})
+            else:
+                # instantiate a new OptionsDict with the string
+                # represention of the element acting as its name, and
+                # the original element stored under sequence_key
+                try:
+                    od = Self.named(name_format(el),
+                                    {sequence_key: el})
+                except TypeError:
+                    try:
+                        od = Self.named(name_format.format(el),
+                                        {sequence_key: el})
+                    except AttributeError:
+                        raise OptionsDictException(
+                            "name_formatter must be a callable "+\
+                            "or a format string.")
+            # check and add common_entries
+            if not isinstance(common_entries, dict):
+                raise OptionsDictException(
+                    "common_entries argument must be a dictionary.")
+            od.update(common_entries)
+            # append to the list
+            optionsdict_list.append(od)
+        return optionsdict_list
+
+    
     def __repr__(self):
         return self.name + ':' + dict.__repr__(self)
 
@@ -84,6 +157,18 @@ class OptionsDict(dict):
 
     def __ne__(self, other):
         return not self==other
+
+    def __add__(self, other):
+        result = OptionsDict(self, self.name)
+        if isinstance(other, dict):
+            result.update(other)
+        return result
+
+    def __radd__(self, other):
+        if not other:
+            return self
+        else:
+            return self + other
 
     def update(self, other):
         if isinstance(other, OptionsDict):
@@ -122,68 +207,4 @@ class CallableEntry:
         
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
-
-
-
-def create_node(name, entries={}):
-    """
-    create_node(name, entries={})
-    
-    Wraps an OptionsDict to return a one-element list.
-    """
-    return [OptionsDict.named(name, entries)]
-
-    
-def create_sequence(sequence_key, elements, common_entries={}, 
-                    name_format='{}'):
-    """
-    create_sequence(sequence_key, elements, common_entries={},
-                    name_format='{}',)
-
-    Creates a list of OptionsDicts, converting the given elements if
-    necessary.  That is, if a element is not already an OptionsDict,
-    it is converted to a string which becomes the name of a new
-    OptionsDict.  All dicts are initialised with common_entries if
-    this argument is given.
-
-    The string conversion is governed by name_format, which can either
-    be a format string or a callable that takes the element value and
-    returns a string.
-
-    An important feature is that for each element, the corresponding
-    OptionsDict acquires the entry {sequence_key: element.name} if the
-    element is already OptionsDict, and {sequence_key: element}
-    otherwise.
-    """
-    optionsdict_list = []
-    for el in elements:
-        if isinstance(el, OptionsDict):
-            # If the element is already an OptionsDict object, make a
-            # copy.  This has the benefit of preventing side effects
-            # if the element persists elsewhere.
-            od = copy(el)
-            # add a special entry using sequence_key
-            od.update({sequence_key: str(el)})
-        else:
-            # instantiate a new OptionsDict with the string
-            # represention of the element acting as its name, and the
-            # original element stored under sequence_key
-            try:
-                od = OptionsDict.named(name_format(el),
-                                       {sequence_key: el})
-            except TypeError:
-                try:
-                    od = OptionsDict.named(name_format.format(el),
-                                           {sequence_key: el})
-                except AttributeError:
-                    raise OptionsDictException(
-                        "name_formatter must be a callable or a format string.")
-        # check and add common_entries
-        if not isinstance(common_entries, dict):
-            raise OptionsDictException(
-                    "common_entries argument must be a dictionary.")
-        od.update(common_entries)
-        # append to the list
-        optionsdict_list.append(od)
-    return optionsdict_list
 

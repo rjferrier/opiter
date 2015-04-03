@@ -2,8 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from tools import flatten, multizip, merge, merges_dicts, \
-    create_lookup
+from tools import flatten, multizip, merge, merges_dicts, Lookup
 
 
 class TestIterationTools(unittest.TestCase):
@@ -55,8 +54,8 @@ class TestDictTools(unittest.TestCase):
         self.assertEqual(myfunc(self.dicts), 6)
     
     def test_create_lookup(self):
-        lookup = create_lookup('c')
+        lookup = Lookup('c')
         self.assertEqual(lookup(self.dicts), 1)
-        lookup = create_lookup('a')
+        lookup = Lookup('a')
         self.assertEqual(lookup(self.dicts), 3)
         
