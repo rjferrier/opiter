@@ -118,19 +118,6 @@ class TestOptionsDictUpdateFromDict(unittest.TestCase):
         """
         dict_pattern = "{['a-z: 0-9,]*}"
         self.assertIsNotNone(search('A:'+dict_pattern, repr(self.od)))
-        
-    # def test_add_anonymous(self):
-    #     anon = OptionsDict()
-    #     self.assertEqual(str(self.C + anon), str(self.A + anon + self.B))
-    #     self.assertEqual(str(self.C) + anon, 'A_B')
-
-    # def test_add_names(self):
-    #     A = OptionsDict('A')
-    #     B = OptionsDict('B')
-    #     C = A + self.od + B
-    #     self.assertEqual(str(self.od + self.od), "")
-    #     self.assertEqual(str(self.od + A), "A")
-    #     self.assertEqual(str(A + self.od + B), "A_B")
 
         
 class TestAnonymousOptionsDict(unittest.TestCase):
@@ -150,70 +137,57 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
     
     def setUp(self):
         """
-        I create an OptionsDict with two options entries: 'fahrenheit',
-        which is lambda-based, and 'water_state', which is def-based
-        (i.e. based on a conventionally defined function).  Both rely
-        on the 'celsius' entry, but I haven't defined this yet.
+        I create an OptionsDict with two variables: kinematic_viscosity
+        and pipe_diameter.  I define Reynolds_number, a dynamic entry
+        dependent on velocity, pipe_diameter and kinematic_viscosity.
+        I haven't defined velocity yet.
         """
-        self.od = OptionsDict(
-            {'fahrenheit': lambda d: d['celsius']*9./5 + 32.})
-        def water_state(d):
-            if d['celsius'] < 0.:
-                return 'ice'
-            elif d['celsius'] < 100.:
-                return 'liquid'
-            else:
-                return 'steam'
-        self.od['water_state'] = water_state
+        self.od = OptionsDict({
+            'kinematic_viscosity': 1.e-6,
+            'pipe_diameter'      : 0.1 })
+        def Re(d):
+            return d['velocity'] * d['pipe_diameter'] / \
+                d['kinematic_viscosity']
+        self.od['Reynolds_number'] = Re
 
     def test_missing_information_raises_error(self):
         """
-        I try and obtain 'fahrenheit' before 'celsius' is defined.  A
+        I try and obtain Reynolds_number before velocity is defined.  A
         KeyError should be raised.
         """
         self.assertRaises(KeyError, 
-                          lambda: self.od['fahrenheit'])
-        
-    def test_lambda_based_entry(self):
-        """
-        I define and change 'celsius'. 'fahrenheit' should update
-        automatically.
-        """
-        self.od['celsius'] = 0.
-        self.assertAlmostEqual(
-            self.od['fahrenheit'], 32.)
-        self.od['celsius'] = 100.
-        self.assertAlmostEqual(
-            self.od['fahrenheit'], 212.)
+                          lambda: self.od['Reynolds_number'])
 
-    def test_def_based_entry(self):
+    def test_dynamic_entry(self):
         """
-        I define and change 'celsius'.  'water_state' should update
-        automatically.
+        I define velocity and change one the variables.
+        Reynolds_number should update automatically.
         """
-        self.od['celsius'] = -10.
-        self.assertEqual(
-            self.od['water_state'], 'ice')
-        self.od['celsius'] = 50.
-        self.assertAlmostEqual(
-            self.od['water_state'], 'liquid')
+        self.od['velocity'] = 0.02
+        self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
+        self.od['pipe_diameter'] = 0.15
+        self.assertAlmostEqual(self.od['Reynolds_number'], 3000.)
 
     def test_nested_entry(self):
         """
-        I add a 'human_response' entry which depends on 'water_state'.
-        When 'celsius' is changed, 'human_response' should update
+        I add an 'observation' entry which depends on Reynolds_number.
+        When velocity is changed, observation should update
         automatically.
         """
-        def human_response(d):
-            if d['water_state']=='steam':
-                return 'ouch!'
+        def obs(d):
+            if d['Reynolds_number'] < 2100.:
+                return 'laminar'
+            elif d['Reynolds_number'] > 4000.:
+                return 'turbulent'
+            else:
+                return 'transitional'
         # modify the dict
-        self.od['human_response'] = human_response
+        self.od['observation'] = obs
         # now test
-        self.od['celsius'] = 0.
-        self.assertIsNone(self.od['human_response'])
-        self.od['celsius'] = 120.
-        self.assertEqual(self.od['human_response'], 'ouch!')
+        self.od['velocity'] = 0.02
+        self.assertEqual(self.od['observation'], 'laminar')
+        self.od['velocity'] = 0.05
+        self.assertEqual(self.od['observation'], 'turbulent')
         
     def test_nested_object(self):
         """
@@ -221,16 +195,16 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         object should be equivalent, but not identical to, the old
         object.  That is, it should be a copy.
         """
-        self.od['celsius'] = 0.
+        self.od['velocity'] = 0.
         dd = OptionsDict(self.od)
         # test for equivalence and non-identity
         self.assertEqual(dd, self.od)
         self.assertFalse(dd is self.od)
         # try changing the new object.  Its options entries should
         # update accordingly, while the old object should be unaffected
-        dd['celsius'] = 100.
-        self.assertAlmostEqual(dd['fahrenheit'], 212.)
-        self.assertAlmostEqual(self.od['fahrenheit'], 32.)
+        dd['velocity'] = 0.02
+        self.assertAlmostEqual(dd['Reynolds_number'], 2000.)
+        self.assertAlmostEqual(self.od['Reynolds_number'], 0.)
         
 
 class TestOptionsDictTemplateExpansion(unittest.TestCase):
