@@ -24,10 +24,6 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
         self.speed = OptionsDict.sequence('speed', [30, 40, 60])
         self.time  = OptionsDict.sequence('travel_time', [0.5, 1])
         self.expected_distances = [15, 30, 20, 40, 30, 60]
-        self.pool = Pool(2)
-
-    def tearDown(self):
-        self.pool.close()
 
     def test_manual_iteration(self):
         """
@@ -74,12 +70,16 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
             self.assertAlmostEqual(resulting, expected)
 
     # def test_parallel_mapping(self):
+    #     @merges_dicts
     #     def calc(opt):
-    #         return opt['speed']
-    #     resulting_distances = self.pool.map(calc, self.speed)
+    #         return opt['speed'] * opt['travel_time']
+    #     pool = Pool(2)
+    #     combos = product(self.speed, self.time)
+    #     resulting_distances = pool.map(calc, combos)
     #     for resulting, expected in \
     #             zip(resulting_distances, self.expected_distances):
     #         self.assertAlmostEqual(resulting, expected)
+    #     pool.close()
 
 
 class TestOptionsDictTreeIteration(unittest.TestCase):
