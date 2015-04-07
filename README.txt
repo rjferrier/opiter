@@ -9,23 +9,23 @@ that the client can access and use for the purpose of template
 expansion, input to a binary, postprocessing, etc.
   
   water = OptionsDict.named('water', {
-      'density':   1.00e3,
-      'viscosity': 0.89e-3})
+      'density'           : 1.00e3,
+      'dynamic_viscosity' : 0.89e-3})
   
   ethanol = OptionsDict.named('ethanol', {
-      'density':   0.79e3,
-      'viscosity': 1.09e-3})
+      'density'           : 0.79e3,
+      'dynamic_viscosity' : 1.09e-3})
 
 One application of this is factorial design of experiments.  For
 example, given an independent variable 'pipe_diameter', which may take
 states [0.10, 0.15], and an independent variable 'velocity', which may
 take states [0.01, 0.02, 0.04], we might want to test combinations
 (0.10, 0.01), (0.10, 0.02), etc.  We might also want to do these for
-each of the 'fluids' specified above.  These combinations can be
-expressed by creating sequences of OptionsDicts and using the product
-function from the itertools library.
-
-  fluids     = [water, ethanol]
+each of the 'fluids' specified above.  These combinations are easily
+expressed by creating sequences of OptionsDicts and using product()
+from the itertools library.
+  
+  fluids     = OptionsDict.sequence('fluid', [water, ethanol])
   pipe_dias  = OptionsDict.sequence('pipe_diameter', [0.10, 0.15])
   velocities = OptionsDict.sequence('velocity', [0.01, 0.02, 0.04])
   combos = itertools.product(fluids, pipe_dias, velocities)
@@ -39,8 +39,8 @@ through the usual syntax.
   for combo in combos:
       opt = merge(combo)
       ID = str(opt)
-      kinematic_visc = opt['density'] / opt['viscosity']
-      Re = opt['velocity'] * opt['pipe_diameter'] * kinematic_visc
+      kinematic_visc = opt['dynamic_viscosity'] / opt['density']
+      Re = opt['velocity'] * opt['pipe_diameter'] / kinematic_visc
       print 'Test ID = {}, Reynolds number = {:.2e}'.\
           format(ID, Re)
   
@@ -52,8 +52,8 @@ merging.
   
   @merges_dicts
   def calculate_Re(opt):
-      kinematic_visc = opt['density'] / opt['viscosity']
-      return opt['velocity'] * opt['pipe_diameter'] * kinematic_visc
+    kinematic_visc = opt['dynamic_viscosity'] / opt['density']
+    return opt['velocity'] * opt['pipe_diameter'] / kinematic_visc
   p = multiprocessing.Pool(4)
   Reynolds_numbers = p.map(calculate_Re, combos)
 
@@ -65,16 +65,17 @@ values of others.  Such dynamic entries might be added locally, or in
 a separate OptionsDict which is then applied globally.
   
   def calculate_kinematic_visc(opt):
-      return opt['density'] / opt['viscosity']
-  for fluid in fluids:
-      fluid['kinematic_visc'] = calculate_kinematic_visc
+      return opt['dynamic_viscosity'] / opt['density']
+  fluids = OptionsDict.sequence('fluid', [water, ethanol], 
+      common_entries={
+          'kinematic_viscosity': calculate_kinematic_visc})
   
   def calculate_Re(opt):
-      return opt['velocity'] * opt['pipe_diameter'] * \
-          opt['kinematic_visc']
-  global = [OptionsDict({'Reynolds_number': calculate_Re})]
+      return opt['velocity'] * opt['pipe_diameter'] / \
+          opt['kinematic_viscosity']
+  root = OptionsDict({'Reynolds_number': calculate_Re})
   
-  combos = itertools.product(global, fluids, pipe_dias, velocities)
+  combos = itertools.product(root, fluids, pipe_dias, velocities)
   p = multiprocessing.Pool(4)
   Reynolds_numbers = p.map(Lookup('Reynolds_number'), combos)
 
