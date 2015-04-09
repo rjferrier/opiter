@@ -25,9 +25,11 @@ class OptionsDict(dict):
 
     (1) Values can be runtime-dependent upon the state of other values
     in the dict.  Each of these special values is specified by a
-    function* accepting a single dictionary argument (i.e. the
-    OptionsDict itself).  The dictionary argument is used to look
-    things up dynamically.
+    function[*] accepting a single dictionary argument (i.e. the
+    OptionsDict itself).  The dictionary argument is used to look things
+    up dynamically.  These functions may be listed in the entries
+    argument if there are no other key-value pairs, in which case the
+    functions' names become the keys.
 
     (2) An OptionsDict can have a name.  When an OptionsDict is
     updated using another OptionsDict, its name changes to reflect the
@@ -53,29 +55,16 @@ class OptionsDict(dict):
         elif not isinstance(name, str):
                 raise OptionsDictException(
                     "name argument must be a string (or None).")
-        if not isinstance(entries, dict):
-            raise OptionsDictException(
-                    "entries argument must be a dictionary.")
-#         # this doesn't work
-#         for value in entries.itervalues():
-#             if isinstance(value, LambdaType):
-#                 raise OptionsDictException(
-#                     """ 
-# One of more entries is a lambda.  This is currently disallowed,
-# because the multiprocessing module has trouble pickling such objects.
-# Use a def instead.  """)
-        # store name, initialise superclass
+        # store name and entries
         self.name = name
-        dict.__init__(self, entries)
-
+        self.update(entries)
 
     @classmethod
     def named(Self, name, entries={}):
         return Self(entries, name)
 
-
     @classmethod
-    def sequence(Self, sequence_key, elements, common_entries={}, 
+    def sequence(Self, sequence_key, elements, common_entries={},
                  name_format='{}'):
         """
         OptionsDict.sequence(sequence_key, elements, 
@@ -121,10 +110,7 @@ class OptionsDict(dict):
                         raise OptionsDictException(
                             "name_formatter must be a callable "+\
                             "or a format string.")
-            # check and add common_entries
-            if not isinstance(common_entries, dict):
-                raise OptionsDictException(
-                    "common_entries argument must be a dictionary.")
+            # add entries
             od.update(common_entries)
             # append to the list
             optionsdict_list.append(od)
@@ -170,16 +156,31 @@ class OptionsDict(dict):
         else:
             return self + other
 
-    def update(self, other):
-        if isinstance(other, OptionsDict):
-            # modify name
-            names = (str(self), str(other))
-            if all(names):
-                self.name = name_separator.join(names)
-            else:
-                self.name = ''.join(names)
-        # pass to superclass
-        dict.update(self, other)
+    def update(self, entries):
+        err = OptionsDictException("""
+entries must be a dict or a sequence of dynamic entries (i.e. 
+functions).""")
+        if isinstance(entries, dict):
+            # argument is a dictionary, so updating is straightforward
+            if isinstance(entries, OptionsDict):
+                # modify name
+                names = (str(self), str(entries))
+                if all(names):
+                    self.name = name_separator.join(names)
+                else:
+                    self.name = ''.join(names)
+            # pass to superclass
+            dict.update(self, entries)
+        else:
+            # argument is presumably a list of dynamic entries
+            try:
+                for entry in entries:
+                    if not isinstance(entry, FunctionType):
+                        raise err
+                    varnames = entry.func_code.co_varnames
+                    self[entry.__name__] = entry
+            except TypeError:
+                raise err
 
     def expand_template(self, buffer_string, 
                         max_loops=template_expansion_max_loops):

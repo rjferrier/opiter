@@ -64,7 +64,7 @@ def merge(dict_combination):
     
 def merges_dicts(client_function):
     """
-    merges_dicts([object, ], client_function)
+    merges_dicts(client_function)
 
     A decorator that flattens and merges a combination of
     dictionaries, passing the result to the client function.  This may

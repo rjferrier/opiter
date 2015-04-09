@@ -7,10 +7,25 @@ from re import search
 
 class TestOptionsDictCreation(unittest.TestCase):
 
+    def test_create_from_dict(self):
+        """
+        When I create an OptionsDict from a dict, there is no error.
+        """
+        OptionsDict({'foo': 'bar'})
+
+    def test_create_from_dynamic_entries(self):
+        """
+        When I create an OptionsDict from a list of functions, there
+        is no error.
+        """
+        def foo(opt):
+            return 'bar'
+        OptionsDict([foo])
+
     def test_create_from_non_dict(self):
         """
-        When I create an OptionsDict using something other than a
-        dict, an error should be raised.
+        When I create an OptionsDict using something other than a dict
+        or a list of functions, an error should be raised.
         """
         create_od = lambda: OptionsDict('foo')
         self.assertRaises(OptionsDictException, create_od)
@@ -139,17 +154,17 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
     def setUp(self):
         """
         I create an OptionsDict with two variables: kinematic_viscosity
-        and pipe_diameter.  I define Reynolds_number, a dynamic entry
-        dependent on velocity, pipe_diameter and kinematic_viscosity.
-        I haven't defined velocity yet.
+        and pipe_diameter.  I define Reynolds_number, which is a dynamic
+        entry dependent on velocity, pipe_diameter and
+        kinematic_viscosity.  I haven't defined velocity yet.
         """
         self.od = OptionsDict({
             'kinematic_viscosity': 1.e-6,
             'pipe_diameter'      : 0.1 })
-        def Re(d):
+        def Reynolds_number(d):
             return d['velocity'] * d['pipe_diameter'] / \
                 d['kinematic_viscosity']
-        self.od['Reynolds_number'] = Re
+        self.od.update([Reynolds_number])
 
     def test_missing_information_raises_error(self):
         """
@@ -175,7 +190,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         When velocity is changed, observation should update
         automatically.
         """
-        def obs(d):
+        def observation(d):
             if d['Reynolds_number'] < 2100.:
                 return 'laminar'
             elif d['Reynolds_number'] > 4000.:
@@ -183,7 +198,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
             else:
                 return 'transitional'
         # modify the dict
-        self.od['observation'] = obs
+        self.od.update([observation])
         # now test
         self.od['velocity'] = 0.02
         self.assertEqual(self.od['observation'], 'laminar')

@@ -111,10 +111,7 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         res3d = OptionsDict.sequence('res', [10, 20])
         branches = attach(dims, (res1d, res2d, res3d))
         self.tree = product(root, chain(branches))
-        self.pool = Pool(2)
-
-    def tearDown(self):
-        self.pool.close()
+        # self.pool = Pool(2)
 
     def check_names(self, resulting_names):
         "Helper for name_check tests."

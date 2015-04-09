@@ -25,7 +25,7 @@ each of the 'fluids' specified above.  These combinations are easily
 expressed by creating sequences of OptionsDicts and using product()
 from the itertools library.
   
-  fluids     = OptionsDict.sequence('fluid', [water, ethanol])
+  fluids     = [water, ethanol]
   pipe_dias  = OptionsDict.sequence('pipe_diameter', [0.10, 0.15])
   velocities = OptionsDict.sequence('velocity', [0.01, 0.02, 0.04])
   combos = itertools.product(fluids, pipe_dias, velocities)
@@ -54,6 +54,7 @@ merging.
   def calculate_Re(opt):
     kinematic_visc = opt['dynamic_viscosity'] / opt['density']
     return opt['velocity'] * opt['pipe_diameter'] / kinematic_visc
+
   p = multiprocessing.Pool(4)
   Reynolds_numbers = p.map(calculate_Re, combos)
 
@@ -64,18 +65,17 @@ can be defined as dynamic, updating automatically according to the
 values of others.  Such dynamic entries might be added locally, or in
 a separate OptionsDict which is then applied globally.
   
-  def calculate_kinematic_visc(opt):
+  def kinematic_viscosity(opt):
       return opt['dynamic_viscosity'] / opt['density']
   fluids = OptionsDict.sequence('fluid', [water, ethanol], 
-      common_entries={
-          'kinematic_viscosity': calculate_kinematic_visc})
+                                common_entries=[kinematic_viscosity])
   
-  def calculate_Re(opt):
+  def Reynolds_number(opt):
       return opt['velocity'] * opt['pipe_diameter'] / \
           opt['kinematic_viscosity']
-  root = OptionsDict({'Reynolds_number': calculate_Re})
+  common = OptionsDict([Reynolds_number])
   
-  combos = itertools.product(root, fluids, pipe_dias, velocities)
+  combos = itertools.product(common, fluids, pipe_dias, velocities)
   p = multiprocessing.Pool(4)
   Reynolds_numbers = p.map(Lookup('Reynolds_number'), combos)
 
