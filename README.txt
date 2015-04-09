@@ -22,13 +22,13 @@ states [0.10, 0.15], and an independent variable 'velocity', which may
 take states [0.01, 0.02, 0.04], we might want to test combinations
 (0.10, 0.01), (0.10, 0.02), etc.  We might also want to do these for
 each of the 'fluids' specified above.  These combinations are easily
-expressed by creating sequences of OptionsDicts and using product()
-from the itertools library.
+expressed by creating sequences of OptionsDicts and using a
+product function (adapted from the itertools library).
   
   fluids     = [water, ethanol]
   pipe_dias  = OptionsDict.sequence('pipe_diameter', [0.10, 0.15])
   velocities = OptionsDict.sequence('velocity', [0.01, 0.02, 0.04])
-  combos = itertools.product(fluids, pipe_dias, velocities)
+  combos = product(fluids, pipe_dias, velocities)
 
 A combination of OptionsDicts can be merged so that the client only
 ever needs to consult one OptionsDict.  The string representation of
@@ -75,7 +75,7 @@ a separate OptionsDict which is then applied globally.
           opt['kinematic_viscosity']
   common = OptionsDict([Reynolds_number])
   
-  combos = itertools.product(common, fluids, pipe_dias, velocities)
+  combos = product(common, fluids, pipe_dias, velocities)
   p = multiprocessing.Pool(4)
   Reynolds_numbers = p.map(Lookup('Reynolds_number'), combos)
 

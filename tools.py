@@ -1,14 +1,16 @@
 from collections import Iterable
-from itertools import imap, izip, chain, product
+from itertools import imap, izip, chain, product as _product
 from functools import wraps
 from copy import copy
 from inspect import getargspec, getargvalues
 
-def flatten(iterable):
-    """
-    flatten(iterable)
 
-    Flatten an arbitrary tree of iterators, e.g. (1, (2, 3)) -> (1, 2,
+def iflatten(iterable):
+
+    """
+    iflatten(iterable)
+
+    Flattens an arbitrary tree of iterators, e.g. (1, (2, 3)) -> (1, 2,
     3).  Taken from the webpage below, with an added condition to stop
     iterating if the iterable is a dictionary.
     
@@ -19,20 +21,24 @@ def flatten(iterable):
         if isinstance(el, Iterable) and \
                 not isinstance(el, basestring) and \
                 not isinstance(el, dict):
-            for sub in flatten(el):
+            for sub in iflatten(el):
                 yield sub
         else:
             yield el
 
-            
-def attach(parents, children):
-    """
-    attach(parents, children)
+    
+def iattach(parents, children):
+    """iattach(parents, children)
 
-    Zips parents with children, and for each of these pairings
-    performs a product.  The results are chained.  Strings and
-    dictionary elements are protected so that their elements don't
-    explode.
+    Attaches the elements of children to the elements of parents,
+    assuming the arguments are the same length.  Example:
+    ('A', 'B'), ((1, 2, 3), (4, 5)) 
+       --> ('A', 1), ('A', 2), ('A', 3), ('B', 4), ('B', 5)
+
+    More specifically, zips parents with children, and for each of
+    these pairings performs a product.  The results are chained.
+    Strings and dictionary elements are protected so that their
+    elements don't explode.
     """
     def protect(el):
         if (isinstance(el, basestring) and len(el) > 1) or \
@@ -41,9 +47,88 @@ def attach(parents, children):
         else:
             return el
     return chain.from_iterable(
-        imap(lambda i: product(*i),
+        imap(lambda i: _product(*i),
              izip(imap(protect, parents),
                   children)))
+
+
+def make_optionally_persistent(generator, persistent):
+    """
+    make_optionally_persistent(generator, persistent)
+
+    Helper function to optionally convert a generator into a list.
+    """
+    if persistent:
+        return list(generator)
+    else:
+        return generator
+
+            
+def flatten(iterable, persistent=True):
+    """
+    flatten(iterable, persistent=True)
+
+    Optionally persistent version of iattach.  To repeat the 
+    documentation:
+
+    Flattens an arbitrary tree of iterators, e.g. (1, (2, 3)) -> (1, 2,
+    3).  Taken from the webpage below, with an added condition to stop
+    iterating if the iterable is a dictionary.
+    
+    http://stackoverflow.com/questions/2158395/
+    flatten-an-irregular-list-of-lists-in-python
+    """
+    result = iflatten(iterable)
+    return make_optionally_persistent(result, persistent)
+
+
+def attach(parents, children, persistent=True):
+    """
+    attach(parents, children, persistent=True)
+
+    Optionally persistent version of iattach.  To repeat the 
+    documentation:
+
+    Attaches the elements of children to the elements of parents,
+    assuming the arguments are the same length.  Example:
+    ('A', 'B'), ((1, 2, 3), (4, 5)) 
+       --> ('A', 1), ('A', 2), ('A', 3), ('B', 4), ('B', 5)
+
+    More specifically, zips parents with children, and for each of
+    these pairings performs a product.  The results are chained.
+    Strings and dictionary elements are protected so that their
+    elements don't explode.
+    """
+    result = iattach(parents, children)
+    return make_optionally_persistent(result, persistent)
+
+        
+def product(*iterables, **kwargs):
+    """
+    product(*iterables, repeat=None, persistent=True)
+
+    Optionally persistent version of itertools' product.  To repeat 
+    the documentation:
+
+    Cartesian product of input iterables.
+
+    Equivalent to nested for-loops in a generator expression. For
+    example, product(A, B) returns the same as ((x,y) for x in A for y
+    in B).
+
+    The nested loops cycle like an odometer with the rightmost element
+    advancing on every iteration. This pattern creates a lexicographic
+    ordering so that if the input's iterables are sorted, the product
+    tuples are emitted in sorted order.
+
+    To compute the product of an iterable with itself, specify the
+    number of repetitions with the optional repeat keyword argument. 
+    For example, product(A, repeat=4) means the same as 
+    product(A, A, A, A).
+    """
+    persistent = kwargs.pop('persistent', True)
+    result = _product(*iterables, **kwargs)
+    return make_optionally_persistent(result, persistent)
 
 
 def merge(dict_combination):
@@ -57,7 +142,7 @@ def merge(dict_combination):
     single_dict = None
     if isinstance(dict_combination, dict):
         dict_combination = (dict_combination,)
-    for el in flatten(dict_combination):
+    for el in iflatten(dict_combination):
         if single_dict is None:
             single_dict = copy(el)
         else:

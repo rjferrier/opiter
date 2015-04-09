@@ -2,8 +2,7 @@ import sys
 sys.path.append('..')
 
 from options import OptionsDict
-from tools import merge, merges_dicts, identify, Lookup
-import itertools
+from tools import product, merge, merges_dicts, identify, Lookup
 import multiprocessing
 
 # setup
@@ -19,12 +18,7 @@ ethanol = OptionsDict.named('ethanol', {
 fluids     = [water, ethanol]
 pipe_dias  = OptionsDict.sequence('pipe_diameter', [0.10, 0.15])
 velocities = OptionsDict.sequence('velocity', [0.01, 0.02, 0.04])
-combos = itertools.product(fluids, pipe_dias, velocities)
-
-# itertools produces generators, so combos will not be persistent.
-# We'll need to convert it to a list if we want to reuse it.
-combos = list(combos)
-
+combos = product(fluids, pipe_dias, velocities)
 
 print "\nUsing serial loop:\n"
 
@@ -66,12 +60,11 @@ def Reynolds_number(opt):
         opt['kinematic_viscosity']
 common = OptionsDict([Reynolds_number])
 
-combos = itertools.product(common, fluids, pipe_dias, velocities)
+combos = product(common, fluids, pipe_dias, velocities)
 p = multiprocessing.Pool(4)
 Reynolds_numbers = p.map(Lookup('Reynolds_number'), combos)
 
 # for completeness...
-combos = itertools.product(common, fluids, pipe_dias, velocities)
 IDs = map(identify, combos)
 for ID, Re in zip(IDs, Reynolds_numbers):
     print 'Test ID = {}, Reynolds number = {:.2e}'.\

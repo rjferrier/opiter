@@ -3,9 +3,8 @@ sys.path.append('..')
 
 import numpy as np
 from options import OptionsDict
-from tools import merge, merges_dicts
+from tools import product, merge, merges_dicts
 
-from itertools import product
 from multiprocessing import Pool
 from time import time, sleep
 from copy import deepcopy
@@ -23,7 +22,7 @@ job_times = [0.1, 0.3]
 # create iterable structure and some operation
 modifier_seq = OptionsDict.sequence('modifier', modifiers)
 job_time_seq = OptionsDict.sequence('job_time', job_times)
-combos = list(product(modifier_seq, job_time_seq))
+combos = product(modifier_seq, job_time_seq)
 
 sleep_time = lambda opt: opt['modifier'] * opt['job_time']
 @merges_dicts
