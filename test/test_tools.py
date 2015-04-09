@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from tools import flatten, multizip, merge, merges_dicts, Lookup
+from tools import flatten, attach, merge, merges_dicts, Lookup
 
 
 class TestIterationTools(unittest.TestCase):
@@ -13,23 +13,23 @@ class TestIterationTools(unittest.TestCase):
         result = flatten(tree)
         self.assertEqual(tuple(result), expected)
 
-    def test_multizip_simple(self):
+    def test_attach_simple(self):
         parents = ('A', ('B', 'C'))
         children = ((1, 2, 3), (4, 5))
         expected = (('A', 1), ('A', 2), ('A', 3),
                     ('B', 4), ('B', 5),
                     ('C', 4), ('C', 5))
-        result = multizip(parents, children)
+        result = attach(parents, children)
         for r, e in zip(result, expected):
             self.assertEqual(tuple(r), e)
 
-    def test_multizip_with_strings_and_dicts(self):
+    def test_attach_with_strings_and_dicts(self):
         parents = ('A', 'bee', {'C': 'see'})
         children = ((1, 'two'), ({3: 'three'}, 4, 5), (6,))
         expected = (('A', 1), ('A', 'two'),
                     ('bee', {3: 'three'}), ('bee', 4), ('bee', 5),
                     ({'C': 'see'}, 6))
-        result = multizip(parents, children)
+        result = attach(parents, children)
         for r, e in zip(result, expected):
             self.assertEqual(tuple(r), e)
 

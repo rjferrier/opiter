@@ -24,9 +24,9 @@ def flatten(iterable):
             yield el
 
             
-def multizip(parents, children):
+def attach(parents, children):
     """
-    multizip(parents, children)
+    attach(parents, children)
 
     Zips parents with children, and for each of these pairings
     performs a product.  The results are chained.  Strings and
@@ -64,7 +64,7 @@ def merge(dict_combination):
     
 def merges_dicts(client_function):
     """
-    merges_dicts(client_function)
+    merges_dicts([object, ], client_function)
 
     A decorator that flattens and merges a combination of
     dictionaries, passing the result to the client function.  This may
@@ -77,7 +77,7 @@ def merges_dicts(client_function):
             merge(dict_combination))
     return decorator
 
-
+    
 def identify(dict_combination):
     """
     identify(dict_combination)
@@ -98,7 +98,7 @@ class Lookup:
     """
     def __init__(self, key):
         self.key = key
-        
+
     def __call__(self, dict_combination):
         opt = merge(dict_combination)
         return opt[self.key]

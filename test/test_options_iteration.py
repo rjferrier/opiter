@@ -3,7 +3,7 @@ sys.path.append('..')
 
 import unittest
 from options import OptionsDict
-from tools import flatten, multizip, merge, merges_dicts, \
+from tools import flatten, attach, merge, merges_dicts, \
     identify, Lookup
 from itertools import product, chain
 from multiprocessing import Pool
@@ -109,7 +109,7 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         res1d = OptionsDict.sequence('res', [10, 20, 40, 80])
         res2d = OptionsDict.sequence('res', [10, 20, 40])
         res3d = OptionsDict.sequence('res', [10, 20])
-        branches = multizip(dims, (res1d, res2d, res3d))
+        branches = attach(dims, (res1d, res2d, res3d))
         self.tree = product(root, chain(branches))
         self.pool = Pool(2)
 

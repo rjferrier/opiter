@@ -87,7 +87,8 @@ class TestOptionsDictUpdateFromOptionsDict(unittest.TestCase):
         repr(C) should be 'A_B:{<contents>}'.
         """
         dict_pattern = "{['a-z: 0-9,]*}"
-        self.assertIsNotNone(search('A_B:'+dict_pattern, repr(self.od)))
+        self.assertIsNotNone(search('A_B:'+dict_pattern,
+                                    repr(self.od)))
 
     def test_right_overrides_left(self):
         """
