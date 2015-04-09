@@ -37,15 +37,20 @@ class TestIterationTools(unittest.TestCase):
 class TestDictTools(unittest.TestCase):
 
     def setUp(self):
-        d1 = {'a': 1, 'b': 1, 'c': 1}
-        d2 = {'a': 2, 'b': 2}
-        d3 = {'a': 3}
-        self.dicts = [d1, d2, d3]
+        self.d1 = {'a': 1, 'b': 1, 'c': 1}
+        self.d2 = {'a': 2, 'b': 2}
+        self.d3 = {'a': 3}
+        self.dicts = [self.d1, self.d2, self.d3]
     
     def test_merge(self):
         d = merge(self.dicts)
         self.assertEqual(d['c'], 1)
         self.assertEqual(d['a'], 3)
+    
+    def test_merge_single_dict(self):
+        d = merge(self.d1)
+        self.assertEqual(d['c'], 1)
+        self.assertEqual(d['a'], 1)
     
     def test_merges_dicts(self):
         @merges_dicts
