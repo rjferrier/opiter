@@ -55,7 +55,7 @@ class TestAnonymousOptionsDict(unittest.TestCase):
         self.assertEqual(self.od, OptionsDict({'foo': 'bar'}))
 
     def test_unequal(self):
-        self.assertNotEqual(self.od, OptionsDict({'baz', 'bar'}))
+        self.assertNotEqual(self.od, OptionsDict({'baz': 'bar'}))
 
 
         
@@ -79,6 +79,12 @@ class TestNamedOptionsDict(unittest.TestCase):
     def test_unequal_names_but_equal_dicts(self):
         self.assertNotEqual(self.od,
                             OptionsDict.named('baz', {'bar': 1}))
+
+    def test_copy(self):
+        other = self.od.copy()
+        # test for equivalence and non-identity
+        self.assertEqual(other, self.od)
+        self.assertFalse(other is self.od)
 
 
 class TestOptionsDictUpdateFromOptionsDict(unittest.TestCase):
@@ -136,19 +142,6 @@ class TestOptionsDictUpdateFromDict(unittest.TestCase):
         self.assertIsNotNone(search('A:'+dict_pattern, repr(self.od)))
 
         
-class TestAnonymousOptionsDict(unittest.TestCase):
-    
-    def setUp(self):
-        """I create an anonymous OptionsDict."""
-        self.od = OptionsDict({'foo': 'bar'})
-        
-    def test_name(self):
-        self.assertEqual(str(self.od), '')
-
-    def test_repr(self):
-        self.assertEqual(repr(self.od), ":{'foo': 'bar'}")
-
-    
 class TestOptionsDictDynamicEntries(unittest.TestCase):
     
     def setUp(self):
@@ -266,7 +259,6 @@ class TestOptionsDictTemplateExpansion(unittest.TestCase):
                    " degrees C."
         self.assertEqual(self.od.expand_template(template),
                          expected)
-        
         
     
 if __name__ == '__main__':

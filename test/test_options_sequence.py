@@ -40,11 +40,10 @@ class TestOptionsDictSequence(unittest.TestCase):
         preexisting OptionsDict should have the {'foo': 'bar'} entry.
         """
         for i, el in enumerate(self.seq):
-            lookup = lambda: el['foo']
             if i==1:
-                self.assertEqual(lookup(), 'bar')
+                self.assertEqual(el['foo'], 'bar')
             else:
-                self.assertRaises(KeyError, lookup)
+                self.assertRaises(KeyError, lambda: el['foo'])
 
     def test_lookup_sequence_key(self):
         """
@@ -64,7 +63,7 @@ class TestOptionsDictSequence(unittest.TestCase):
                 self.assertEqual(result, self.values[i])
         
 
-class TestOptionsDictSequenceCreationOptions(unittest.TestCase):
+class TestOptionsDictSequenceCreation(unittest.TestCase):
 
     def test_create_with_common_entries(self):
         """
@@ -119,6 +118,39 @@ class TestOptionsDictSequenceCreationOptions(unittest.TestCase):
                                  name_format=None)
         self.assertRaises(OptionsDictException, create_seq)
 
+    
+# class TestGetLocator(unittest.TestCase):
+
+#     def setUp(self):
+#         """
+#         I create an OptionsDict sequence 'A' using three integers.  I
+#         store the second node and its default locator.
+#         """
+#         seq = OptionsDict.sequence('A', ['i', 'ii', 'iii'])
+#         self.od = seq[1]
+#         self.loc = self.od.get_locator()
+
+#     def test_locator_type(self):
+#         """
+#         The stored locator should be an instance of Locator.
+#         """
+#         self.assertIsInstance(self.loc, LocatorType)
+
+#     def test_get_locator_by_sequence_key(self):
+#         """
+#         I should get the same locator by passing the sequence key to the
+#         OptionDict's get_locator method.
+#         """
+#         self.assertEqual(self.loc, self.od.get_locator('A'))
+
+#     def test_nonexistent_locator(self):
+#         """
+#         Conversely, passing anything else should raise an error.
+#         """
+#         self.assertRaises(OptionsDictException,
+#                           lambda: self.od.get_locator('B'))
+    
+        
         
 if __name__ == '__main__':
     unittest.main()

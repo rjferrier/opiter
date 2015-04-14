@@ -24,7 +24,7 @@ class OptionsDict(dict):
 
     (1) Values can be runtime-dependent upon the state of other values
     in the dict.  Each of these special values is specified by a
-    function[*] accepting a single dictionary argument (i.e. the
+    function** accepting a single dictionary argument (i.e. the
     OptionsDict itself).  The dictionary argument is used to look things
     up dynamically.  These functions may be listed in the entries
     argument if there are no other key-value pairs, in which case the
@@ -35,30 +35,40 @@ class OptionsDict(dict):
     new state.  Updating 'A' with 'B' produces 'A_B'.
 
     (3) An OptionsDict can expand strings as templates.
+
+    (4) When the OptionsDict is created as part of a sequence, or is
+    updated with such an OptionsDict, extra information is stored.
+    See OptionsDict.sequence and the Locator class.
     
-    * If using the multiprocessing module, it important that dynamic
-      entries are created using defs rather than lambdas.  It seems
-      that lambdas cause pickling problems, and there is currently no
-      way to protect against them.
+    ** If using the multiprocessing module, it is important that
+       dynamic entries are created using defs rather than lambdas.  It
+       seems that lambdas cause pickling problems, and there is
+       currently no way to protect against them.
     """
 
+    # variable attributes
     name = ''
+    locators = {}
+    
+    # settings
     name_separator = NAME_SEPARATOR
     
-    def __init__(self, entries={}, name=None):
-        # check argument types
-        if not name:
-            name = ''
-        elif not isinstance(name, str):
-                raise OptionsDictException(
-                    "name argument must be a string (or None).")
-        # store name and entries
-        self.name = name
+    def __init__(self, entries={}):
+        # with just an entries argument, treat as a simple dict
         self.update(entries)
 
     @classmethod
     def named(Self, name, entries={}):
-        return Self(entries, name)
+        # check name argument
+        if not name:
+            name = ''
+        elif not isinstance(name, str):
+            raise OptionsDictException(
+                "name argument must be a string (or None).")
+        # instantiate object and set the name
+        obj = Self(entries)
+        obj.name = name
+        return obj
 
     @classmethod
     def sequence(Self, sequence_key, elements, common_entries={},
@@ -77,10 +87,19 @@ class OptionsDict(dict):
         either be a format string or a callable that takes the element
         value and returns a string.
 
-        An important feature is that for each element, the
+        The sequence_key argument has two notable effects (assuming it
+        is a non-empty string).  Firstly, for each element, the
         corresponding OptionsDict acquires the entry {sequence_key:
         element.name} if the element is already an OptionsDict, and
-        {sequence_key: element} otherwise.
+        {sequence_key: element} otherwise.  This is useful for
+        associating a simple independent variable with a selection of
+        values.
+
+        Secondly, a Locator object becomes registered and accessible
+        through the get_locator(sequence_key) method.  A Locator
+        provides information on where an OptionsDict is in relation to
+        others in the sequence.  Conversely, it provides the names of
+        other OptionsDicts based on their location.
         """
 
         optionsdict_list = []
@@ -89,7 +108,7 @@ class OptionsDict(dict):
                 # If the element is already an OptionsDict object,
                 # make a copy.  This has the benefit of preventing
                 # side effects if the element persists elsewhere.
-                od = copy(el)
+                od = el.copy()
                 # add a special entry using sequence_key
                 od.update({sequence_key: str(el)})
             else:
@@ -134,51 +153,54 @@ class OptionsDict(dict):
             return value
         
     def __eq__(self, other):
-        eq_names = str(self)==str(other)
+        eq_names = str(self) == str(other)
+        eq_locators = self.locators == other.locators
         eq_dicts = dict.__eq__(self, other)
         return eq_names and eq_dicts
 
     def __ne__(self, other):
         return not self==other
 
-    def __add__(self, other):
-        result = OptionsDict(self, self.name)
-        if isinstance(other, dict):
-            result.update(other)
-        return result
-
-    def __radd__(self, other):
-        if not other:
-            return self
-        else:
-            return self + other
-
+    def copy(self):
+        obj = OptionsDict(dict.copy(self))
+        obj.name = self.name
+        obj.locators = self.locators
+        return obj
+        
     def update(self, entries):
-        err = OptionsDictException("""
-entries must be a dict or a sequence of dynamic entries (i.e. 
-functions).""")
         if isinstance(entries, dict):
             # argument is a dictionary, so updating is straightforward
-            if isinstance(entries, OptionsDict):
-                # modify name
-                names = (str(self), str(entries))
-                if all(names):
-                    self.name = self.name_separator.join(names)
-                else:
-                    self.name = ''.join(names)
-            # pass to superclass
-            dict.update(self, entries)
+            self._update_from_dict(entries)
         else:
             # argument is presumably a list of dynamic entries
-            try:
-                for entry in entries:
-                    if not isinstance(entry, FunctionType):
-                        raise err
-                    varnames = entry.func_code.co_varnames
-                    self[entry.__name__] = entry
-            except TypeError:
-                raise err
+            self._update_from_dynamic_entries(entries)
 
+    def _update_from_dict(self, other):
+        # update OptionsDict attributes
+        if isinstance(other, OptionsDict):
+            names = (str(self), str(other))
+            if all(names):
+                self.name = self.name_separator.join(names)
+            else:
+                self.name = ''.join(names)
+            # # tk
+            # self.locators.update(other.locators)
+        # now pass to superclass
+        dict.update(self, other)
+
+    def _update_from_dynamic_entries(self, functions):
+        err = OptionsDictException("""
+entries must be a dict or a sequence of dynamic entries (i.e.
+functions).""")
+        try:
+            for func in functions:
+                if not isinstance(func, FunctionType):
+                    raise err
+                varnames = func.func_code.co_varnames
+                self[func.__name__] = func
+        except TypeError:
+            raise err
+                
     def expand_template(self, buffer_string, loops=1):
         """In buffer_string, replaces all substrings prefixed '$' with
         corresponding values from the dictionary."""
@@ -187,6 +209,35 @@ functions).""")
             buffer_string = buffer_string.safe_substitute(self)
         return buffer_string
 
+
+class Locator:
+
+    def __init__(self, names, index):
+        self.names = names
+        self.index = index
+
+    def __str__(self):
+        return self.str()
+
+    def str(self, absolute=None, relative=None):
+        """
+        Returns the name of the node in question or, if arguments are
+        given, one of its siblings.  The optional arguments correspond
+        to absolute and relative indices, respectively.  In accordance
+        with Python indexing rules, a negative absolute index returns
+        a node from the end of the sequence.  To avoid confusion, this
+        does not apply when a relative index is given.
+        """
+        if absolute is None:
+            index = self.index
+        else:
+            index = absolute
+        if relative is not None:
+            index += relative
+            if index < 0:
+                raise IndexError("list index out of range")
+        return self.names[index]
+    
         
 class CallableEntry:
     """
