@@ -226,36 +226,46 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
 class TestOptionsDictTemplateExpansion(unittest.TestCase):
 
     def setUp(self):
-        self.od = OptionsDict({'name': 'Richard',
-                               'age' : 32,
-                               'colour_eyes': 'green',
-                               'colour_hair': 'brown'})
+        self.od = OptionsDict({'fluid'         : 'water',
+                               'melting_point' :       0,
+                               'boiling_point' :     100})
 
     def test_expand_string(self):
-        template = "My name is $name, and I am $age years old."
-        expected = "My name is Richard, and I am 32 years old."
+        template = "$fluid has a melting point of $melting_point"+\
+                   " degrees C."
+        expected = "water has a melting point of 0 degrees C."
         self.assertEqual(self.od.expand_template(template), expected)
 
     def test_expand_string_missing_entry(self):
-        template = "My name is $name, I am $age years old, "+\
-            "and I come from $place_of_origin."
-        expected = "My name is Richard, I am 32 years old, "+\
-            "and I come from $place_of_origin."
+        template = "$fluid has a density of $density kg/m^3."
+        expected = "water has a density of $density kg/m^3."
         self.assertEqual(self.od.expand_template(template), expected)
+
 
     def test_expand_nested(self):
-        template = "My name is $name, I am $age years old, "+\
-            "and I have $colour_$feature $feature."
+        template = "$fluid has a $change point of ${${change}_point}"+\
+                   " degrees C."
         
-        self.od['feature'] = 'eyes'
-        expected = "My name is Richard, I am 32 years old, "+\
-            "and I have green eyes."
-        self.assertEqual(self.od.expand_template(template), expected)
+        self.od['change'] = 'melting'
+        expected = "water has a melting point of 0 degrees C."
+        self.assertEqual(self.od.expand_template(template, loops=2),
+                         expected)
+        
+        self.od['change'] = 'boiling'
+        expected = "water has a boiling point of 100 degrees C."
+        self.assertEqual(self.od.expand_template(template, loops=2),
+                         expected)
 
-        self.od['feature'] = 'hair'
-        expected = "My name is Richard, I am 32 years old, "+\
-            "and I have brown hair."
-        self.assertEqual(self.od.expand_template(template), expected)
+        
+    def test_expand_not_enough_loops(self):
+        template = "$fluid has a $change point of ${${change}_point}"+\
+                   " degrees C."
+        
+        self.od['change'] = 'melting'
+        expected = "water has a melting point of ${melting_point}"+\
+                   " degrees C."
+        self.assertEqual(self.od.expand_template(template),
+                         expected)
         
         
     

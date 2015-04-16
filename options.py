@@ -5,7 +5,6 @@ from copy import copy
 
 # default settings
 name_separator = '_'
-template_expansion_max_loops = 5
 
 
 class OptionsDictException(Exception):
@@ -45,8 +44,6 @@ class OptionsDict(dict):
 
     name = ''
     name_separator = name_separator
-    template_expansion_max_loops = template_expansion_max_loops
-
     
     def __init__(self, entries={}, name=None):
         # check argument types
@@ -182,15 +179,12 @@ functions).""")
             except TypeError:
                 raise err
 
-    def expand_template(self, buffer_string, 
-                        max_loops=template_expansion_max_loops):
+    def expand_template(self, buffer_string, loops=1):
         """In buffer_string, replaces all substrings prefixed '$' with
         corresponding values from the dictionary."""
-        n = 0
-        while '$' in buffer_string and n < max_loops:
+        for i in range(loops):
             buffer_string = Template(buffer_string)
             buffer_string = buffer_string.safe_substitute(self)
-            n += 1
         return buffer_string
 
         
