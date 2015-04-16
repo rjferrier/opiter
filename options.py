@@ -4,7 +4,7 @@ from copy import copy
 
 
 # default settings
-name_separator = '_'
+NAME_SEPARATOR = '_'
 
 
 class OptionsDictException(Exception):
@@ -43,7 +43,7 @@ class OptionsDict(dict):
     """
 
     name = ''
-    name_separator = name_separator
+    name_separator = NAME_SEPARATOR
     
     def __init__(self, entries={}, name=None):
         # check argument types
@@ -163,7 +163,7 @@ functions).""")
                 # modify name
                 names = (str(self), str(entries))
                 if all(names):
-                    self.name = name_separator.join(names)
+                    self.name = self.name_separator.join(names)
                 else:
                     self.name = ''.join(names)
             # pass to superclass
