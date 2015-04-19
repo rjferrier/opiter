@@ -57,7 +57,7 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
         """
         I should be able create combinations of speed and travel time
         and calculate the correct distances using a map.  I will use
-        the combine decorator so that my distance calculator
+        the merges_dicts decorator so that my distance calculator
         only has to deal with one dictionary.
         """
         @merges_dicts

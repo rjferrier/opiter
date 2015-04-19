@@ -117,38 +117,6 @@ class TestOptionsDictSequenceCreation(unittest.TestCase):
             OptionsDict.sequence('A', [1., 2.5, 6.25],
                                  name_format=None)
         self.assertRaises(OptionsDictException, create_seq)
-
-    
-# class TestGetLocation(unittest.TestCase):
-
-#     def setUp(self):
-#         """
-#         I create an OptionsDict sequence 'A' using three integers.  I
-#         store the second node and its default location.
-#         """
-#         seq = OptionsDict.sequence('A', ['i', 'ii', 'iii'])
-#         self.od = seq[1]
-#         self.loc = self.od.get_location()
-
-#     def test_location_type(self):
-#         """
-#         The stored location should be an instance of Location.
-#         """
-#         self.assertIsInstance(self.loc, LocationType)
-
-#     def test_get_location_by_sequence_key(self):
-#         """
-#         I should get the same location by passing the sequence key to the
-#         OptionDict's get_location method.
-#         """
-#         self.assertEqual(self.loc, self.od.get_location('A'))
-
-#     def test_nonexistent_location(self):
-#         """
-#         Conversely, passing anything else should raise an error.
-#         """
-#         self.assertRaises(OptionsDictException,
-#                           lambda: self.od.get_location('B'))
     
         
         

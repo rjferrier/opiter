@@ -2,17 +2,17 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import Locator
+from options import Location
 
 
-class TestLocator(unittest.TestCase):
+class TestLocation(unittest.TestCase):
 
     def setUp(self):
         """
         With a sequence of nodes named 'A', 'B' and 'C', I create a
-        Locator for the second node.
+        Location for the second node.
         """
-        self.loc = Locator(['A', 'B', 'C'], 1)
+        self.loc = Location(['A', 'B', 'C'], 1)
 
     def test_node_name(self):
         """

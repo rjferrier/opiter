@@ -202,13 +202,24 @@ functions).""")
             raise err
                 
     def expand_template(self, buffer_string, loops=1):
-        """In buffer_string, replaces all substrings prefixed '$' with
+        """In buffer_string, replaces substrings prefixed '$' with
         corresponding values from the dictionary."""
         for i in range(loops):
             buffer_string = Template(buffer_string)
             buffer_string = buffer_string.safe_substitute(self)
         return buffer_string
 
+    def get_location(self, sequence_key=None):
+        """
+        If the OptionsDict was initialised as part of a sequence,
+        calling this method will return its associated Location
+        object.  If the OptionsDict has since been updated with other
+        sequence-initialised OptionsDicts, it is possible to recover
+        any of their Locations by passing in the corresponding
+        sequence_key.
+        """
+        pass
+        
 
 class Location:
 
