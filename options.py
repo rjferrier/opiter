@@ -38,7 +38,7 @@ class OptionsDict(dict):
 
     (4) When the OptionsDict is created as part of a sequence, or is
     updated with such an OptionsDict, extra information is stored.
-    See OptionsDict.sequence and the Locator class.
+    See OptionsDict.sequence and the Location class.
     
     ** If using the multiprocessing module, it is important that
        dynamic entries are created using defs rather than lambdas.  It
@@ -48,7 +48,7 @@ class OptionsDict(dict):
 
     # variable attributes
     name = ''
-    locators = {}
+    locations = {}
     
     # settings
     name_separator = NAME_SEPARATOR
@@ -95,8 +95,8 @@ class OptionsDict(dict):
         associating a simple independent variable with a selection of
         values.
 
-        Secondly, a Locator object becomes registered and accessible
-        through the get_locator(sequence_key) method.  A Locator
+        Secondly, a Location object becomes registered and accessible
+        through the get_location(sequence_key) method.  A Location
         provides information on where an OptionsDict is in relation to
         others in the sequence.  Conversely, it provides the names of
         other OptionsDicts based on their location.
@@ -154,7 +154,7 @@ class OptionsDict(dict):
         
     def __eq__(self, other):
         eq_names = str(self) == str(other)
-        eq_locators = self.locators == other.locators
+        eq_locations = self.locations == other.locations
         eq_dicts = dict.__eq__(self, other)
         return eq_names and eq_dicts
 
@@ -164,7 +164,7 @@ class OptionsDict(dict):
     def copy(self):
         obj = OptionsDict(dict.copy(self))
         obj.name = self.name
-        obj.locators = self.locators
+        obj.locations = self.locations
         return obj
         
     def update(self, entries):
@@ -184,7 +184,7 @@ class OptionsDict(dict):
             else:
                 self.name = ''.join(names)
             # # tk
-            # self.locators.update(other.locators)
+            # self.locations.update(other.locations)
         # now pass to superclass
         dict.update(self, other)
 
@@ -210,7 +210,7 @@ functions).""")
         return buffer_string
 
 
-class Locator:
+class Location:
 
     def __init__(self, names, index):
         self.names = names
