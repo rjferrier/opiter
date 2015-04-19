@@ -57,7 +57,9 @@ class TestAnonymousOptionsDict(unittest.TestCase):
     def test_unequal(self):
         self.assertNotEqual(self.od, OptionsDict({'baz': 'bar'}))
 
-
+    def test_locations_empty(self):
+        self.assertIsNone(self.od.get_location())
+        
         
 class TestNamedOptionsDict(unittest.TestCase):
 

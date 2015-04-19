@@ -1,7 +1,6 @@
 from types import FunctionType, LambdaType
 from string import Template
-from copy import copy
-
+# from collections import OrderedDict
 
 # default settings
 NAME_SEPARATOR = '_'
@@ -45,16 +44,18 @@ class OptionsDict(dict):
        seems that lambdas cause pickling problems, and there is
        currently no way to protect against them.
     """
-
-    # variable attributes
-    name = ''
-    locations = {}
     
     # settings
     name_separator = NAME_SEPARATOR
     
     def __init__(self, entries={}):
-        # with just an entries argument, treat as a simple dict
+        # with just an entries argument, treat as a simple dict.
+        # Default the name and other attributes first.  This is
+        # necessary to prevent dynamic entries from possibly
+        # referencing name before it exists
+        self.name = ''
+        self.locations = {}
+        # self.locations = OrderedDict()
         self.update(entries)
 
     @classmethod
@@ -91,18 +92,20 @@ class OptionsDict(dict):
         is a non-empty string).  Firstly, for each element, the
         corresponding OptionsDict acquires the entry {sequence_key:
         element.name} if the element is already an OptionsDict, and
-        {sequence_key: element} otherwise.  This is useful for
-        associating a simple independent variable with a selection of
+        {sequence_key: element} otherwise.  This is useful for setting
+        up an independent variable and sweeping through a range of
         values.
 
         Secondly, a Location object becomes registered and accessible
         through the get_location(sequence_key) method.  A Location
         provides information on where an OptionsDict is in relation to
-        others in the sequence.  Conversely, it provides the names of
-        other OptionsDicts based on their location.
+        others in the sequence.  It also provides the names of other
+        OptionsDicts based on their absolute or relative indices.
         """
-
         optionsdict_list = []
+        name_list = []
+        
+        # first pass: instantiate OptionsDict elements
         for el in elements:
             if isinstance(el, Self):
                 # If the element is already an OptionsDict object,
@@ -112,24 +115,31 @@ class OptionsDict(dict):
                 # add a special entry using sequence_key
                 od.update({sequence_key: str(el)})
             else:
-                # instantiate a new OptionsDict with the string
-                # represention of the element acting as its name, and
-                # the original element stored under sequence_key
+                # otherwise, instantiate a new OptionsDict with the
+                # string represention of the element acting as its
+                # name and the original element stored under
+                # sequence_key
                 try:
-                    od = Self.named(name_format(el),
-                                    {sequence_key: el})
+                    name = name_format(el)
                 except TypeError:
                     try:
-                        od = Self.named(name_format.format(el),
-                                        {sequence_key: el})
+                        name = name_format.format(el)
                     except AttributeError:
                         raise OptionsDictException(
-                            "name_formatter must be a callable "+\
+                            "name_format must be a callable "+\
                             "or a format string.")
+                od = Self.named(name, {sequence_key: el})
             # add entries
             od.update(common_entries)
-            # append to the list
+            # append to the lists
             optionsdict_list.append(od)
+            name_list.append(od.name)
+
+        # second pass: register Locations
+        for index, od in enumerate(optionsdict_list):
+            od.locations[sequence_key] = Location(name_list, index)
+
+        # print sequence_key, name_list
         return optionsdict_list
 
     
@@ -153,10 +163,11 @@ class OptionsDict(dict):
             return value
         
     def __eq__(self, other):
-        eq_names = str(self) == str(other)
-        eq_locations = self.locations == other.locations
-        eq_dicts = dict.__eq__(self, other)
-        return eq_names and eq_dicts
+        eq_tests = []
+        eq_tests.append(str(self) == str(other))
+        eq_tests.append(self.locations == other.locations)
+        eq_tests.append(dict.__eq__(self, other))
+        return all(eq_tests)
 
     def __ne__(self, other):
         return not self==other
@@ -218,7 +229,15 @@ functions).""")
         any of their Locations by passing in the corresponding
         sequence_key.
         """
-        pass
+        if sequence_key is None:
+            try:
+                sequence_key = self.locations.keys()[0]
+            except IndexError:
+                return None
+        try:
+            return self.locations[sequence_key]
+        except KeyError:
+            return None
         
 
 class Location:
