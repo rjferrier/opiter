@@ -115,6 +115,11 @@ class TestOptionsDictWithSeveralLocations(unittest.TestCase):
         self.od.update(C[0])
         self.od.update(A[2])
 
+    def test_repr(self):
+        self.assertEqual(
+            repr(self.od),
+            "ii_0.25_3:{'A': 3, 'C': 0.25, 'B': 'ii'}@['B', 'C', 'A']")
+        
     def test_get_other_location(self):
         """
         get_location('A') should return a Location from which we can

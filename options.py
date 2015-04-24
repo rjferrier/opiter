@@ -143,7 +143,13 @@ class OptionsDict(dict):
 
     
     def __repr__(self):
-        return self.name + ':' + dict.__repr__(self)
+        lkeys = self.locations.keys()
+        if lkeys:
+            lkeys = "@"+str(lkeys)
+        else:
+            lkeys = ""
+        return '{}:{}{}'.format(
+            self.name, dict.__repr__(self), lkeys)
 
     def __str__(self):
         return self.name
