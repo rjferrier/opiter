@@ -14,6 +14,10 @@ class TestLocation(unittest.TestCase):
         """
         self.loc = Location(['A', 'B', 'C'], 1)
 
+    def test_repr(self):
+        self.assertEqual(repr(self.loc),
+                         "Location(['A', 'B', 'C'], 1)")
+
     def test_node_name(self):
         """
         I should be able to recover the name of the node from both 

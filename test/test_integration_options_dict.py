@@ -29,7 +29,7 @@ class TestOptionsDictWithLocation(unittest.TestCase):
         I create an OptionsDict sequence 'A' using three integers.  I
         store the second node and its location object.
         """
-        seq = OptionsDict.sequence('A', ['i', 'ii', 'iii'])
+        seq = OptionsDict.sequence('A', [1, 2, 3])
         self.od = seq[1]
         self.loc = self.od.get_location()
 
@@ -64,6 +64,72 @@ class TestOptionsDictWithLocation(unittest.TestCase):
         Conversely, passing anything else should return None.
         """
         self.assertIsNone(self.od.get_location('B'))
+
+
+class TestOptionsDictWithSeveralLocations(unittest.TestCase):
+
+    def setUp(self):
+        """
+        I create three OptionsDict sequences, 'A', 'B' and 'C', and
+        store an element from each.  I update the OptionsDict
+        corresponding to 'B' with the other two OptionsDicts.
+        """
+        A = OptionsDict.sequence('A', [1, 2, 3])
+        B = OptionsDict.sequence('B', ['i', 'ii', 'iii'])
+        C = OptionsDict.sequence('C', [0.6, 1.6])
+        self.a2 = A[2]
+        self.b1 = B[1]
+        self.c0 = C[0]
+        self.b1.update(c0)
+        self.b1.update(a2)
+
+    def test_get_other_location(self):
+        """
+        get_location('A') should return a Location from which we can
+        recover the ID of the third element in A.
+        """
+        self.assertEqual(self.od.get_location('A').id())
+
+    def test_get_default_location(self):
+        """
+        When I call get_location with no arguments, the result should
+        be the same as that of get_location('B'), i.e. it should not
+        have changed since B was updated.
+        """
+        self.assertEqual(self.od.get_location(),
+                         self.od.get_location('B'))
+
+        
+class TestOptionsDictWithSeveralLocations(unittest.TestCase):
+
+    def setUp(self):
+        """
+        I create three OptionsDict sequences, 'A', 'B' and 'C', and
+        store the second element of B.  I update this OptionsDict
+        with the first and third elements of C and A, respectively.
+        """
+        A = OptionsDict.sequence('A', [1, 2, 3])
+        B = OptionsDict.sequence('B', ['i', 'ii', 'iii'])
+        C = OptionsDict.sequence('C', [0.25, 0.5, 1.0])
+        self.od = B[1]
+        self.od.update(C[0])
+        self.od.update(A[2])
+
+    def test_get_other_location(self):
+        """
+        get_location('A') should return a Location from which we can
+        recover the name of the third element in A.
+        """
+        self.assertEqual(self.od.get_location('A').str(), '3')
+
+    def test_get_default_location(self):
+        """
+        When I call get_location with no arguments, the result should
+        be the same as that of get_location('B'), i.e. it should not
+        have changed since B was updated.
+        """
+        self.assertEqual(self.od.get_location(),
+                         self.od.get_location('B'))
 
         
 if __name__ == '__main__':

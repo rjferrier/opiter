@@ -1,6 +1,6 @@
 from types import FunctionType, LambdaType
 from string import Template
-# from collections import OrderedDict
+from collections import OrderedDict
 
 # default settings
 NAME_SEPARATOR = '_'
@@ -24,10 +24,10 @@ class OptionsDict(dict):
     (1) Values can be runtime-dependent upon the state of other values
     in the dict.  Each of these special values is specified by a
     function** accepting a single dictionary argument (i.e. the
-    OptionsDict itself).  The dictionary argument is used to look things
-    up dynamically.  These functions may be listed in the entries
-    argument if there are no other key-value pairs, in which case the
-    functions' names become the keys.
+    OptionsDict itself).  The dictionary argument is used to look
+    things up dynamically.  These functions may be listed in the
+    entries argument if there are no other key-value pairs, in which
+    case the functions' names become the keys.
 
     (2) An OptionsDict can have a name.  When an OptionsDict is
     updated using another OptionsDict, its name changes to reflect the
@@ -54,8 +54,7 @@ class OptionsDict(dict):
         # necessary to prevent dynamic entries from possibly
         # referencing name before it exists
         self.name = ''
-        self.locations = {}
-        # self.locations = OrderedDict()
+        self.locations = OrderedDict()
         self.update(entries)
 
     @classmethod
@@ -194,8 +193,7 @@ class OptionsDict(dict):
                 self.name = self.name_separator.join(names)
             else:
                 self.name = ''.join(names)
-            # # tk
-            # self.locations.update(other.locations)
+            self.locations.update(other.locations)
         # now pass to superclass
         dict.update(self, other)
 
@@ -248,6 +246,9 @@ class Location:
 
     def __str__(self):
         return self.str()
+
+    def __repr__(self):
+        return 'Location({}, {})'.format(self.names, self.index)
 
     def str(self, absolute=None, relative=None):
         """
