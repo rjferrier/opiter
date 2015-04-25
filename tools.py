@@ -1,7 +1,7 @@
 from collections import Iterable
 from itertools import imap, izip, chain, product as _product
 from functools import wraps
-from copy import copy
+from copy import deepcopy
 from inspect import getargspec, getargvalues
 
 
@@ -142,9 +142,9 @@ def merge(dict_combination):
     single_dict = None
     if isinstance(dict_combination, dict):
         dict_combination = (dict_combination,)
-    for el in iflatten(dict_combination):
+    for i, el in enumerate(iflatten(dict_combination)):
         if single_dict is None:
-            single_dict = copy(el)
+            single_dict = el.copy()
         else:
             single_dict.update(el)
     return single_dict

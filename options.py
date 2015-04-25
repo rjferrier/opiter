@@ -1,6 +1,7 @@
 from types import FunctionType, LambdaType
 from string import Template
 from collections import OrderedDict
+from copy import copy
 
 # default settings
 NAME_SEPARATOR = '_'
@@ -29,15 +30,16 @@ class OptionsDict(dict):
     entries argument if there are no other key-value pairs, in which
     case the functions' names become the keys.
 
-    (2) An OptionsDict can have a name.  When an OptionsDict is
-    updated using another OptionsDict, its name changes to reflect the
-    new state.  Updating 'A' with 'B' produces 'A_B'.
+    (2) An OptionsDict can be identified through its string
+    representation.  When an OptionsDict is updated using another
+    OptionsDict, its string representation changes to reflect the new
+    state.  For example, updating 'A' with 'B' produces 'A_B'.
 
     (3) An OptionsDict can expand strings as templates.
 
     (4) When the OptionsDict is created as part of an array, or is
     updated with such an OptionsDict, extra information is stored.
-    See OptionsDict.array and the Context class.
+    See OptionsDict.array, OptionsDict.str and the Context class.
     
     ** If using the multiprocessing module, it is important that
        dynamic entries are created using defs rather than lambdas.  It
@@ -50,11 +52,11 @@ class OptionsDict(dict):
     
     def __init__(self, entries={}):
         # with just an entries argument, treat as a simple dict.
-        # Default the name and other attributes first.  This is
-        # necessary to prevent dynamic entries from possibly
+        # Default the name substrings and other attributes first.
+        # This is necessary to prevent dynamic entries from possibly
         # referencing name before it exists
-        self.name = ''
-        self.contexts = OrderedDict()
+        self._name_substrings = []
+        self._contexts = OrderedDict()
         self.update(entries)
 
     @classmethod
@@ -65,9 +67,9 @@ class OptionsDict(dict):
         elif not isinstance(name, str):
             raise OptionsDictException(
                 "name argument must be a string (or None).")
-        # instantiate object and set the name
+        # instantiate object and set the first name
         obj = Self(entries)
-        obj.name = name
+        obj._name_substrings = [name]
         return obj
 
     @classmethod
@@ -129,27 +131,27 @@ class OptionsDict(dict):
             od.update(common_entries)
             # append to the lists
             optionsdict_list.append(od)
-            name_list.append(od.name)
+            name_list.append(str(od))
 
         # second pass: register Contexts
         for index, od in enumerate(optionsdict_list):
-            od.contexts[array_name] = Context(name_list, index)
+            od._contexts[array_name] = Context(name_list, index)
 
         # print array_name, name_list
         return optionsdict_list
 
     
     def __repr__(self):
-        lkeys = self.contexts.keys()
-        if lkeys:
-            lkeys = "@"+str(lkeys)
+        ckeys = self._contexts.keys()
+        if ckeys:
+            ckeys = "@"+str(ckeys)
         else:
-            lkeys = ""
+            ckeys = ""
         return '{}:{}{}'.format(
-            self.name, dict.__repr__(self), lkeys)
+            str(self), dict.__repr__(self), ckeys)
 
     def __str__(self):
-        return self.name
+        return self.str()
 
     def __iter__(self):
         yield self
@@ -166,8 +168,8 @@ class OptionsDict(dict):
         
     def __eq__(self, other):
         eq_tests = []
-        eq_tests.append(str(self) == str(other))
-        eq_tests.append(self.contexts == other.contexts)
+        eq_tests.append(self._name_substrings == other._name_substrings)
+        eq_tests.append(self._contexts == other._contexts)
         eq_tests.append(dict.__eq__(self, other))
         return all(eq_tests)
 
@@ -176,27 +178,15 @@ class OptionsDict(dict):
 
     def copy(self):
         obj = OptionsDict(dict.copy(self))
-        obj.name = self.name
-        obj.contexts = self.contexts
+        obj._name_substrings = copy(self._name_substrings)
+        obj._contexts = copy(self._contexts)
         return obj
-        
-    def update(self, entries):
-        if isinstance(entries, dict):
-            # argument is a dictionary, so updating is straightforward
-            self._update_from_dict(entries)
-        else:
-            # argument is presumably a list of dynamic entries
-            self._update_from_dynamic_entries(entries)
 
     def _update_from_dict(self, other):
         # update OptionsDict attributes
         if isinstance(other, OptionsDict):
-            names = (str(self), str(other))
-            if all(names):
-                self.name = self.name_separator.join(names)
-            else:
-                self.name = ''.join(names)
-            self.contexts.update(other.contexts)
+            self._name_substrings += other._name_substrings
+            self._contexts.update(other._contexts)
         # now pass to superclass
         dict.update(self, other)
 
@@ -212,14 +202,14 @@ functions).""")
                 self[func.__name__] = func
         except TypeError:
             raise err
-                
-    def expand_template(self, buffer_string, loops=1):
-        """In buffer_string, replaces substrings prefixed '$' with
-        corresponding values from the dictionary."""
-        for i in range(loops):
-            buffer_string = Template(buffer_string)
-            buffer_string = buffer_string.safe_substitute(self)
-        return buffer_string
+        
+    def update(self, entries):
+        if isinstance(entries, dict):
+            # argument is a dictionary, so updating is straightforward
+            self._update_from_dict(entries)
+        else:
+            # argument is presumably a list of dynamic entries
+            self._update_from_dynamic_entries(entries)
 
     def get_context(self, array_name=None):
         """
@@ -232,13 +222,60 @@ functions).""")
         """
         if array_name is None:
             try:
-                array_name = self.contexts.keys()[0]
+                array_name = self._contexts.keys()[0]
             except IndexError:
                 return None
         try:
-            return self.contexts[array_name]
+            return self._contexts[array_name]
         except KeyError:
             return None
+
+    def _join_substrings(self, substrings):
+        if all(substrings):
+            return self.name_separator.join(substrings)
+        else:
+            return ''.join(substrings)
+
+    def str(self, only=[], exclude=[]):
+        """
+        Returns an identifier in the form of a string, providing more
+        control than the __str__ idiom through its optional arguments.
+        """
+        # wrap 'only' and 'exclude' strings as lists if necessary
+        if isinstance(only, str):
+            only = [only]
+        if isinstance(exclude, str):
+            exclude = [exclude]
+        # convert array names to context names
+        only_substrings = self._get_context_names(only)
+        exclude_substrings = self._get_context_names(exclude)
+        # loop over name substrings, appending as appropriate
+        result_substrings = []
+        for substr in self._name_substrings:
+            if only:
+                if substr not in only_substrings:
+                    continue
+            if substr in exclude_substrings:
+                continue
+            result_substrings.append(substr)
+        return self._join_substrings(result_substrings)
+
+    def _get_context_names(self, array_names):
+        result = []
+        for arr in array_names:
+            ct = self._contexts[arr]
+            result.append(str(ct))
+        return result
+                
+    def expand_template(self, buffer_string, loops=1):
+        """
+        In buffer_string, replaces substrings prefixed '$' with
+        corresponding values from the dictionary.
+        """
+        for i in range(loops):
+            buffer_string = Template(buffer_string)
+            buffer_string = buffer_string.safe_substitute(self)
+        return buffer_string
         
 
 class Context:

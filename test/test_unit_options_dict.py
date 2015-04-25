@@ -45,7 +45,7 @@ class TestAnonymousOptionsDict(unittest.TestCase):
         """I create an anonymous OptionsDict."""
         self.od = OptionsDict({'foo': 'bar'})
         
-    def test_name(self):
+    def test_str(self):
         self.assertEqual(str(self.od), '')
 
     def test_repr(self):
@@ -59,6 +59,17 @@ class TestAnonymousOptionsDict(unittest.TestCase):
 
     def test_contexts_empty(self):
         self.assertIsNone(self.od.get_context())
+
+    def test_copy(self):
+        other = self.od.copy()
+        # test for equivalence and non-identity
+        self.assertEqual(other, self.od)
+        self.assertFalse(other is self.od)
+        # test that entries have been copied and not simply linked (we
+        # do not guarantee that their components have been
+        # deep-copied, however)
+        other.update(OptionsDict({'foo': 'baz'}))
+        self.assertNotEqual(other, self.od)
         
         
 class TestNamedOptionsDict(unittest.TestCase):
@@ -66,9 +77,6 @@ class TestNamedOptionsDict(unittest.TestCase):
     def setUp(self):
         """I create a named OptionsDict."""
         self.od = OptionsDict.named('foo', {'bar': 1})
-
-    def test_name(self):
-        self.assertEqual(str(self.od), 'foo')
 
     def test_equal_names_and_dicts(self):
         self.assertEqual(self.od,
@@ -87,8 +95,36 @@ class TestNamedOptionsDict(unittest.TestCase):
         # test for equivalence and non-identity
         self.assertEqual(other, self.od)
         self.assertFalse(other is self.od)
+        # test that name components have been copied and not simply
+        # linked
+        other.update(OptionsDict.named('baz'))
+        self.assertNotEqual(other, self.od)
+        
 
+    def test_default_str(self):
+        """
+        Calling the __str__ idiom and the str() method with no arguments
+        should just return the name.
+        """
+        self.assertEqual(str(self.od), 'foo')
+        self.assertEqual(self.od.str(), 'foo')
 
+    # def test_str_from_missing_array_name(self):
+    #     """
+    #     Calling the str() method with the name of an array that hasn't
+    #     been registered yet should trigger a KeyError.
+    #     """
+    #     self.assertRaises(KeyError, lambda: self.od.str(['foo']))
+
+    # def test_str_exclude_missing_array_name(self):
+    #     """
+    #     Conversely, calling the str() method to exclude the substring
+    #     corresponding to the name of an array that hasn't been
+    #     registered yet should be fine.
+    #     """
+    #     self.assertEqual(self.od.str(exclude=['some_array']), 'foo')
+
+        
 class TestOptionsDictUpdateFromOptionsDict(unittest.TestCase):
         
     def setUp(self):
@@ -121,7 +157,7 @@ class TestOptionsDictUpdateFromOptionsDict(unittest.TestCase):
 
         
 class TestOptionsDictUpdateFromDict(unittest.TestCase):
-        
+    
     def setUp(self):
         """
         I create and store an OptionsDict.  I create a standard dict,

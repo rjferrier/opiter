@@ -8,7 +8,7 @@ sys.path.append('..')
 
 import unittest
 from options import OptionsDict
-from tools import merges_dicts, product, attach
+from tools import merges_dicts, product, attach, flatten
 
 # functions to be multiprocessed must be defined outside the unit
 # testing framework (i.e. here), otherwise there will be pickling
