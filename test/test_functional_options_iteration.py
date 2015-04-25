@@ -3,15 +3,21 @@ sys.path.append('..')
 
 import unittest
 from options import OptionsDict
-from tools import flatten, attach, merge, merges_dicts, \
-    identify, Lookup
-from itertools import product, chain
+from tools import product, attach, merge, merges_dicts, \
+    identify, Lookup, flatten
 from multiprocessing import Pool
 
-# NOTE: The multiprocessing tests currently cause pickling errors.
-# These do not appear in the examples scripts, so there might be an
-# incompatibility with the unit testing framework.  The offending
-# tests have been commented out.
+# functions and objects to be multiprocessed must be defined outside
+# the unit testing framework (i.e. here) otherwise there will be
+# pickling errors.
+
+@merges_dicts
+def distance(opt):
+    return opt['speed'] * opt['travel_time']
+
+@merges_dicts
+def cost(opt):
+    return opt['res']**opt['dim']
 
 
 class TestOptionsDictCartesianProductIteration(unittest.TestCase):
@@ -24,6 +30,7 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
         self.speed = OptionsDict.sequence('speed', [30, 40, 60])
         self.time  = OptionsDict.sequence('travel_time', [0.5, 1])
         self.expected_distances = [15, 30, 20, 40, 30, 60]
+        self.pool = Pool(2)
 
     def test_manual_iteration(self):
         """
@@ -42,13 +49,9 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
         """
         Instead of calculating the distance myself, I might include
         another OptionsDict which does the work via a dynamic entry.
-        I will need to wrap this object as an extra sequence before
-        passing to itertools.product, otherwise the object will return
-        an iterator to its dictionary entries and mess things up.
         """
-        calc = [OptionsDict({'distance': lambda self: \
-                            self['speed'] * self['travel_time']})]
-        combos = product(calc, self.speed, self.time)
+        common = OptionsDict([distance])
+        combos = product(common, self.speed, self.time)
         for combo, expected in zip(combos, self.expected_distances):
             opt = merge(combo)
             self.assertAlmostEqual(opt['distance'], expected)
@@ -60,26 +63,26 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
         the merges_dicts decorator so that my distance calculator
         only has to deal with one dictionary.
         """
-        @merges_dicts
-        def calc(opt):
-            return opt['speed'] * opt['travel_time']
         combos = product(self.speed, self.time)
-        resulting_distances = map(calc, combos)
+        resulting_distances = map(distance, combos)
         for resulting, expected in \
                 zip(resulting_distances, self.expected_distances):
             self.assertAlmostEqual(resulting, expected)
 
-    # def test_parallel_mapping(self):
-    #     @merges_dicts
-    #     def calc(opt):
-    #         return opt['speed'] * opt['travel_time']
-    #     pool = Pool(2)
-    #     combos = product(self.speed, self.time)
-    #     resulting_distances = pool.map(calc, combos)
-    #     for resulting, expected in \
-    #             zip(resulting_distances, self.expected_distances):
-    #         self.assertAlmostEqual(resulting, expected)
-    #     pool.close()
+    def test_parallel_mapping(self):
+        combos = product(self.speed, self.time)
+        resulting_distances = self.pool.map(distance, combos)
+        for resulting, expected in \
+                zip(resulting_distances, self.expected_distances):
+            self.assertAlmostEqual(resulting, expected)
+            
+    def test_parallel_mapping_with_extra_dict_and_dynamic_entry(self):
+        common = OptionsDict([distance])
+        combos = product(common, self.speed, self.time)
+        resulting_distances = self.pool.map(distance, combos)
+        for resulting, expected in \
+                zip(resulting_distances, self.expected_distances):
+            self.assertAlmostEqual(resulting, expected)
 
 
 class TestOptionsDictTreeIteration(unittest.TestCase):
@@ -100,18 +103,14 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         will implement a dynamic entry at the root of the tree to
         calculate computation time.
         """
-        def calc_cost(opt):
-            return opt['res']**opt['dim']
-        root = [OptionsDict.named(
-            'sim', {'cost': calc_cost})]
-        dims = OptionsDict.sequence('dim', [1, 2, 3],
-                                    name_format='{}d')    
+        root = [OptionsDict.named('sim', [cost])]
+        dims = OptionsDict.sequence('dim', [1, 2, 3], name_format='{}d')
         res1d = OptionsDict.sequence('res', [10, 20, 40, 80])
         res2d = OptionsDict.sequence('res', [10, 20, 40])
         res3d = OptionsDict.sequence('res', [10, 20])
         branches = attach(dims, (res1d, res2d, res3d))
-        self.tree = product(root, chain(branches))
-        # self.pool = Pool(2)
+        self.tree = product(root, branches)
+        self.pool = Pool(2)
 
     def check_names(self, resulting_names):
         "Helper for name_check tests."
@@ -150,18 +149,16 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         self.check_names(resulting_names)
             
     def test_serial_mapping_and_lookup(self):
-        lookup = Lookup('cost')
-        resulting_times = map(lookup, self.tree)
+        resulting_times = map(Lookup('cost'), self.tree)
         self.check_times(resulting_times)
             
-    # def test_parallel_mapping_and_name_check(self):
-    #     resulting_names = self.pool.map(identify, self.tree)
-    #     self.check_names(resulting_names)
+    def test_parallel_mapping_and_name_check(self):
+        resulting_names = self.pool.map(identify, self.tree)
+        self.check_names(resulting_names)
             
-    # def test_parallel_mapping_and_lookup(self):
-    #     lookup = Lookup('cost')
-    #     resulting_times = self.pool.map(lookup, self.tree)
-    #     self.check_times(resulting_times)
+    def test_parallel_mapping_and_lookup(self):
+        resulting_times = self.pool.map(Lookup('cost'), self.tree)
+        self.check_times(resulting_times)
 
             
 if __name__ == '__main__':
