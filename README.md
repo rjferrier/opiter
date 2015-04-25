@@ -22,13 +22,13 @@ states [0.10, 0.15], and an independent variable `velocity`, which
 may take states [0.01, 0.02, 0.04], we might want to test
 combinations (0.10, 0.01), (0.10, 0.02), etc.  We might also want
 to do this for each of the fluids specified above.  These combinations
-are easily expressed by creating sequences of OptionsDicts and using
+are easily expressed by creating arrays of OptionsDicts and using
 `product` (adapted from the `itertools` library).
   
 ```python
-  fluids     = [water, ethanol]
-  pipe_dias  = OptionsDict.sequence('pipe_diameter', [0.10, 0.15])
-  velocities = OptionsDict.sequence('velocity', [0.01, 0.02, 0.04])
+  fluids     = OptionsDict.array('fluid', [water, ethanol])
+  pipe_dias  = OptionsDict.array('pipe_diameter', [0.10, 0.15])
+  velocities = OptionsDict.array('velocity', [0.01, 0.02, 0.04])
   combos = product(fluids, pipe_dias, velocities)
 ```
 
@@ -73,8 +73,8 @@ a separate OptionsDict which is then applied globally.
 ```python
   def kinematic_viscosity(opt):
       return opt['dynamic_viscosity'] / opt['density']
-  fluids = OptionsDict.sequence('fluid', [water, ethanol], 
-                                common_entries=[kinematic_viscosity])
+  fluids = OptionsDict.array('fluid', [water, ethanol], 
+                             common_entries=[kinematic_viscosity])
   
   def Reynolds_number(opt):
       return opt['velocity'] * opt['pipe_diameter'] / \

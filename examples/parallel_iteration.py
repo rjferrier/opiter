@@ -20,8 +20,8 @@ job_times = [0.1, 0.3]
 ## PREPROCESSING
 
 # create iterable structure and some operation
-modifier_seq = OptionsDict.sequence('modifier', modifiers)
-job_time_seq = OptionsDict.sequence('job_time', job_times)
+modifier_seq = OptionsDict.array('modifier', modifiers)
+job_time_seq = OptionsDict.array('job_time', job_times)
 combos = product(modifier_seq, job_time_seq)
 
 sleep_time = lambda opt: opt['modifier'] * opt['job_time']

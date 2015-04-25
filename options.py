@@ -61,26 +61,34 @@ class OptionsDict(dict):
         return Self(entries, name)
 
     @classmethod
-    def sequence(Self, sequence_key, elements, common_entries={},
-                 name_format='{}'):
+    def array(Self, array_name, elements, common_entries={},
+              name_format='{}'):
         """
-        OptionsDict.sequence(sequence_key, elements, 
-                             common_entries={}, name_format='{}')
+        OptionsDict.array(array_name, elements, 
+                          common_entries={}, name_format='{}')
 
-        Creates a list of OptionsDicts, converting the given elements
-        if necessary.  That is, if a element is not already an
-        OptionsDict, it is converted to a string which becomes the
-        name of a new OptionsDict.  All dicts are initialised with
-        common_entries if this argument is given.
+        Returns a list of OptionsDicts, wrapping the given elements as
+        necessary.
 
-        The string conversion is governed by name_format, which can
-        either be a format string or a callable that takes the element
-        value and returns a string.
+        If a given element is not already an OptionsDict, it is
+        converted to a string which becomes the name of a new
+        OptionsDict.  The new OptionsDict acquires the entry
+        {array_name: element}.  This feature is useful for setting up
+        an independent variable with an associated array of values.
+        For example,
+           OptionsDict.array('velocity', [0.01, 0.02, 0.04])
+        is equivalent to
+          [OptionsDict.named('0.01', {'velocity': 0.01}),
+           OptionsDict.named('0.02', {'velocity': 0.02}),
+           OptionsDict.named('0.04', {'velocity': 0.04})]
 
-        An important feature is that for each element, the
-        corresponding OptionsDict acquires the entry {sequence_key:
-        element.name} if the element is already an OptionsDict, and
-        {sequence_key: element} otherwise.
+        If an element is already an OptionsDict, it simply acquires
+        the entry {array_name: element.name}.
+        
+        All dicts are initialised with common_entries if this argument
+        is given.  The element-to-string conversion is governed by
+        name_format, which can either be a format string or a callable
+        that takes the element value and returns a string.
         """
 
         optionsdict_list = []
@@ -90,19 +98,19 @@ class OptionsDict(dict):
                 # make a copy.  This has the benefit of preventing
                 # side effects if the element persists elsewhere.
                 od = copy(el)
-                # add a special entry using sequence_key
-                od.update({sequence_key: str(el)})
+                # add a special entry using array_name
+                od.update({array_name: str(el)})
             else:
                 # instantiate a new OptionsDict with the string
                 # represention of the element acting as its name, and
-                # the original element stored under sequence_key
+                # the original element stored under array_name
                 try:
                     od = Self.named(name_format(el),
-                                    {sequence_key: el})
+                                    {array_name: el})
                 except TypeError:
                     try:
                         od = Self.named(name_format.format(el),
-                                        {sequence_key: el})
+                                        {array_name: el})
                     except AttributeError:
                         raise OptionsDictException(
                             "name_formatter must be a callable "+\
@@ -155,7 +163,7 @@ class OptionsDict(dict):
 
     def update(self, entries):
         err = OptionsDictException("""
-entries must be a dict or a sequence of dynamic entries (i.e. 
+entries must be a dict or a list of dynamic entries (i.e. 
 functions).""")
         if isinstance(entries, dict):
             # argument is a dictionary, so updating is straightforward
