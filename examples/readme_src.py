@@ -16,8 +16,8 @@ ethanol = OptionsDict.named('ethanol', {
     'dynamic_viscosity' : 1.09e-3})
 
 fluids     = [water, ethanol]
-pipe_dias  = OptionsDict.sequence('pipe_diameter', [0.10, 0.15])
-velocities = OptionsDict.sequence('velocity', [0.01, 0.02, 0.04])
+pipe_dias  = OptionsDict.array('pipe_diameter', [0.10, 0.15])
+velocities = OptionsDict.array('velocity', [0.01, 0.02, 0.04])
 combos = product(fluids, pipe_dias, velocities)
 
 print "\nUsing serial loop:\n"
@@ -52,7 +52,7 @@ print "\nUsing dynamic entries:\n"
 
 def kinematic_viscosity(opt):
     return opt['dynamic_viscosity'] / opt['density']
-fluids = OptionsDict.sequence('fluid', [water, ethanol], 
+fluids = OptionsDict.array('fluid', [water, ethanol], 
                               common_entries=[kinematic_viscosity])
 
 def Reynolds_number(opt):

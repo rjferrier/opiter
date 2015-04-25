@@ -35,9 +35,9 @@ class OptionsDict(dict):
 
     (3) An OptionsDict can expand strings as templates.
 
-    (4) When the OptionsDict is created as part of a sequence, or is
+    (4) When the OptionsDict is created as part of an array, or is
     updated with such an OptionsDict, extra information is stored.
-    See OptionsDict.sequence and the Location class.
+    See OptionsDict.array and the Location class.
     
     ** If using the multiprocessing module, it is important that
        dynamic entries are created using defs rather than lambdas.  It
@@ -71,11 +71,11 @@ class OptionsDict(dict):
         return obj
 
     @classmethod
-    def sequence(Self, sequence_key, elements, common_entries={},
-                 name_format='{}'):
+    def array(Self, array_name, elements, common_entries={},
+              name_format='{}'):
         """
-        OptionsDict.sequence(sequence_key, elements, 
-                             common_entries={}, name_format='{}')
+        OptionsDict.array(array_name, elements, 
+                          common_entries={}, name_format='{}')
 
         Creates a list of OptionsDicts, converting the given elements
         if necessary.  That is, if a element is not already an
@@ -87,18 +87,18 @@ class OptionsDict(dict):
         either be a format string or a callable that takes the element
         value and returns a string.
 
-        The sequence_key argument has two notable effects (assuming it
+        The array_name argument has two notable effects (assuming it
         is a non-empty string).  Firstly, for each element, the
-        corresponding OptionsDict acquires the entry {sequence_key:
+        corresponding OptionsDict acquires the entry {array_name:
         element.name} if the element is already an OptionsDict, and
-        {sequence_key: element} otherwise.  This is useful for setting
+        {array_name: element} otherwise.  This is useful for setting
         up an independent variable and sweeping through a range of
         values.
 
         Secondly, a Location object becomes registered and accessible
-        through the get_location(sequence_key) method.  A Location
+        through the get_location(array_name) method.  A Location
         provides information on where an OptionsDict is in relation to
-        others in the sequence.  It also provides the names of other
+        others in the array.  It also provides the names of other
         OptionsDicts based on their absolute or relative indices.
         """
         optionsdict_list = []
@@ -111,13 +111,13 @@ class OptionsDict(dict):
                 # make a copy.  This has the benefit of preventing
                 # side effects if the element persists elsewhere.
                 od = el.copy()
-                # add a special entry using sequence_key
-                od.update({sequence_key: str(el)})
+                # add a special entry using array_name
+                od.update({array_name: str(el)})
             else:
                 # otherwise, instantiate a new OptionsDict with the
                 # string represention of the element acting as its
                 # name and the original element stored under
-                # sequence_key
+                # array_name
                 try:
                     name = name_format(el)
                 except TypeError:
@@ -127,7 +127,7 @@ class OptionsDict(dict):
                         raise OptionsDictException(
                             "name_format must be a callable "+\
                             "or a format string.")
-                od = Self.named(name, {sequence_key: el})
+                od = Self.named(name, {array_name: el})
             # add entries
             od.update(common_entries)
             # append to the lists
@@ -136,9 +136,9 @@ class OptionsDict(dict):
 
         # second pass: register Locations
         for index, od in enumerate(optionsdict_list):
-            od.locations[sequence_key] = Location(name_list, index)
+            od.locations[array_name] = Location(name_list, index)
 
-        # print sequence_key, name_list
+        # print array_name, name_list
         return optionsdict_list
 
     
@@ -224,22 +224,22 @@ functions).""")
             buffer_string = buffer_string.safe_substitute(self)
         return buffer_string
 
-    def get_location(self, sequence_key=None):
+    def get_location(self, array_name=None):
         """
-        If the OptionsDict was initialised as part of a sequence,
+        If the OptionsDict was initialised as part of an array,
         calling this method will return its associated Location
         object.  If the OptionsDict has since been updated with other
-        sequence-initialised OptionsDicts, it is possible to recover
+        array-initialised OptionsDicts, it is possible to recover
         any of their Locations by passing in the corresponding
-        sequence_key.
+        array_name.
         """
-        if sequence_key is None:
+        if array_name is None:
             try:
-                sequence_key = self.locations.keys()[0]
+                array_name = self.locations.keys()[0]
             except IndexError:
                 return None
         try:
-            return self.locations[sequence_key]
+            return self.locations[array_name]
         except KeyError:
             return None
         
@@ -262,7 +262,7 @@ class Location:
         given, one of its siblings.  The optional arguments correspond
         to absolute and relative indices, respectively.  In accordance
         with Python indexing rules, a negative absolute index returns
-        a node from the end of the sequence.  To avoid confusion, this
+        a node from the end of the array.  To avoid confusion, this
         does not apply when a relative index is given.
         """
         if absolute is None:

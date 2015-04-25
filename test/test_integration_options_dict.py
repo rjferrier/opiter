@@ -26,10 +26,10 @@ class TestOptionsDictWithLocation(unittest.TestCase):
 
     def setUp(self):
         """
-        I create an OptionsDict sequence 'A' using three integers.  I
+        I create an OptionsDict array 'A' using three integers.  I
         store the second node and its location object.
         """
-        seq = OptionsDict.sequence('A', [1, 2, 3])
+        seq = OptionsDict.array('A', [1, 2, 3])
         self.od = seq[1]
         self.loc = self.od.get_location()
 
@@ -46,9 +46,9 @@ class TestOptionsDictWithLocation(unittest.TestCase):
         """
         self.assertEqual(str(self.loc), str(self.od))
 
-    def test_get_location_by_sequence_key(self):
+    def test_get_location_by_array_key(self):
         """
-        I should get the same location by passing the sequence key to
+        I should get the same location by passing the array key to
         the OptionDict's get_location method.
         """
         self.assertEqual(self.loc, self.od.get_location('A'))
@@ -70,13 +70,13 @@ class TestOptionsDictWithSeveralLocations(unittest.TestCase):
 
     def setUp(self):
         """
-        I create three OptionsDict sequences, 'A', 'B' and 'C', and
+        I create three OptionsDict arrays, 'A', 'B' and 'C', and
         store an element from each.  I update the OptionsDict
         corresponding to 'B' with the other two OptionsDicts.
         """
-        A = OptionsDict.sequence('A', [1, 2, 3])
-        B = OptionsDict.sequence('B', ['i', 'ii', 'iii'])
-        C = OptionsDict.sequence('C', [0.6, 1.6])
+        A = OptionsDict.array('A', [1, 2, 3])
+        B = OptionsDict.array('B', ['i', 'ii', 'iii'])
+        C = OptionsDict.array('C', [0.6, 1.6])
         self.a2 = A[2]
         self.b1 = B[1]
         self.c0 = C[0]
@@ -104,13 +104,13 @@ class TestOptionsDictWithSeveralLocations(unittest.TestCase):
 
     def setUp(self):
         """
-        I create three OptionsDict sequences, 'A', 'B' and 'C', and
+        I create three OptionsDict arrays, 'A', 'B' and 'C', and
         store the second element of B.  I update this OptionsDict
         with the first and third elements of C and A, respectively.
         """
-        A = OptionsDict.sequence('A', [1, 2, 3])
-        B = OptionsDict.sequence('B', ['i', 'ii', 'iii'])
-        C = OptionsDict.sequence('C', [0.25, 0.5, 1.0])
+        A = OptionsDict.array('A', [1, 2, 3])
+        B = OptionsDict.array('B', ['i', 'ii', 'iii'])
+        C = OptionsDict.array('C', [0.25, 0.5, 1.0])
         self.od = B[1]
         self.od.update(C[0])
         self.od.update(A[2])

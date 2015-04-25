@@ -3,6 +3,9 @@ Base module for test_functional_serial_iteration and
 test_functional_parallel_iteration.
 """
 
+import sys
+sys.path.append('..')
+
 import unittest
 from options import OptionsDict
 from tools import merges_dicts, product, attach
@@ -25,11 +28,11 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
     
     def setUp(self):
         """
-        I create two OptionsDict sequences, one for 'speed' and one
+        I create two OptionsDict arrays, one for 'speed' and one
         for 'travel time'.
         """
-        self.speed = OptionsDict.sequence('speed', [30, 40, 60])
-        self.time  = OptionsDict.sequence('travel_time', [0.5, 1])
+        self.speed = OptionsDict.array('speed', [30, 40, 60])
+        self.time  = OptionsDict.array('travel_time', [0.5, 1])
         self.expected_distances = [15, 30, 20, 40, 30, 60]
 
         
@@ -49,13 +52,12 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
 
         This should be possible using the attach and product
         functions.  I will implement a dynamic entry at the root of
-        the tree to calculate computation time.
+        the tree to calculate the computational cost.
         """
-        dims = OptionsDict.sequence('dim', [1, 2, 3],
-                                    name_format='{}d')
-        res1d = OptionsDict.sequence('res', [10, 20, 40, 80])
-        res2d = OptionsDict.sequence('res', [10, 20, 40])
-        res3d = OptionsDict.sequence('res', [10, 20])
+        dims = OptionsDict.array('dim', [1, 2, 3], name_format='{}d')
+        res1d = OptionsDict.array('res', [10, 20, 40, 80])
+        res2d = OptionsDict.array('res', [10, 20, 40])
+        res3d = OptionsDict.array('res', [10, 20])
         branches = attach(dims, (res1d, res2d, res3d))
         root = OptionsDict.named('sim', [cost])
         self.tree = product(root, branches)

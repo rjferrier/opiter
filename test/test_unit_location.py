@@ -9,7 +9,7 @@ class TestLocation(unittest.TestCase):
 
     def setUp(self):
         """
-        With a sequence of nodes named 'A', 'B' and 'C', I create a
+        With a array of nodes named 'A', 'B' and 'C', I create a
         Location for the second node.
         """
         self.loc = Location(['A', 'B', 'C'], 1)
