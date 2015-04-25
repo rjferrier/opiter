@@ -37,7 +37,7 @@ class OptionsDict(dict):
 
     (4) When the OptionsDict is created as part of an array, or is
     updated with such an OptionsDict, extra information is stored.
-    See OptionsDict.array and the Location class.
+    See OptionsDict.array and the Context class.
     
     ** If using the multiprocessing module, it is important that
        dynamic entries are created using defs rather than lambdas.  It
@@ -54,7 +54,7 @@ class OptionsDict(dict):
         # necessary to prevent dynamic entries from possibly
         # referencing name before it exists
         self.name = ''
-        self.locations = OrderedDict()
+        self.contexts = OrderedDict()
         self.update(entries)
 
     @classmethod
@@ -95,11 +95,8 @@ class OptionsDict(dict):
         up an independent variable and sweeping through a range of
         values.
 
-        Secondly, a Location object becomes registered and accessible
-        through the get_location(array_name) method.  A Location
-        provides information on where an OptionsDict is in relation to
-        others in the array.  It also provides the names of other
-        OptionsDicts based on their absolute or relative indices.
+        Secondly, a Context object becomes registered and accessible
+        through the get_context(array_name) method.
         """
         optionsdict_list = []
         name_list = []
@@ -134,16 +131,16 @@ class OptionsDict(dict):
             optionsdict_list.append(od)
             name_list.append(od.name)
 
-        # second pass: register Locations
+        # second pass: register Contexts
         for index, od in enumerate(optionsdict_list):
-            od.locations[array_name] = Location(name_list, index)
+            od.contexts[array_name] = Context(name_list, index)
 
         # print array_name, name_list
         return optionsdict_list
 
     
     def __repr__(self):
-        lkeys = self.locations.keys()
+        lkeys = self.contexts.keys()
         if lkeys:
             lkeys = "@"+str(lkeys)
         else:
@@ -170,7 +167,7 @@ class OptionsDict(dict):
     def __eq__(self, other):
         eq_tests = []
         eq_tests.append(str(self) == str(other))
-        eq_tests.append(self.locations == other.locations)
+        eq_tests.append(self.contexts == other.contexts)
         eq_tests.append(dict.__eq__(self, other))
         return all(eq_tests)
 
@@ -180,7 +177,7 @@ class OptionsDict(dict):
     def copy(self):
         obj = OptionsDict(dict.copy(self))
         obj.name = self.name
-        obj.locations = self.locations
+        obj.contexts = self.contexts
         return obj
         
     def update(self, entries):
@@ -199,7 +196,7 @@ class OptionsDict(dict):
                 self.name = self.name_separator.join(names)
             else:
                 self.name = ''.join(names)
-            self.locations.update(other.locations)
+            self.contexts.update(other.contexts)
         # now pass to superclass
         dict.update(self, other)
 
@@ -224,27 +221,34 @@ functions).""")
             buffer_string = buffer_string.safe_substitute(self)
         return buffer_string
 
-    def get_location(self, array_name=None):
+    def get_context(self, array_name=None):
         """
         If the OptionsDict was initialised as part of an array,
-        calling this method will return its associated Location
+        calling this method will return its associated Context
         object.  If the OptionsDict has since been updated with other
         array-initialised OptionsDicts, it is possible to recover
-        any of their Locations by passing in the corresponding
+        any of their Contexts by passing in the corresponding
         array_name.
         """
         if array_name is None:
             try:
-                array_name = self.locations.keys()[0]
+                array_name = self.contexts.keys()[0]
             except IndexError:
                 return None
         try:
-            return self.locations[array_name]
+            return self.contexts[array_name]
         except KeyError:
             return None
         
 
-class Location:
+class Context:
+    """
+    Context(names, index)
+    
+    Provides information on where a node is in relation to others in a
+    sequence.  It also provides the names of the other elements based
+    on their absolute or relative indices.
+    """
 
     def __init__(self, names, index):
         self.names = names
@@ -254,7 +258,7 @@ class Location:
         return self.str()
 
     def __repr__(self):
-        return 'Location({}, {})'.format(self.names, self.index)
+        return 'Context({}, {})'.format(self.names, self.index)
 
     def str(self, absolute=None, relative=None):
         """
