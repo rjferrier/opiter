@@ -72,11 +72,6 @@ class OptionsDict(dict):
         obj._name_substrings = [name]
         return obj
 
-    @staticmethod
-    def create_context(name_list, index):
-        "Overrideable factory method"
-        return Context(name_list, index)
-
     @classmethod
     def array(Self, array_name, elements, common_entries={},
               name_format='{}'):
@@ -145,11 +140,16 @@ class OptionsDict(dict):
 
         # second pass: register contexts
         for index, od in enumerate(optionsdict_list):
-            od._contexts[array_name] = Self.create_context(name_list,
-                                                           index)
+            od._contexts[array_name] = od.create_context(
+                name_list, index)
 
         # print array_name, name_list
         return optionsdict_list
+
+        
+    def create_context(self, name_list, index):
+        "Overrideable factory method"
+        return Context(name_list, index)
     
     def __repr__(self):
         ckeys = self._contexts.keys()
@@ -191,6 +191,14 @@ class OptionsDict(dict):
         obj._name_substrings = copy(self._name_substrings)
         obj._contexts = copy(self._contexts)
         return obj
+        
+    def update(self, entries):
+        if isinstance(entries, dict):
+            # argument is a dictionary, so updating is straightforward
+            self._update_from_dict(entries)
+        else:
+            # argument is presumably a list of dynamic entries
+            self._update_from_dynamic_entries(entries)
 
     def _update_from_dict(self, other):
         # update OptionsDict attributes
@@ -212,14 +220,6 @@ functions).""")
                 self[func.__name__] = func
         except TypeError:
             raise err
-        
-    def update(self, entries):
-        if isinstance(entries, dict):
-            # argument is a dictionary, so updating is straightforward
-            self._update_from_dict(entries)
-        else:
-            # argument is presumably a list of dynamic entries
-            self._update_from_dynamic_entries(entries)
 
     def get_context(self, array_name=None):
         """
@@ -239,12 +239,6 @@ functions).""")
             return self._contexts[array_name]
         except KeyError:
             return None
-
-    def _join_substrings(self, substrings):
-        if all(substrings):
-            return self.name_separator.join(substrings)
-        else:
-            return ''.join(substrings)
 
     def str(self, only=[], exclude=[]):
         """
@@ -284,6 +278,12 @@ functions).""")
             ct = self._contexts[arr]
             result.append(str(ct))
         return result
+
+    def _join_substrings(self, substrings):
+        if all(substrings):
+            return self.name_separator.join(substrings)
+        else:
+            return ''.join(substrings)
                 
     def expand_template(self, buffer_string, loops=1):
         """
