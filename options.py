@@ -39,7 +39,7 @@ class OptionsDict(dict):
 
     (4) When the OptionsDict is created as part of an array, or is
     updated with such an OptionsDict, extra information is stored.
-    See OptionsDict.array, OptionsDict.str and the Context class.
+    See array, str and get_context methods.
     
     ** If using the multiprocessing module, it is important that
        dynamic entries are created using defs rather than lambdas.  It
@@ -72,6 +72,11 @@ class OptionsDict(dict):
         obj._name_substrings = [name]
         return obj
 
+    @staticmethod
+    def create_context(name_list, index):
+        "Overrideable factory method"
+        return Context(name_list, index)
+
     @classmethod
     def array(Self, array_name, elements, common_entries={},
               name_format='{}'):
@@ -79,26 +84,31 @@ class OptionsDict(dict):
         OptionsDict.array(array_name, elements, 
                           common_entries={}, name_format='{}')
 
-        Creates a list of OptionsDicts, converting the given elements
-        if necessary.  That is, if a element is not already an
-        OptionsDict, it is converted to a string which becomes the
-        name of a new OptionsDict.  All dicts are initialised with
-        common_entries if this argument is given.
+        Returns a list of OptionsDicts, wrapping the given elements as
+        necessary.
 
-        The string conversion is governed by name_format, which can
-        either be a format string or a callable that takes the element
-        value and returns a string.
+        If a given element is not already an OptionsDict, it is
+        converted to a string which becomes the name of a new
+        OptionsDict.  The new OptionsDict acquires the entry
+        {array_name: element}.  This feature is useful for setting up
+        an independent variable with an associated array of values.
+        For example,
+           OptionsDict.array('velocity', [0.01, 0.02, 0.04])
+        is equivalent to
+          [OptionsDict.named('0.01', {'velocity': 0.01}),
+           OptionsDict.named('0.02', {'velocity': 0.02}),
+           OptionsDict.named('0.04', {'velocity': 0.04})]
 
-        The array_name argument has two notable effects (assuming it
-        is a non-empty string).  Firstly, for each element, the
-        corresponding OptionsDict acquires the entry {array_name:
-        element.name} if the element is already an OptionsDict, and
-        {array_name: element} otherwise.  This is useful for setting
-        up an independent variable and sweeping through a range of
-        values.
-
-        Secondly, a Context object becomes registered and accessible
-        through the get_context(array_name) method.
+        If an element is already an OptionsDict, it simply acquires
+        the entry {array_name: element.name}.
+        
+        All dicts are initialised with common_entries if this argument
+        is given.  The element-to-string conversion is governed by
+        name_format, which can either be a format string or a callable
+        that takes the element value and returns a string.
+        
+        A context object becomes registered and accessible through the
+        get_context(array_name) method.
         """
         optionsdict_list = []
         name_list = []
@@ -133,13 +143,13 @@ class OptionsDict(dict):
             optionsdict_list.append(od)
             name_list.append(str(od))
 
-        # second pass: register Contexts
+        # second pass: register contexts
         for index, od in enumerate(optionsdict_list):
-            od._contexts[array_name] = Context(name_list, index)
+            od._contexts[array_name] = Self.create_context(name_list,
+                                                           index)
 
         # print array_name, name_list
         return optionsdict_list
-
     
     def __repr__(self):
         ckeys = self._contexts.keys()
@@ -213,11 +223,11 @@ functions).""")
 
     def get_context(self, array_name=None):
         """
-        If the OptionsDict was initialised as part of an array,
-        calling this method will return its associated Context
-        object.  If the OptionsDict has since been updated with other
-        array-initialised OptionsDicts, it is possible to recover
-        any of their Contexts by passing in the corresponding
+        If the OptionsDict was initialised as part of an array, calling
+        this method with no arguments will return its associated
+        Context object.  If the OptionsDict has since been updated
+        with other array-initialised OptionsDicts, it is possible to
+        recover any of their Contexts by passing in the corresponding
         array_name.
         """
         if array_name is None:
@@ -238,8 +248,16 @@ functions).""")
 
     def str(self, only=[], exclude=[]):
         """
-        Returns an identifier in the form of a string, providing more
-        control than the __str__ idiom through its optional arguments.
+        str(self, only=[], exclude=[])
+
+        Returns a string identifier, providing more control than the
+        __str__ idiom through optional arguments.
+
+        Specifically, if the OptionsDict was array-initialised, and/or
+        has been updated from other array-initialised OptionsDicts, it
+        is possible to control which substrings appear through the
+        'only' and 'exclude' arguments.  These arguments take an array
+        name or list of array names.
         """
         # wrap 'only' and 'exclude' strings as lists if necessary
         if isinstance(only, str):
