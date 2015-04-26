@@ -70,41 +70,6 @@ class TestOptionsDictWithSeveralContexts(unittest.TestCase):
 
     def setUp(self):
         """
-        I create three OptionsDict arrays, 'A', 'B' and 'C', and
-        store an element from each.  I update the OptionsDict
-        corresponding to 'B' with the other two OptionsDicts.
-        """
-        A = OptionsDict.array('A', [1, 2, 3])
-        B = OptionsDict.array('B', ['i', 'ii', 'iii'])
-        C = OptionsDict.array('C', [0.6, 1.6])
-        self.a2 = A[2]
-        self.b1 = B[1]
-        self.c0 = C[0]
-        self.b1.update(c0)
-        self.b1.update(a2)
-
-    def test_get_other_context(self):
-        """
-        get_context('A') should return a Context from which we can
-        recover the ID of the third element in A.
-        """
-        self.assertEqual(self.od.get_context('A').id())
-
-    def test_get_default_context(self):
-        """
-        When I call get_context with no arguments, the result should
-        be the same as that of get_context('B'), i.e. it should not
-        have changed since B was updated.
-        """
-        self.assertEqual(self.od.get_context(),
-                         self.od.get_context('B'))
-
-
-        
-class TestOptionsDictWithSeveralContexts(unittest.TestCase):
-
-    def setUp(self):
-        """
         I create three OptionsDict arrays, 'A', 'B' and 'C', and store
         the second element of B.  I update this OptionsDict with the
         first and third elements of C and A, respectively.  To
