@@ -3,56 +3,50 @@ sys.path.append('..')
 
 import unittest
 from mock import Mock
-from options import OptionsDict, OptionsDictException, Context
+from options import OptionsDict, OptionsDictException, Position
 
 
-class OptionsDictMockingContext(OptionsDict):
+class OptionsDictMockingPosition(OptionsDict):
     """
-    OptionsDict decoupled from the Context class for unit testing
-    purposes.  The mock Context objects it creates will respond to
+    OptionsDict decoupled from the Position class for unit testing
+    purposes.  The mock Position objects it creates will respond to
     str() simply by returning the OptionsDict's original name.  This
-    way we can examine how OptionsDict manages its context objects.
+    way we can examine how OptionsDict manages its position objects.
     """
     @classmethod
     def named(Self, name, entries={}):
         obj = OptionsDict.named(name, entries)
-        obj.context_name = name
+        obj.original_name = name
         return obj
-    def create_context(self, name_list, index):
-        ct = Mock(spec=Context)
-        ct.str.return_value = self.context_name
+    def create_position(self, name_list, index):
+        ct = Mock(spec=Position)
+        ct.str.return_value = self.original_name
         return ct
 
 
-class TestOptionsDictWithMockContext(unittest.TestCase):
+class TestOptionsDictWithMockPosition(unittest.TestCase):
 
     def setUp(self):
         """
         I create an OptionsDict array 'A' using three integers.  I
-        store the second node and its context object.
+        store the second node and its position object.
         """
-        
-        class OptionsDictMockingContext(OptionsDict):
-            @staticmethod
-            def create_context(name_list, index):
-                return Mock(spec=Context)
-                
-        seq = OptionsDictMockingContext.array('A', [1, 2, 3])
+        seq = OptionsDictMockingPosition.array('A', [1, 2, 3])
         self.od = seq[1]
-        self.ct = self.od.get_context()
+        self.pos = self.od.get_position()
 
-    def test_get_context_by_array_name(self):
+    def test_get_position_by_array_name(self):
         """
-        I should get the same context by passing the array key to
-        the OptionDict's get_context method.
+        I should get the same position by passing the array key to
+        the OptionDict's get_position method.
         """
-        self.assertEqual(self.ct, self.od.get_context('A'))
+        self.assertEqual(self.pos, self.od.get_position('A'))
 
-    def test_nonexistent_context(self):
+    def test_nonexistent_position(self):
         """
         Conversely, passing anything else should return None.
         """
-        self.assertIsNone(self.od.get_context('B'))
+        self.assertIsNone(self.od.get_position('B'))
 
     def test_copy(self):
         other = self.od.copy()
@@ -61,7 +55,7 @@ class TestOptionsDictWithMockContext(unittest.TestCase):
         self.assertFalse(other is self.od)
 
 
-class TestOptionsDictWithSeveralContexts(unittest.TestCase):
+class TestOptionsDictWithSeveralPositions(unittest.TestCase):
 
     def setUp(self):
         """
@@ -71,10 +65,10 @@ class TestOptionsDictWithSeveralContexts(unittest.TestCase):
         complicate its name, I'll also update it with an OptionsDict
         that is not part of an array.
         """
-        A = OptionsDictMockingContext.array('A', [1, 2, 3])
-        B = OptionsDictMockingContext.array('B', ['i', 'ii', 'iii'])
-        C = OptionsDictMockingContext.array('C', [0.25, 0.5, 1.0])
-        d = OptionsDictMockingContext.named('orphan', {})
+        A = OptionsDictMockingPosition.array('A', [1, 2, 3])
+        B = OptionsDictMockingPosition.array('B', ['i', 'ii', 'iii'])
+        C = OptionsDictMockingPosition.array('C', [0.25, 0.5, 1.0])
+        d = OptionsDictMockingPosition.named('orphan', {})
         self.od = B[1]
         self.od.update(C[0])
         self.od.update(d)
@@ -83,38 +77,38 @@ class TestOptionsDictWithSeveralContexts(unittest.TestCase):
     def test_repr(self):
         """
         repr() should return all details about the OptionsDict and its
-        context components.
+        position components.
         """
         self.assertEqual(
             repr(self.od),
             "ii_0.25_orphan_3:{'A': 3, 'C': 0.25, 'B': 'ii'}"+\
             "@['B', 'C', 'A']")
 
-    def test_get_default_context(self):
+    def test_get_default_position(self):
         """
-        When I call get_context with no arguments, the result should
-        be the same as that of get_context('B'), i.e. it should not
+        When I call get_position with no arguments, the result should
+        be the same as that of get_position('B'), i.e. it should not
         have changed since B was updated.
         """
-        self.assertEqual(self.od.get_context(),
-                         self.od.get_context('B'))
+        self.assertEqual(self.od.get_position(),
+                         self.od.get_position('B'))
 
-    def test_get_other_context(self):
+    def test_get_other_position(self):
         """
-        get_context('A') should return a Context from which we can
+        get_position('A') should return a Position from which we can
         recover the name of the third element in A.
         """
-        self.assertEqual(self.od.get_context('A').str(), '3')
+        self.assertEqual(self.od.get_position('A').str(), '3')
 
     def test_copy(self):
         other = self.od.copy()
         # test for equivalence and non-identity
         self.assertEqual(other, self.od)
         self.assertFalse(other is self.od)
-        # test that contexts have been copied and not simply linked
+        # test that positions have been copied and not simply linked
         E = OptionsDict.array('E', ['foo', 'bar'])
         other.update(E[0])
-        self.assertIsNone(self.od.get_context('E'))
+        self.assertIsNone(self.od.get_position('E'))
 
     def test_str_from_array_names(self):
         """

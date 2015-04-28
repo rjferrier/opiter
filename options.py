@@ -39,7 +39,7 @@ class OptionsDict(dict):
 
     (4) When the OptionsDict is created as part of an array, or is
     updated with such an OptionsDict, extra information is stored.
-    See array, str and get_context methods.
+    See array, str and get_position methods.
     
     ** If using the multiprocessing module, it is important that
        dynamic entries are created using defs rather than lambdas.  It
@@ -56,7 +56,7 @@ class OptionsDict(dict):
         # This is necessary to prevent dynamic entries from possibly
         # referencing name before it exists
         self._name_substrings = []
-        self._contexts = OrderedDict()
+        self._positions = OrderedDict()
         self.update(entries)
 
     @classmethod
@@ -102,8 +102,8 @@ class OptionsDict(dict):
         name_format, which can either be a format string or a callable
         that takes the element value and returns a string.
         
-        A context object becomes registered and accessible through the
-        get_context(array_name) method.
+        A position object becomes registered and accessible through the
+        get_position(array_name) method.
         """
         optionsdict_list = []
         name_list = []
@@ -138,21 +138,22 @@ class OptionsDict(dict):
             optionsdict_list.append(od)
             name_list.append(str(od))
 
-        # second pass: register contexts
+        # second pass: register positions
         for index, od in enumerate(optionsdict_list):
-            od._contexts[array_name] = od.create_context(
+            od._positions[array_name] = od.create_position(
                 name_list, index)
 
         # print array_name, name_list
         return optionsdict_list
 
-        
-    def create_context(self, name_list, index):
+
+    @staticmethod
+    def create_position(name_list, index):
         "Overrideable factory method"
-        return Context(name_list, index)
-    
+        return Position(name_list, index)
+
     def __repr__(self):
-        ckeys = self._contexts.keys()
+        ckeys = self._positions.keys()
         if ckeys:
             ckeys = "@"+str(ckeys)
         else:
@@ -179,7 +180,7 @@ class OptionsDict(dict):
     def __eq__(self, other):
         eq_tests = []
         eq_tests.append(self._name_substrings == other._name_substrings)
-        eq_tests.append(self._contexts == other._contexts)
+        eq_tests.append(self._positions == other._positions)
         eq_tests.append(dict.__eq__(self, other))
         return all(eq_tests)
 
@@ -189,7 +190,7 @@ class OptionsDict(dict):
     def copy(self):
         obj = OptionsDict(dict.copy(self))
         obj._name_substrings = copy(self._name_substrings)
-        obj._contexts = copy(self._contexts)
+        obj._positions = copy(self._positions)
         return obj
         
     def update(self, entries):
@@ -204,7 +205,7 @@ class OptionsDict(dict):
         # update OptionsDict attributes
         if isinstance(other, OptionsDict):
             self._name_substrings += other._name_substrings
-            self._contexts.update(other._contexts)
+            self._positions.update(other._positions)
         # now pass to superclass
         dict.update(self, other)
 
@@ -221,22 +222,22 @@ functions).""")
         except TypeError:
             raise err
 
-    def get_context(self, array_name=None):
+    def get_position(self, array_name=None):
         """
         If the OptionsDict was initialised as part of an array, calling
         this method with no arguments will return its associated
-        Context object.  If the OptionsDict has since been updated
+        Position object.  If the OptionsDict has since been updated
         with other array-initialised OptionsDicts, it is possible to
-        recover any of their Contexts by passing in the corresponding
+        recover any of their Positions by passing in the corresponding
         array_name.
         """
         if array_name is None:
             try:
-                array_name = self._contexts.keys()[0]
+                array_name = self._positions.keys()[0]
             except IndexError:
                 return None
         try:
-            return self._contexts[array_name]
+            return self._positions[array_name]
         except KeyError:
             return None
 
@@ -258,9 +259,9 @@ functions).""")
             only = [only]
         if isinstance(exclude, str):
             exclude = [exclude]
-        # convert array names to context names
-        only_substrings = self._get_context_names(only)
-        exclude_substrings = self._get_context_names(exclude)
+        # convert array names to node names
+        only_substrings = self._get_node_names(only)
+        exclude_substrings = self._get_node_names(exclude)
         # loop over name substrings, appending as appropriate
         result_substrings = []
         for substr in self._name_substrings:
@@ -272,10 +273,10 @@ functions).""")
             result_substrings.append(substr)
         return self._join_substrings(result_substrings)
 
-    def _get_context_names(self, array_names):
+    def _get_node_names(self, array_names):
         result = []
         for arr in array_names:
-            ct = self._contexts[arr]
+            ct = self._positions[arr]
             result.append(str(ct))
         return result
 
@@ -296,9 +297,9 @@ functions).""")
         return buffer_string
         
 
-class Context:
+class Position:
     """
-    Context(names, index)
+    Position(names, index)
     
     Provides information on where a node is in relation to others in a
     sequence.  It also provides the names of the other elements based
@@ -313,7 +314,7 @@ class Context:
         return self.str()
 
     def __repr__(self):
-        return 'Context({}, {})'.format(self.names, self.index)
+        return 'Position({}, {})'.format(self.names, self.index)
 
     def str(self, absolute=None, relative=None):
         """

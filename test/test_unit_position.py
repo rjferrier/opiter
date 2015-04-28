@@ -2,29 +2,29 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import Context
+from options import Position
 
 
-class TestContext(unittest.TestCase):
+class TestPosition(unittest.TestCase):
 
     def setUp(self):
         """
         With a array of nodes named 'A', 'B' and 'C', I create a
-        Context for the second node.
+        Position for the second node.
         """
-        self.ct = Context(['A', 'B', 'C'], 1)
+        self.pos = Position(['A', 'B', 'C'], 1)
 
     def test_repr(self):
-        self.assertEqual(repr(self.ct),
-                         "Context(['A', 'B', 'C'], 1)")
+        self.assertEqual(repr(self.pos),
+                         "Position(['A', 'B', 'C'], 1)")
 
     def test_node_name(self):
         """
         I should be able to recover the name of the node from both 
         __str__ and str() methods.
         """
-        self.assertEqual(self.ct.str(), 'B')
-        self.assertEqual(str(self.ct), 'B')
+        self.assertEqual(self.pos.str(), 'B')
+        self.assertEqual(str(self.pos), 'B')
 
     def test_other_node_name_from_absolute_index(self):
         """
@@ -34,9 +34,9 @@ class TestContext(unittest.TestCase):
         If the index runs past the end, an IndexError should be
         raised.
         """
-        self.assertEqual(self.ct.str(0), 'A')
-        self.assertEqual(self.ct.str(-1), 'C')
-        self.assertRaises(IndexError, lambda: self.ct.str(3))
+        self.assertEqual(self.pos.str(0), 'A')
+        self.assertEqual(self.pos.str(-1), 'C')
+        self.assertRaises(IndexError, lambda: self.pos.str(3))
 
     def test_other_node_name_from_relative_index(self):
         """
@@ -44,18 +44,18 @@ class TestContext(unittest.TestCase):
         relative index.  If it runs past the beginning, an IndexError
         should be raised.
         """
-        self.assertEqual(self.ct.str(relative=-1), 'A')
+        self.assertEqual(self.pos.str(relative=-1), 'A')
         self.assertRaises(IndexError,
-                          lambda: self.ct.str(relative=-2))
+                          lambda: self.pos.str(relative=-2))
 
     def test_other_node_name_from_relative_and_absolute_index(self):
         """
         Using both a relative and absolute index should also work.
         A resulting negative index raises an IndexError.
         """
-        self.assertEqual(self.ct.str(relative=-1, absolute=2), 'B')
+        self.assertEqual(self.pos.str(relative=-1, absolute=2), 'B')
         self.assertRaises(
-            IndexError, lambda: self.ct.str(relative=-2, absolute=1))
+            IndexError, lambda: self.pos.str(relative=-2, absolute=1))
 
         
 if __name__ == '__main__':

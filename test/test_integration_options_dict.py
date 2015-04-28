@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import OptionsDict, CallableEntry, Context, \
+from options import OptionsDict, CallableEntry, Position, \
     OptionsDictException
 
 
@@ -21,29 +21,30 @@ class TestCallableEntry(unittest.TestCase):
         self.assertEqual(od['my_func'](1, 2), 3)
 
         
-class TestOptionsDictWithContext(unittest.TestCase):
+    
+class TestOptionsDictWithPosition(unittest.TestCase):
 
     def setUp(self):
         """
         I create an OptionsDict array 'A' using three integers.  I
-        store the second node and its context object.
+        store the second node and its position object.
         """
         seq = OptionsDict.array('A', [1, 2, 3])
         self.od = seq[1]
-        self.ct = self.od.get_context()
+        self.pos = self.od.get_position()
 
-    def test_context_type(self):
+    def test_position_type(self):
         """
-        The stored context should be an instance of Context.
+        The stored position should be an instance of Position.
         """
-        self.assertIsInstance(self.ct, Context)
+        self.assertIsInstance(self.pos, Position)
 
     def test_str(self):
         """
-        The string representation of the context should be the same as
+        The string representation of the position should be the same as
         that of the OptionsDict.
         """
-        self.assertEqual(str(self.ct), str(self.od))
+        self.assertEqual(str(self.pos), str(self.od))
 
 
         
