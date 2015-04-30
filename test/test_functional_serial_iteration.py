@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from test_functional_common_iteration import *
+from test_functional_common import *
 import unittest
 from options import OptionsDict
 from tools import product, attach, merge, identify, Lookup

@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from test_functional_common_iteration import *
+from test_functional_common import *
 from tools import product, identify, Lookup
 from multiprocessing import Pool
 
