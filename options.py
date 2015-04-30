@@ -335,6 +335,21 @@ class Position:
                 raise IndexError("list index out of range")
         return self.names[index]
     
+    def at(self, index):
+        """
+        Checks that the current Position is at the given index, which
+        can be negative to signify posiiton from the end of the
+        sequence.
+        """
+        return self.index == index or \
+            self.index == index + len(self.names)
+    
+    def is_first(self):
+        return self.at(0)
+        
+    def is_last(self):
+        return self.at(-1)
+
         
 class CallableEntry:
     """
