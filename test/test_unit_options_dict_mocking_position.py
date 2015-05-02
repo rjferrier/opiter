@@ -2,28 +2,55 @@ import sys
 sys.path.append('..')
 
 import unittest
-from mock import Mock
 from options import OptionsDict, OptionsDictException, Position
 
+# the tests in this module take advantage of the Mock class to
+# decouple the OptionsDict and Position classes.  But if mock.Mock
+# isn't available, we can still run tests with the classes coupled.
+try:
+    from unittest.mock import Mock
+    HAVE_MOCK = True
+except ImportError:
+    try:
+        from mock import Mock
+        HAVE_MOCK = True
+    except ImportError:
+        HAVE_MOCK = False
+        import warnings
 
-class OptionsDictMockingPosition(OptionsDict):
-    """
-    OptionsDict decoupled from the Position class for unit testing
-    purposes.  The mock Position objects it creates will respond to
-    str() simply by returning the OptionsDict's original name.  This
-    way we can examine how OptionsDict manages its position objects.
-    """
-    @classmethod
-    def named(Self, name, entries={}):
-        obj = OptionsDict.named(name, entries)
-        obj.original_name = name
-        return obj
-    def create_position(self, name_list, index):
-        ct = Mock(spec=Position)
-        ct.str.return_value = self.original_name
-        return ct
+        
+if HAVE_MOCK:
+    class OptionsDictUnderTest(OptionsDict):
+        """
+        This is OptionsDict decoupled from the Position
+        implementation for unit testing purposes.  The mock Position
+        objects it creates will respond to str() simply by returning
+        the OptionsDict's original name.  This way we can examine how
+        OptionsDict manages its position objects.
+        """
+        @classmethod
+        def named(Self, name, entries={}):
+            obj = OptionsDict.named(name, entries)
+            obj.original_name = name
+            return obj
+        def create_position(self, name_list, index):
+            ct = Mock(spec=Position)
+            ct.str.return_value = self.original_name
+            return ct
+else:
+    class OptionsDictUnderTest(OptionsDict):
+        """
+        This is simply the original OptionsDict that creates full
+        Position objects.
+        """
+        pass
+    
+    warnings.warn("""
+    mock module not found.  Unit tests with mock Position objects will
+    be replaced by integration tests with full Position objects.
+    """)
 
-
+        
 class TestOptionsDictWithMockPosition(unittest.TestCase):
 
     def setUp(self):
@@ -31,7 +58,7 @@ class TestOptionsDictWithMockPosition(unittest.TestCase):
         I create an OptionsDict array 'A' using three integers.  I
         store the second node and its position object.
         """
-        seq = OptionsDictMockingPosition.array('A', [1, 2, 3])
+        seq = OptionsDictUnderTest.array('A', [1, 2, 3])
         self.od = seq[1]
         self.pos = self.od.get_position()
 
@@ -65,10 +92,10 @@ class TestOptionsDictWithSeveralPositions(unittest.TestCase):
         complicate its name, I'll also update it with an OptionsDict
         that is not part of an array.
         """
-        A = OptionsDictMockingPosition.array('A', [1, 2, 3])
-        B = OptionsDictMockingPosition.array('B', ['i', 'ii', 'iii'])
-        C = OptionsDictMockingPosition.array('C', [0.25, 0.5, 1.0])
-        d = OptionsDictMockingPosition.named('orphan', {})
+        A = OptionsDictUnderTest.array('A', [1, 2, 3])
+        B = OptionsDictUnderTest.array('B', ['i', 'ii', 'iii'])
+        C = OptionsDictUnderTest.array('C', [0.25, 0.5, 1.0])
+        d = OptionsDictUnderTest.named('orphan', {})
         self.od = B[1]
         self.od.update(C[0])
         self.od.update(d)
