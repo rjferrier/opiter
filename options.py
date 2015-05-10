@@ -240,9 +240,6 @@ class OptionsDict(dict):
         client can get a particular one by passing in the
         corresponding collection name.
         """
-        # def operation(old_node_info):
-        #     return old_node_info
-        # return self._get_or_set_node_info(operation, collection_name)
         if collection_name is None:
             try:
                 return self.node_info[0]
@@ -267,9 +264,6 @@ class OptionsDict(dict):
         client can set a particular one by passing in the
         corresponding collection name.
         """
-        # def operation(old_node_info):
-        #     old_node_info = new_node_info
-        # self._get_or_set_node_info(operation, collection_name)
         if collection_name is None:
             try:
                 self.node_info[0] = new_node_info
@@ -329,22 +323,6 @@ functions).""")
             return self.name_separator.join(substrings)
         else:
             return ''.join(substrings)
-
-    # def _get_or_set_node_info(self, operation, collection_name):
-    #     if collection_name is None:
-    #         try:
-    #             return operation(self.node_info[0])
-    #         except IndexError:
-    #             raise NodeInfoException(
-    #                 "there aren't any node_info objects")
-    #     else:
-    #         for ni in self.node_info:
-    #             print ni
-    #             if ni.belongs_to(collection_name):
-    #                 return operation(ni)
-    #         raise NodeInfoException(
-    #             "couldn't find any node information corresponding to '{}'".\
-    #             format(collection_name))
             
     def __str__(self):
         return self.str()

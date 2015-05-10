@@ -93,17 +93,44 @@ class TestOptionsDictsWithMixedNodeInfo(unittest.TestCase):
         self.assertEqual(self.od.str('C', exclude='A'), '0.25')
         self.assertEqual(self.od.str('A', exclude=['A', 'C']), '')
 
-    # def test_str_from_relative_indices(self):
-    #     """
-    #     I should be able to infer the name of another merged OptionsDict
-    #     by passing array names and relative indices to its str()
-    #     method.
-    #     """
-    #     # if HAVE_MOCK:
-            
-    #     self.assertEqual(
-    #         self.od.str(relative={'A': -1, 'C': 1}), 'ii_0.5_d_2')
+    def test_str_from_absolute_indices(self):
+        """
+        I should be able to infer the name of another merged OptionsDict
+        by passing array names and absolute indices to its str()
+        method.
+        """
+        self.assertEqual(
+            self.od.str(absolute={'B': -1, 'A': 0}), 'iii_0.25_d_1')
+        self.assertRaises(IndexError, lambda: self.od.str(relative={'A': 3}))
 
+    def test_str_from_relative_indices(self):
+        """
+        I should be able to infer the name of another merged OptionsDict
+        by passing array names and relative indices to its str()
+        method.
+        """
+        self.assertEqual(
+            self.od.str(relative={'A': -1, 'C': 1}), 'ii_0.5_d_2')
+        self.assertRaises(IndexError, lambda: self.od.str(relative={'C': -1}))
+
+    def test_str_with_absolute_and_relative_indices(self):
+        """
+        I should be able to mix the 'absolute' and 'relative' arguments.
+        """
+        self.assertEqual(
+            self.od.str(absolute={'B': -1, 'C': 2},
+                        relative={'A': -1, 'C': -1}),
+            'iii_0.5_d_2')
+
+    def test_str_with_all_four_arguments(self):
+        """
+        I should be able to use all four arguments in forming the string.
+        """
+        self.assertEqual(
+            self.od.str(only=['A', 'C', 'B'], exclude='C',
+                        absolute={'B': -1, 'C': 2},
+                        relative={'A': -1, 'C': -1}),
+            'iii_2')
         
 if __name__ == '__main__':
     unittest.main()
