@@ -67,7 +67,27 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
         self.assertEqual(self.node_info.str(relative=-1, absolute=2), 'B')
         self.assertRaises(
             IndexError, lambda: self.node_info.str(relative=-2, absolute=1))
-    
+
+    def test_other_node_name_from_absolute_index_in_dict(self):
+        """
+        The absolute index might be supplied via a dictionary of entries
+        in the form {array_name: index}.  A deficient dictionary will
+        cause the node name to default.
+        """
+        self.assertEqual(self.node_info.str({'seq': -1, 'foo': -1}), 'C')
+        self.assertEqual(self.node_info.str({'foo': -1}), 'B')
+
+    def test_other_node_name_from_relative_index_in_dict(self):
+        """
+        The relative index might be supplied via a dictionary of entries
+        in the form {array_name: index}.  A deficient dictionary will
+        cause the node name to default.
+        """
+        self.assertEqual(
+            self.node_info.str(relative={'seq': -1, 'foo': -1}), 'A')
+        self.assertEqual(
+            self.node_info.str(relative={'foo': -1}), 'B')
+
         
 class TestArrayNodeInfoIndex(unittest.TestCase):
     

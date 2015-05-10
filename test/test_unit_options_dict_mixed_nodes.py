@@ -3,7 +3,7 @@ sys.path.append('..')
 
 import unittest
 from options import OptionsDictException, NodeInfoException
-from unit_options_dict import OptionsDictUnderTest
+from unit_options_dict import OptionsDictUnderTest, HAVE_MOCK
 
 
 class TestOptionsDictsWithMixedNodeInfo(unittest.TestCase):
@@ -53,6 +53,13 @@ class TestOptionsDictsWithMixedNodeInfo(unittest.TestCase):
         self.assertRaises(NodeInfoException, \
                           lambda: self.od.get_node_info('E'))
 
+    def test_default_str(self):
+        """
+        Calling the str() method without any arguments should return a
+        name for the OptionsDict based on its constituent OptionsDict.
+        """
+        self.assertEqual(self.od.str(), 'ii_0.25_d_3')
+
     def test_str_from_array_names(self):
         """
         I should be able to get a subset of the name of the merged
@@ -85,6 +92,17 @@ class TestOptionsDictsWithMixedNodeInfo(unittest.TestCase):
         self.assertEqual(self.od.str(['A', 'C'], exclude='A'), '0.25')
         self.assertEqual(self.od.str('C', exclude='A'), '0.25')
         self.assertEqual(self.od.str('A', exclude=['A', 'C']), '')
+
+    # def test_str_from_relative_indices(self):
+    #     """
+    #     I should be able to infer the name of another merged OptionsDict
+    #     by passing array names and relative indices to its str()
+    #     method.
+    #     """
+    #     # if HAVE_MOCK:
+            
+    #     self.assertEqual(
+    #         self.od.str(relative={'A': -1, 'C': 1}), 'ii_0.5_d_2')
 
         
 if __name__ == '__main__':

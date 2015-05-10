@@ -61,6 +61,22 @@ class TestOrphanNodeInfoString(unittest.TestCase):
         self.assertRaises(
             IndexError, lambda: self.node_info.str(relative=-2, absolute=1))
 
+    def test_other_node_name_from_absolute_index_in_dict(self):
+        """
+        The absolute index might be supplied via a dictionary of entries
+        in the form {collection_name: index}.  Here the node name will
+        default.
+        """
+        self.assertEqual(self.node_info.str({'foo': -1}), 'A')
+
+    def test_other_node_name_from_relative_index_in_dict(self):
+        """
+        The relative index might be supplied via a dictionary of entries
+        in the form {collection_name: index}.  Here the node name will
+        default.
+        """
+        self.assertEqual(self.node_info.str(relative={'foo': 1}), 'A')
+        
 
 class TestOrphanNodeInfoIndex(unittest.TestCase):
     

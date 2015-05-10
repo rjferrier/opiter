@@ -196,9 +196,9 @@ class OptionsDict(dict):
             self._update_from_dynamic_entries(entries)
 
             
-    def str(self, only=[], exclude=[]):
+    def str(self, only=[], exclude=[], absolute={}, relative={}):
         """
-        self.str(only=[], exclude=[])
+        self.str(only=[], exclude=[], absolute={}, relative={})
 
         Returns a string identifier, providing more control than the
         str() idiom through optional arguments.
@@ -225,8 +225,8 @@ class OptionsDict(dict):
             if ni.belongs_to_any(exclude):
                 continue
             # if we are still in the loop at this point, we can include
-            # the current node name in the result
-            substrings.append(str(ni))
+            # the current node name in the result.
+            substrings.append(ni.str(relative=relative, absolute=absolute))
         # finally join up the node names
         return self._join_substrings(substrings)
 
@@ -458,7 +458,14 @@ class OrphanNodeInfo(NodeInfo):
         Returns the name of the node in question.  The optional arguments
         are not applicable for an orphan node.
         """
-        if self.at(self._create_index(0, absolute, relative)):
+        # for arg in (absolute, relative):
+        #     if isinstance(absolute, dict):
+        #         arg = None
+        args = [absolute, relative]
+        for i, a in enumerate(args):
+            if isinstance(a, dict):
+                args[i] = None
+        if self.at(self._create_index(0, *args)):
             return self.node_name
         else:
             raise IndexError("list index out of range")
@@ -511,9 +518,26 @@ class ArrayNodeInfo(NodeInfo):
         with Python indexing rules, a negative absolute index returns
         a node from the end of the array.  To prevent confusion,
         however, this shall not apply when a relative index is given.
+
+        The optional arguments may also be supplied as dicts with
+        entries of the form {array_name: index}.  In this case, the
+        the indices will be dereferenced if possible using the present
+        array name.
         """
+        args = [absolute, relative]
+        for i, a in enumerate(args):
+            try:
+                # convert the argument from a dict to an index 
+                args[i] = a[self.array_name]
+            except KeyError:
+                # lookup failed, so give up on this argument
+                args[i] = None
+            except TypeError:
+                # if argument is not a dict, it is presumably already
+                # an index
+                pass
         return self.node_names[
-            self._create_index(self.node_index, absolute, relative)]
+            self._create_index(self.node_index, *args)]
 
     def copy(self):
         return ArrayNodeInfo(
