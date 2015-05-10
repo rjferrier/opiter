@@ -3,18 +3,17 @@ sys.path.append('..')
 
 import unittest
 from options import OptionsDict, OptionsDictException
-from re import sub
+from unit_options_dict import OptionsDictUnderTest
 
-        
-class TestOptionsDictArray(unittest.TestCase):
+
+class TestOptionsDictArrayBasics(unittest.TestCase):
 
     def setUp(self):
         """
-        I create an OptionsDict array from a list of
-        different-typed values, one of which is already an
-        OptionsDict.
+        I create an OptionsDict array from a list of different-typed
+        values, one of which is already an OptionsDict.
         """
-        od = OptionsDict.named('some_dict', {'foo': 'bar'})
+        od = OptionsDict.node('some_dict', {'foo': 'bar'})
         self.values = ['A', od, 2, 3.14]
         self.seq = OptionsDict.array('random_thing', self.values)
         
@@ -117,9 +116,39 @@ class TestOptionsDictArrayCreationOptions(unittest.TestCase):
             OptionsDict.array('A', [1., 2.5, 6.25],
                                  name_format=None)
         self.assertRaises(OptionsDictException, create_seq)
-    
+
         
-        
+class TestOptionsDictArrayNodeInfo(unittest.TestCase):
+
+    def setUp(self):
+        """
+        I create an OptionsDict array 'A' using three integers.  I store
+        the second node and its node info object.
+        """
+        seq = OptionsDictUnderTest.array('A', [1, 2, 3])
+        self.od = seq[1]
+        self.node_info = self.od.get_node_info()
+
+    def test_get_node_info_by_array_name(self):
+        """
+        I should get the same node info by passing the array key to the
+        OptionDict's get_node_info method.
+        """
+        self.assertEqual(self.node_info, self.od.get_node_info('A'))
+
+    def test_nonexistent_node_info(self):
+        """
+        Conversely, passing anything else should return None.
+        """
+        self.assertIsNone(self.od.get_node_info('B'))
+
+    def test_copy(self):
+        other = self.od.copy()
+        # test for equivalence and non-identity
+        self.assertEqual(other, self.od)
+        self.assertFalse(other is self.od)
+
+         
 if __name__ == '__main__':
     unittest.main()
         

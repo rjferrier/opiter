@@ -59,7 +59,7 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         res2d = OptionsDict.array('res', [10, 20, 40])
         res3d = OptionsDict.array('res', [10, 20])
         branches = attach(dims, (res1d, res2d, res3d))
-        root = OptionsDict.named('sim', [cost])
+        root = OptionsDict.node('sim', [cost])
         self.tree = product(root, branches)
 
     def check_names(self, resulting_names):

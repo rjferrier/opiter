@@ -7,11 +7,11 @@ that the client can access and use for the purpose of template
 expansion, input to a binary, postprocessing, etc.
 
 ```python
-  water = OptionsDict.named('water', {
+  water = OptionsDict.node('water', {
       'density'           : 1.00e3,
       'dynamic_viscosity' : 0.89e-3})
   
-  ethanol = OptionsDict.named('ethanol', {
+  ethanol = OptionsDict.node('ethanol', {
       'density'           : 0.79e3,
       'dynamic_viscosity' : 1.09e-3})
 ```

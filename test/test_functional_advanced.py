@@ -96,8 +96,8 @@ class NotEnoughInfoException(Exception):
     
 class IsFirstStrategy:
     def get_previous_info(self, options, current_err):
-        pos = options.get_position('res')
-        if not pos.is_first():
+        node_info = options.get_node_info('res')
+        if not node_info.is_first():
             # if this is not the first in a series of mesh
             # resolutions, we can load previous values
             return_res = self.previous_res
@@ -108,7 +108,7 @@ class IsFirstStrategy:
         self.previous_err = current_err
 
         # return previous values if they were loaded
-        if pos.is_first():
+        if node_info.is_first():
             raise NotEnoughInfoException()
         else:
             return return_res, return_err
@@ -125,8 +125,8 @@ class IsLastStrategy:
             # fail - hold on to this exception
             pass
             
-        pos = options.get_position('res')
-        if pos.is_last():
+        node_info = options.get_node_info('res')
+        if node_info.is_last():
             # if this is the last in a series of mesh resolutions,
             # clear the stored values
             del(self.previous_res)

@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import OptionsDict, CallableEntry, Position, \
+from options import OptionsDict, CallableEntry, ArrayNodeInfo, \
     OptionsDictException
 
 
@@ -22,29 +22,29 @@ class TestCallableEntry(unittest.TestCase):
 
         
     
-class TestOptionsDictWithPosition(unittest.TestCase):
+class TestOptionsDictWithArrayNodeInfo(unittest.TestCase):
 
     def setUp(self):
         """
         I create an OptionsDict array 'A' using three integers.  I
-        store the second node and its position object.
+        store the second node and its node_info object.
         """
         seq = OptionsDict.array('A', [1, 2, 3])
         self.od = seq[1]
-        self.pos = self.od.get_position()
+        self.node_info = self.od.get_node_info()
 
-    def test_position_type(self):
+    def test_node_info_type(self):
         """
-        The stored position should be an instance of Position.
+        The stored node info should be an instance of ArrayNodeInfo.
         """
-        self.assertIsInstance(self.pos, Position)
+        self.assertIsInstance(self.node_info, ArrayNodeInfo)
 
     def test_str(self):
         """
-        The string representation of the position should be the same as
+        The string representation of the node info should be the same as
         that of the OptionsDict.
         """
-        self.assertEqual(str(self.pos), str(self.od))
+        self.assertEqual(str(self.node_info), str(self.od))
 
 
         

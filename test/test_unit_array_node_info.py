@@ -2,29 +2,40 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import Position
+from options import ArrayNodeInfo
+    
 
-
-class TestPositionString(unittest.TestCase):
+class TestArrayNodeInfoBasics(unittest.TestCase):
 
     def setUp(self):
         """
-        With a sequence of nodes named 'A', 'B' and 'C', I create a
-        Position for the second node.
+        With a sequence of nodes named 'A', 'B' and 'C', I create an
+        ArrayNodeInfo object for the second node.
         """
-        self.pos = Position(['A', 'B', 'C'], 1)
+        self.node_info = ArrayNodeInfo('seq', ['A', 'B', 'C'], 1)
 
-    def test_repr(self):
-        self.assertEqual(repr(self.pos),
-                         "Position(['A', 'B', 'C'], 1)")
+    def test_belongs_to(self):
+        """
+        The node should test positive for belonging to 'seq', and negative
+        for anything else.
+        """
+        self.assertTrue(self.node_info.belongs_to('seq'))
+        self.assertFalse(self.node_info.belongs_to('B'))
 
+    def test_belongs_to_any(self):
+        """
+        Similar to belongs_to test.
+        """
+        self.assertTrue(self.node_info.belongs_to_any(['seq', 'B']))
+        self.assertFalse(self.node_info.belongs_to_any(['A', 'B']))
+        
     def test_node_name(self):
         """
         I should be able to recover the name of the node from both 
         __str__ and str() methods.
         """
-        self.assertEqual(self.pos.str(), 'B')
-        self.assertEqual(str(self.pos), 'B')
+        self.assertEqual(self.node_info.str(), 'B')
+        self.assertEqual(str(self.node_info), 'B')
 
     def test_other_node_name_from_absolute_index(self):
         """
@@ -34,9 +45,9 @@ class TestPositionString(unittest.TestCase):
         If the index runs past the end, an IndexError should be
         raised.
         """
-        self.assertEqual(self.pos.str(0), 'A')
-        self.assertEqual(self.pos.str(-1), 'C')
-        self.assertRaises(IndexError, lambda: self.pos.str(3))
+        self.assertEqual(self.node_info.str(0), 'A')
+        self.assertEqual(self.node_info.str(-1), 'C')
+        self.assertRaises(IndexError, lambda: self.node_info.str(3))
 
     def test_other_node_name_from_relative_index(self):
         """
@@ -44,32 +55,32 @@ class TestPositionString(unittest.TestCase):
         relative index.  If it runs past the beginning, an IndexError
         should be raised.
         """
-        self.assertEqual(self.pos.str(relative=-1), 'A')
+        self.assertEqual(self.node_info.str(relative=-1), 'A')
         self.assertRaises(IndexError,
-                          lambda: self.pos.str(relative=-2))
+                          lambda: self.node_info.str(relative=-2))
 
     def test_other_node_name_from_relative_and_absolute_index(self):
         """
         Using both a relative and absolute index should also work.
         A resulting negative index raises an IndexError.
         """
-        self.assertEqual(self.pos.str(relative=-1, absolute=2), 'B')
+        self.assertEqual(self.node_info.str(relative=-1, absolute=2), 'B')
         self.assertRaises(
-            IndexError, lambda: self.pos.str(relative=-2, absolute=1))
-
-
-class TestPositionEnds(unittest.TestCase):
+            IndexError, lambda: self.node_info.str(relative=-2, absolute=1))
+    
+        
+class TestArrayNodeInfoIndex(unittest.TestCase):
     
     def setUp(self):
         """
         With a sequence of nodes named 'A', 'B' and 'C', I create
-        Positions for all three nodes.  I'll want to know which of
-        these represent the start or end of the sequence.
+        ArrayNodeInfos for all three nodes.  I'll want to know which
+        of these represent the start or end of the sequence.
         """
         seq = ['A', 'B', 'C']
-        self.a = Position(seq, 0)
-        self.b = Position(seq, 1)
-        self.c = Position(seq, 2)
+        self.a = ArrayNodeInfo('seq', seq, 0)
+        self.b = ArrayNodeInfo('seq', seq, 1)
+        self.c = ArrayNodeInfo('seq', seq, 2)
     
     def test_at(self):
         # check position from start

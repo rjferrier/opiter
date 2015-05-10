@@ -16,184 +16,177 @@ class OptionsDictException(Exception):
         
 class OptionsDict(dict):
     """
-    OptionsDict(entries={})
-    OptionsDict.named(name, entries={})
-    
     An OptionsDict inherits from a conventional dict, but it has a few
     enhancements:
 
-    (1) Values can be runtime-dependent upon the state of other values
-    in the dict.  Each of these special values is specified by a
-    function** accepting a single dictionary argument (i.e. the
-    OptionsDict itself).  The dictionary argument is used to look
-    things up dynamically.  These functions may be listed in the
-    entries argument if there are no other key-value pairs, in which
-    case the functions' names become the keys.
+    (1) An OptionsDict can be created as a named node, or as part of
+        an array of named nodes.  This node information accumulates
+        when OptionsDicts are merged via the update() method, and can
+        be used to form a string identifier for the ensemble.  For
+        example, updating node 'A' with node 'B' will produce node
+        'A_B'.  The identifier can be accessed via the usual str()
+        idiom, but a str() method is also provided with optional
+        arguments for customising the identifier and inferring the
+        identifiers of other combinations.
 
-    (2) An OptionsDict can be identified through its string
-    representation.  When an OptionsDict is updated using another
-    OptionsDict, its string representation changes to reflect the new
-    state.  For example, updating 'A' with 'B' produces 'A_B'.
+    (2) Values can be runtime-dependent upon the state of other values
+        in the dictionary.  Each of these special values is specified
+        by a function accepting a single dictionary argument (i.e. the
+        OptionsDict itself).  The dictionary argument is used to look
+        things up dynamically.  An OptionsDict can be constructed or
+        updated with a list of functions instead of the usual
+        key-value pairs, in which case the functions' names become the
+        keys.
+
+        N.B.  If using the multiprocessing module, it is important
+        that dynamic entries are created using defs rather than
+        lambdas.  It seems that lambdas cause pickling problems, and
+        there is currently no way to protect against them.
 
     (3) An OptionsDict can expand strings as templates.
-
-    (4) When the OptionsDict is created as part of an array, or is
-    updated with such an OptionsDict, extra information is stored.
-    See array, str and get_position methods.
-    
-    ** If using the multiprocessing module, it is important that
-       dynamic entries are created using defs rather than lambdas.  It
-       seems that lambdas cause pickling problems, and there is
-       currently no way to protect against them.
     """
     
     # settings
     name_separator = NAME_SEPARATOR
+
     
     def __init__(self, entries={}):
+        """
+        OptionsDict(entries={})
+
+        Returns an OptionsDict with no node information.
+        """
         # with just an entries argument, treat as a simple dict.
-        # Default the name substrings and other attributes first.
-        # This is necessary to prevent dynamic entries from possibly
-        # referencing name before it exists
-        self._name_substrings = []
-        self._positions = OrderedDict()
+        # Default the node_info component first.  This is necessary to
+        # prevent dynamic entries from possibly referencing the
+        # component before it exists
+        self.node_info = []
         self.update(entries)
 
+        
     @classmethod
-    def named(Self, name, entries={}):
+    def node(Self, name, entries={}):
+        """
+        OptionsDict.node(name, entries={})
+
+        Returns an OptionsDict as an orphan node, i.e. having a name
+        for identification purposes but not belonging to a collection.
+        """
         # check name argument
         if not name:
             name = ''
         elif not isinstance(name, str):
             raise OptionsDictException(
                 "name argument must be a string (or None).")
-        # instantiate object and set the first name
+        # instantiate object and set the first node information
         obj = Self(entries)
-        obj._name_substrings = [name]
+        obj.node_info.append(obj.create_orphan_node_info(name))
         return obj
 
+        
     @classmethod
-    def array(Self, array_name, elements, common_entries={},
-              name_format='{}'):
+    def array(Self, array_name, elements, common_entries={}, name_format='{}'):
         """
-        OptionsDict.array(array_name, elements, 
-                          common_entries={}, name_format='{}')
+        OptionsDict.array(array_name, elements, common_entries={},
+                          name_format='{}')
 
         Returns a list of OptionsDicts, wrapping the given elements as
         necessary.
 
-        If a given element is not already an OptionsDict, it is
+        If a given element is not already an OptionsDict node, it is
         converted to a string which becomes the name of a new
         OptionsDict.  The new OptionsDict acquires the entry
         {array_name: element}.  This feature is useful for setting up
         an independent variable with an associated array of values.
         For example,
            OptionsDict.array('velocity', [0.01, 0.02, 0.04])
-        is equivalent to
-          [OptionsDict.named('0.01', {'velocity': 0.01}),
-           OptionsDict.named('0.02', {'velocity': 0.02}),
-           OptionsDict.named('0.04', {'velocity': 0.04})]
+        would be equivalent to
+          [OptionsDict.node('0.01', {'velocity': 0.01}),
+           OptionsDict.node('0.02', {'velocity': 0.02}),
+           OptionsDict.node('0.04', {'velocity': 0.04})]
+        except that the NodeInfo components are different.
 
-        If an element is already an OptionsDict, it simply acquires
-        the entry {array_name: element.name}.
+        If an element is already an OptionsDict node, it simply
+        acquires the entry {array_name: str(element)}.
         
         All dicts are initialised with common_entries if this argument
         is given.  The element-to-string conversion is governed by
         name_format, which can either be a format string or a callable
         that takes the element value and returns a string.
-        
-        A position object becomes registered and accessible through the
-        get_position(array_name) method.
         """
-        optionsdict_list = []
-        name_list = []
+        options_dicts = []
+        node_names = []
         
-        # first pass: instantiate OptionsDict elements
-        for el in elements:
-            if isinstance(el, Self):
+        # First pass: instantiate OptionsDict elements
+        for index, el in enumerate(elements):
+            if isinstance(el, OptionsDict):
+                # # If the element is already an OptionsDict object, use
+                # # its entries to instantiate a fresh OptionsDict.  The
+                # # element's node_info is not needed, however, because we
+                # # are creating a new container.
+                # od = Self(el)
+                
                 # If the element is already an OptionsDict object,
-                # make a copy.  This has the benefit of preventing
-                # side effects if the element persists elsewhere.
+                # copy it and add a special entry using array_name
                 od = el.copy()
-                # add a special entry using array_name
-                od.update({array_name: str(el)})
+                node_name = str(el)
+                od.update({array_name: node_name})
             else:
-                # otherwise, instantiate a new OptionsDict with the
-                # string represention of the element acting as its
-                # name and the original element stored under
-                # array_name
+                # otherwise, instantiate a new OptionsDict node with
+                # the original element stored under array_name
                 try:
-                    name = name_format(el)
+                    node_name = name_format(el)
                 except TypeError:
                     try:
-                        name = name_format.format(el)
+                        node_name = name_format.format(el)
                     except AttributeError:
                         raise OptionsDictException(
                             "name_format must be a callable "+\
                             "or a format string.")
-                od = Self.named(name, {array_name: el})
+                od = Self.node(node_name, {array_name: el})
+
             # add entries
             od.update(common_entries)
             # append to the lists
-            optionsdict_list.append(od)
-            name_list.append(str(od))
+            options_dicts.append(od)
+            node_names.append(node_name)
 
-        # second pass: register positions
-        for index, od in enumerate(optionsdict_list):
-            od._positions[array_name] = od.create_position(
-                name_list, index)
+        # Second pass: set array node information.  This will replace
+        # the preexisting orphan node information.
+        for index, od in enumerate(options_dicts):
+            od.set_node_info(
+                od.create_array_node_info(array_name, node_names, index))
+        
+        return options_dicts
 
-        # print array_name, name_list
-        return optionsdict_list
+        
+    def create_orphan_node_info(self, node_name):
+        """
+        self.create_orphan_node_info(node_name)
 
+        Overrideable factory method, used by OptionsDict.node().
+        """
+        return OrphanNodeInfo(node_name)
 
-    @staticmethod
-    def create_position(name_list, index):
-        "Overrideable factory method"
-        return Position(name_list, index)
+        
+    def create_array_node_info(self, array_name, node_names, node_index):
+        """
+        self.create_array_node_info(node_name)
 
-    def __repr__(self):
-        ckeys = self._positions.keys()
-        if ckeys:
-            ckeys = "@"+str(ckeys)
-        else:
-            ckeys = ""
-        return '{}:{}{}'.format(
-            str(self), dict.__repr__(self), ckeys)
+        Overrideable factory method, used by OptionsDict.array().
+        """
+        return ArrayNodeInfo(array_name, node_names, node_index)
 
-    def __str__(self):
-        return self.str()
-
-    def __iter__(self):
-        yield self
     
-    def __getitem__(self, key):
-        value = dict.__getitem__(self, key)
-        # recurse until the return value is no longer a function
-        if isinstance(value, FunctionType):
-            # dynamic entry
-            return value(self)
-        else:
-            # normal entry
-            return value
-        
-    def __eq__(self, other):
-        eq_tests = []
-        eq_tests.append(self._name_substrings == other._name_substrings)
-        eq_tests.append(self._positions == other._positions)
-        eq_tests.append(dict.__eq__(self, other))
-        return all(eq_tests)
-
-    def __ne__(self, other):
-        return not self==other
-
-    def copy(self):
-        obj = OptionsDict(dict.copy(self))
-        obj._name_substrings = copy(self._name_substrings)
-        obj._positions = copy(self._positions)
-        return obj
-        
     def update(self, entries):
+        """
+        self.update(entries)
+        
+        As with conventional dicts, updates entries with the key-value
+        pairs given in the entries argument.  Alternatively, a list of
+        functions may be supplied which will go on to become dynamic
+        entries.
+        """
         if isinstance(entries, dict):
             # argument is a dictionary, so updating is straightforward
             self._update_from_dict(entries)
@@ -201,11 +194,112 @@ class OptionsDict(dict):
             # argument is presumably a list of dynamic entries
             self._update_from_dynamic_entries(entries)
 
+            
+    def str(self, only=[], exclude=[]):
+        """
+        self.str(only=[], exclude=[])
+
+        Returns a string identifier, providing more control than the
+        str() idiom through optional arguments.
+
+        Specifically, if the OptionsDict was initialised from a
+        collection and/or has been updated from other
+        collection-initialised OptionsDicts, it is possible to control
+        which substrings appear through the 'only' and 'exclude'
+        arguments.  These arguments take an collection name or list of
+        collection names.
+        """
+        # wrap 'only' and 'exclude' strings as lists if necessary
+        if isinstance(only, str):
+            only = [only]
+        if isinstance(exclude, str):
+            exclude = [exclude]
+        substrings = []
+        for ni in self.node_info:
+            # filter nodes according to corresponding collection names
+            # given in the optional args
+            if only:
+                if not ni.belongs_to_any(only):
+                    continue
+            if ni.belongs_to_any(exclude):
+                continue
+            # if we are still in the loop at this point, we can include
+            # the current node name in the result
+            substrings.append(str(ni))
+        # finally join up the node names
+        return self._join_substrings(substrings)
+
+        
+    def get_node_info(self, collection_name=None):
+        """
+        self.get_node_info(collection_name=None)
+        
+        Returns the OptionDict's first NodeInfo object.  If the
+        OptionsDict has accumulated several NodeInfo objects, the
+        client can get a particular one by passing in the
+        corresponding collection name.
+        """
+        # TODO: test what happens when the OptionsDict is updated with
+        # others from the same collection.
+        if collection_name is None:
+            try:
+                return self.node_info[0]
+            except IndexError:
+                return None
+        else:
+            for ni in self.node_info:
+                if ni.belongs_to(collection_name):
+                    return ni
+            return None
+
+        
+    def set_node_info(self, new_node_info, collection_name=None):
+        """
+        self.set_node_info(new_node_info, collection_name=None)
+        
+        Sets the OptionDict's first NodeInfo object.  If the
+        OptionsDict has accumulated several NodeInfo objects, the
+        client can set a particular one by passing in the
+        corresponding collection name.
+        """
+        # TODO: test what happens when the OptionsDict is updated with
+        # others from the same collection.
+        if collection_name is None:
+            try:
+                self.node_info[0] = new_node_info
+            except IndexError:
+                raise OptionsDictException(
+                    "there aren't any node_info objects to replace.")
+        else:
+            for ni in self.node_info:
+                if ni.belongs_to(collection_name):
+                    ni = new_node_info
+            return None
+
+        
+    def expand_template(self, buffer_string, loops=1):
+        """
+        self.expand_template(buffer_string, loops=1)
+        
+        In buffer_string, replaces substrings prefixed '$' with
+        corresponding values in the OptionsDict.  More than one loop
+        will be needed if the placeholders are nested.
+        """
+        for i in range(loops):
+            buffer_string = Template(buffer_string)
+            buffer_string = buffer_string.safe_substitute(self)
+        return buffer_string
+
+
+    def copy(self):
+        obj = OptionsDict(dict.copy(self))
+        obj.node_info = [ni.copy() for ni in self.node_info]
+        return obj
+
     def _update_from_dict(self, other):
         # update OptionsDict attributes
         if isinstance(other, OptionsDict):
-            self._name_substrings += other._name_substrings
-            self._positions.update(other._positions)
+            self.node_info += other.node_info
         # now pass to superclass
         dict.update(self, other)
 
@@ -221,58 +315,7 @@ functions).""")
                 self[func.__name__] = func
         except TypeError:
             raise err
-
-    def get_position(self, array_name=None):
-        """
-        If the OptionsDict was initialised as part of an array, calling
-        this method with no arguments will return its associated
-        Position object.  If the OptionsDict has since been updated
-        with other array-initialised OptionsDicts, it is possible to
-        recover any of their Positions by passing in the corresponding
-        array_name.
-        """
-        if array_name is None:
-            try:
-                array_name = self._positions.keys()[0]
-            except IndexError:
-                return None
-        try:
-            return self._positions[array_name]
-        except KeyError:
-            return None
-
-    def str(self, only=[], exclude=[]):
-        """
-        str(self, only=[], exclude=[])
-
-        Returns a string identifier, providing more control than the
-        __str__ idiom through optional arguments.
-
-        Specifically, if the OptionsDict was array-initialised, and/or
-        has been updated from other array-initialised OptionsDicts, it
-        is possible to control which substrings appear through the
-        'only' and 'exclude' arguments.  These arguments take an array
-        name or list of array names.
-        """
-        # wrap 'only' and 'exclude' strings as lists if necessary
-        if isinstance(only, str):
-            only = [only]
-        if isinstance(exclude, str):
-            exclude = [exclude]
-        # convert array names to node names
-        only_substrings = self._get_node_names(only)
-        exclude_substrings = self._get_node_names(exclude)
-        # loop over name substrings, appending as appropriate
-        result_substrings = []
-        for substr in self._name_substrings:
-            if only:
-                if substr not in only_substrings:
-                    continue
-            if substr in exclude_substrings:
-                continue
-            result_substrings.append(substr)
-        return self._join_substrings(result_substrings)
-
+            
     def _get_node_names(self, array_names):
         result = []
         for arr in array_names:
@@ -285,70 +328,187 @@ functions).""")
             return self.name_separator.join(substrings)
         else:
             return ''.join(substrings)
-                
-    def expand_template(self, buffer_string, loops=1):
-        """
-        In buffer_string, replaces substrings prefixed '$' with
-        corresponding values from the dictionary.
-        """
-        for i in range(loops):
-            buffer_string = Template(buffer_string)
-            buffer_string = buffer_string.safe_substitute(self)
-        return buffer_string
-        
-
-class Position:
-    """
-    Position(names, index)
-    
-    Provides information on where a node is in relation to others in a
-    sequence.  It also provides the names of the other elements based
-    on their absolute or relative indices.
-    """
-
-    def __init__(self, names, index):
-        self.names = names
-        self.index = index
 
     def __str__(self):
         return self.str()
 
     def __repr__(self):
-        return 'Position({}, {})'.format(self.names, self.index)
+        return dict.__repr__(self) + repr(self.node_info)
 
-    def str(self, absolute=None, relative=None):
+    def __iter__(self):
+        yield self
+        
+    def __eq__(self, other):
+        result = True
+        result *= self.node_info == other.node_info
+        result *= dict.__eq__(self, other)
+        return result
+
+    def __ne__(self, other):
+        return not self==other
+    
+    def __getitem__(self, key):
+        value = dict.__getitem__(self, key)
+        # recurse until the return value is no longer a function
+        if isinstance(value, FunctionType):
+            # dynamic entry
+            return value(self)
+        else:
+            # normal entry
+            return value
+
+
+class NodeInfo:
+    """
+    Abstract class for describing contextual information about a node.
+    The concrete methods herein are special cases which defer to the
+    more general subclass methods.
+    """
+    def belongs_to_any(self, collection_names):
         """
-        Returns the name of the node in question or, if arguments are
-        given, one of its siblings.  The optional arguments correspond
-        to absolute and relative indices, respectively.  In accordance
-        with Python indexing rules, a negative absolute index returns
-        a node from the end of the array.  To avoid confusion, this
-        does not apply when a relative index is given.
+        self.belongs_to_any(collection_names)
+        
+        Returns True if the node in question is associated with any of
+        collection_names.
         """
+        for cn in collection_names:
+            if self.belongs_to(cn):
+                return cn
+        return False
+    
+    def is_first(self):
+        """
+        self.is_first()
+        
+        Checks that the node in question is at the beginning of its
+        container.
+        """
+        return self.at(0)
+        
+    def is_last(self):
+        """
+        self.is_last()
+        
+        Checks that the node in question is at the end of its container.
+        """
+        return self.at(-1)
+
+    def _create_index(self, default, absolute, relative):
+        # Helper to subclass str() methods
         if absolute is None:
-            index = self.index
+            index = default
         else:
             index = absolute
         if relative is not None:
             index += relative
             if index < 0:
                 raise IndexError("list index out of range")
-        return self.names[index]
+        return index
+        
+    def __str__(self):
+        return self.str()
+        
+
+class OrphanNodeInfo(NodeInfo):
+    """
+    Describes a node which is not part of any collection.
+    """
+    def __init__(self, node_name):
+        self.node_name = node_name
+
+    def belongs_to(self, collection_name):
+        """
+        self.belongs_to(collection_name)
+
+        The node is not part of a collection, so this method will
+        always return False.
+        """
+        return False
     
     def at(self, index):
         """
-        Checks that the current Position is at the given index, which
-        can be negative to signify posiiton from the end of the
-        sequence.
+        self.at(index)
+
+        Checks that the node is at the given index, which for an orphan
+        node is only true for 0 (first) and -1 (last).
         """
-        return self.index == index or \
-            self.index == index + len(self.names)
-    
-    def is_first(self):
-        return self.at(0)
+        return index in (0, -1)
+
+    def str(self, absolute=None, relative=None):
+        """
+        self.str(absolute=None, relative=None)
         
-    def is_last(self):
-        return self.at(-1)
+        Returns the name of the node in question.  The optional arguments
+        are not applicable for an orphan node.
+        """
+        if self.at(self._create_index(0, absolute, relative)):
+            return self.node_name
+        else:
+            raise IndexError("list index out of range")
+
+    def copy(self):
+        return OrphanNodeInfo(self.node_name)
+
+    def __eq__(self, other):
+        result = isinstance(other, OrphanNodeInfo)
+        if result:
+            result *= self.node_name == other.node_name
+        return result
+
+        
+class ArrayNodeInfo(NodeInfo):
+    """
+    Describes a node which is part of an array (or sequence).
+    """
+    def __init__(self, array_name, node_names, node_index):
+        self.array_name = array_name
+        self.node_names = node_names
+        self.node_index = node_index
+
+    def belongs_to(self, collection_name):
+        """
+        self.belongs_to(collection_name)
+
+        Returns True if the node in question is associated with the
+        given collection name.
+        """
+        return collection_name == self.array_name
+
+    def at(self, index):
+        """
+        self.at(index)
+        
+        Checks that the node in question is at the given index, which can
+        be negative to signify position from the end of the sequence.
+        """
+        return self.node_index == index or \
+            self.node_index == index + len(self.node_names)
+        
+    def str(self, absolute=None, relative=None):
+        """
+        self.str(absolute=None, relative=None)
+        
+        Returns the name of the node in question or, if arguments are
+        given, one of its siblings.  The optional arguments correspond
+        to absolute and relative indices, respectively.  In accordance
+        with Python indexing rules, a negative absolute index returns
+        a node from the end of the array.  To prevent confusion,
+        however, this shall not apply when a relative index is given.
+        """
+        return self.node_names[
+            self._create_index(self.node_index, absolute, relative)]
+
+    def copy(self):
+        return ArrayNodeInfo(
+            self.array_name, copy(self.node_names), self.node_index)
+        
+    def __eq__(self, other):
+        result = isinstance(other, ArrayNodeInfo)
+        if result:
+            result *= self.array_name == other.array_name
+            result *= self.node_names == other.node_names
+            result *= self.node_index == other.node_index
+        return result
 
         
 class CallableEntry:
@@ -357,12 +517,11 @@ class CallableEntry:
 
     Because the OptionsDict works by evaluating all function objects
     recursively, it is not able to return other functions specified by
-    the client unless these are wrapped as callable objects.  This
-    class provides such a wrapper.
+    the client unless these are wrapped as callable objects.  This class
+    provides such a wrapper.
     """
     def __init__(self, function):
         self.function = function
         
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
-

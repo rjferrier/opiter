@@ -5,6 +5,7 @@ import unittest
 from options import OptionsDict, OptionsDictException
 from re import search
 
+
 class TestOptionsDictCreation(unittest.TestCase):
 
     def test_create_from_dict(self):
@@ -30,26 +31,19 @@ class TestOptionsDictCreation(unittest.TestCase):
         create_od = lambda: OptionsDict('foo')
         self.assertRaises(OptionsDictException, create_od)
 
-    def test_create_named_from_non_string(self):
-        """
-        When I create a named OptionsDict using something other than a
-        string, an error should be raised.
-        """
-        create_od = lambda: OptionsDict.named({'foo': 'bar'})
-        self.assertRaises(OptionsDictException, create_od)
 
-
-class TestAnonymousOptionsDict(unittest.TestCase):
+class TestOptionsDictBasics(unittest.TestCase):
     
     def setUp(self):
-        """I create an anonymous OptionsDict."""
+        "I create an anonymous OptionsDict."
         self.od = OptionsDict({'foo': 'bar'})
         
     def test_str(self):
+        """
+        Because there is no node information, str() should return an empty
+        string.
+        """
         self.assertEqual(str(self.od), '')
-
-    def test_repr(self):
-        self.assertEqual(repr(self.od), ":{'foo': 'bar'}")
 
     def test_equal(self):
         self.assertEqual(self.od, OptionsDict({'foo': 'bar'}))
@@ -58,7 +52,7 @@ class TestAnonymousOptionsDict(unittest.TestCase):
         self.assertNotEqual(self.od, OptionsDict({'baz': 'bar'}))
 
     def test_positions_empty(self):
-        self.assertIsNone(self.od.get_position())
+        self.assertIsNone(self.od.get_node_info())
 
     def test_copy(self):
         other = self.od.copy()
@@ -70,114 +64,6 @@ class TestAnonymousOptionsDict(unittest.TestCase):
         # deep-copied, however)
         other.update(OptionsDict({'foo': 'baz'}))
         self.assertNotEqual(other, self.od)
-        
-        
-class TestNamedOptionsDict(unittest.TestCase):
-
-    def setUp(self):
-        """I create a named OptionsDict."""
-        self.od = OptionsDict.named('foo', {'bar': 1})
-
-    def test_equal_names_and_dicts(self):
-        self.assertEqual(self.od,
-                         OptionsDict.named('foo', {'bar': 1}))
-
-    def test_equal_names_but_unequal_dicts(self):
-        self.assertNotEqual(self.od,
-                            OptionsDict.named('foo', {'bar': 2}))
-
-    def test_unequal_names_but_equal_dicts(self):
-        self.assertNotEqual(self.od,
-                            OptionsDict.named('baz', {'bar': 1}))
-
-    def test_copy(self):
-        other = self.od.copy()
-        # test for equivalence and non-identity
-        self.assertEqual(other, self.od)
-        self.assertFalse(other is self.od)
-        # test that name components have been copied and not simply
-        # linked
-        other.update(OptionsDict.named('baz'))
-        self.assertNotEqual(other, self.od)
-        
-
-    def test_default_str(self):
-        """
-        Calling the __str__ idiom and the str() method with no arguments
-        should just return the name.
-        """
-        self.assertEqual(str(self.od), 'foo')
-        self.assertEqual(self.od.str(), 'foo')
-
-    # def test_str_from_missing_array_name(self):
-    #     """
-    #     Calling the str() method with the name of an array that hasn't
-    #     been registered yet should trigger a KeyError.
-    #     """
-    #     self.assertRaises(KeyError, lambda: self.od.str(['foo']))
-
-    # def test_str_exclude_missing_array_name(self):
-    #     """
-    #     Conversely, calling the str() method to exclude the substring
-    #     corresponding to the name of an array that hasn't been
-    #     registered yet should be fine.
-    #     """
-    #     self.assertEqual(self.od.str(exclude=['some_array']), 'foo')
-
-        
-class TestOptionsDictUpdateFromOptionsDict(unittest.TestCase):
-        
-    def setUp(self):
-        """
-        I create and store an OptionsDict.  I create another
-        OptionsDict, with one entry duplicating a key from the stored
-        dict but having a different corresponding value.  I update the
-        stored dict with the other dict.
-        """
-        self.od = OptionsDict.named('A', {'foo': 1, 'bar': 2})
-        other = OptionsDict.named('B', {'foo': 3, 'baz': 4})
-        self.od.update(other)
-        
-    def test_name(self):
-        self.assertEqual(str(self.od), 'A_B')
-        
-    def test_repr(self):
-        """
-        repr(C) should be 'A_B:{<contents>}'.
-        """
-        dict_pattern = "{['a-z: 0-9,]*}"
-        self.assertIsNotNone(search('A_B:'+dict_pattern,
-                                    repr(self.od)))
-
-    def test_right_overrides_left(self):
-        """
-        Looking up the shared key should return the other dict's value.
-        """
-        self.assertEqual(self.od['foo'], 3)
-
-        
-class TestOptionsDictUpdateFromDict(unittest.TestCase):
-    
-    def setUp(self):
-        """
-        I create and store an OptionsDict.  I create a standard dict,
-        with one entry duplicating a key from the stored dict but
-        having a different corresponding value.  I update the stored
-        dict with the other dict.
-        """
-        self.od = OptionsDict.named('A', {'foo': 1, 'bar': 2})
-        other = {'foo': 3, 'baz': 4}
-        self.od.update(other)
-        
-    def test_name(self):
-        self.assertEqual(str(self.od), 'A')
-        
-    def test_repr(self):
-        """
-        repr(C) should be 'A:{<contents>}'.
-        """
-        dict_pattern = "{['a-z: 0-9,]*}"
-        self.assertIsNotNone(search('A:'+dict_pattern, repr(self.od)))
 
         
 class TestOptionsDictDynamicEntries(unittest.TestCase):
