@@ -53,21 +53,6 @@ class TestOptionsDictOrphanNode(unittest.TestCase):
         self.assertEqual(str(self.od), 'foo')
         self.assertEqual(self.od.str(), 'foo')
 
-    # def test_str_from_missing_array_name(self):
-    #     """
-    #     Calling the str() method with the name of an array that hasn't
-    #     been registered yet should trigger a KeyError.
-    #     """
-    #     self.assertRaises(KeyError, lambda: self.od.str(['foo']))
-
-    # def test_str_exclude_missing_array_name(self):
-    #     """
-    #     Conversely, calling the str() method to exclude the substring
-    #     corresponding to the name of an array that hasn't been
-    #     registered yet should be fine.
-    #     """
-    #     self.assertEqual(self.od.str(exclude=['some_array']), 'foo')
-
         
 class TestOptionsDictUpdateFromOptionsDict(unittest.TestCase):
         

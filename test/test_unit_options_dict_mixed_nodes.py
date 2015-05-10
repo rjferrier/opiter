@@ -2,29 +2,29 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import OptionsDict, OptionsDictException
+from options import OptionsDictException, NodeInfoException
 from unit_options_dict import OptionsDictUnderTest
 
 
-class TestOptionsDictWithMixedNodeInfo(unittest.TestCase):
-
+class TestOptionsDictsWithMixedNodeInfo(unittest.TestCase):
+    
     def setUp(self):
         """
-        I create three OptionsDict arrays, 'A', 'B' and 'C', and store
-        the second element of B.  I update this OptionsDict with the
-        first and third elements of C and A, respectively.  To
-        complicate its name, I'll also update it with an OptionsDict
-        that is not part of an array.
+        I create three OptionsDict arrays, 'A', 'B' and 'C', and an orphan
+        (non-array-initialised) OptionsDict.  I store the second element
+        of B and update it with the first element of C, an orphan node,
+        and the third element of A.  To make sure the framework is
+        really robust, I'm going to do the updating in a funny order.
         """
         A = OptionsDictUnderTest.array('A', [1, 2, 3])
         B = OptionsDictUnderTest.array('B', ['i', 'ii', 'iii'])
         C = OptionsDictUnderTest.array('C', [0.25, 0.5, 1.0])
         d = OptionsDictUnderTest.node('d', {})
+        d.update(A[2])
+        C[0].update(d)
         self.od = B[1]
         self.od.update(C[0])
-        self.od.update(d)
-        self.od.update(A[2])
-
+        
     def test_get_default_node_info(self):
         """
         When I call get_node_info with no arguments, the result should
@@ -48,9 +48,10 @@ class TestOptionsDictWithMixedNodeInfo(unittest.TestCase):
         self.assertFalse(other is self.od)
         # test that node_info objects have been copied and not simply
         # linked
-        E = OptionsDict.array('E', ['foo', 'bar'])
+        E = OptionsDictUnderTest.array('E', ['foo', 'bar'])
         other.update(E[0])
-        self.assertIsNone(self.od.get_node_info('E'))
+        self.assertRaises(NodeInfoException, \
+                          lambda: self.od.get_node_info('E'))
 
     def test_str_from_array_names(self):
         """

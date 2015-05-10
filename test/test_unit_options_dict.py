@@ -2,8 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import OptionsDict, OptionsDictException
-from re import search
+from options import OptionsDict, OptionsDictException, NodeInfoException
 
 
 class TestOptionsDictCreation(unittest.TestCase):
@@ -51,9 +50,13 @@ class TestOptionsDictBasics(unittest.TestCase):
     def test_unequal(self):
         self.assertNotEqual(self.od, OptionsDict({'baz': 'bar'}))
 
-    def test_positions_empty(self):
-        self.assertIsNone(self.od.get_node_info())
+    def test_node_info_empty(self):
+        self.assertRaises(NodeInfoException, lambda: self.od.get_node_info())
 
+    def test_set_node_info(self):
+        ni = self.od.create_orphan_node_info('foo')
+        self.assertRaises(NodeInfoException, lambda: self.od.set_node_info(ni))
+        
     def test_copy(self):
         other = self.od.copy()
         # test for equivalence and non-identity
@@ -65,6 +68,7 @@ class TestOptionsDictBasics(unittest.TestCase):
         other.update(OptionsDict({'foo': 'baz'}))
         self.assertNotEqual(other, self.od)
 
+        
         
 class TestOptionsDictDynamicEntries(unittest.TestCase):
     

@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import OptionsDict, OptionsDictException
+from options import OptionsDict, OptionsDictException, NodeInfoException
 from unit_options_dict import OptionsDictUnderTest
 
 
@@ -140,7 +140,8 @@ class TestOptionsDictArrayNodeInfo(unittest.TestCase):
         """
         Conversely, passing anything else should return None.
         """
-        self.assertIsNone(self.od.get_node_info('B'))
+        self.assertRaises(NodeInfoException, \
+                          lambda: self.od.get_node_info('B'))
 
     def test_copy(self):
         other = self.od.copy()
@@ -148,6 +149,56 @@ class TestOptionsDictArrayNodeInfo(unittest.TestCase):
         self.assertEqual(other, self.od)
         self.assertFalse(other is self.od)
 
+        
+class TestOptionsDictArrayNodeUpdatedWithSibling(unittest.TestCase):
+
+    def setUp(self):
+        """
+        This is not an intended use case, but suppose I create an array
+        and update one of the OptionsDicts with another from the same
+        sequence.
+        """
+        seq = OptionsDictUnderTest.array('A', [1, 2, 3])
+        self.od = seq[1]
+        self.od.update(seq[2])
+        self.node_info = self.od.get_node_info()
+        
+    def test_default_str(self):
+        self.assertEqual(self.od.str(), '2_3')
+
+    def test_get_node_info(self):
+        """
+        Whether I call get_node_info with no arguments or with the array
+        name, the result should be the original node info.
+        """
+        self.assertEqual(self.od.get_node_info().str(), '2')
+        self.assertEqual(self.od.get_node_info('A').str(), '2')
+
+    def test_set_default_node_info(self):
+        """
+        When I call set_node_info with no arguments, I should end up
+        setting the original node info.
+        """
+        self.od.set_node_info(
+            self.od.create_orphan_node_info('i'))
+        self.assertEqual(self.od.str(), 'i_3')
+
+    def test_set_node_info_with_array_name(self):
+        """
+        When I call set_node_info with the array name, I should end up
+        setting the original node info.  However, if I do this again
+        having replaced the original node info with orphan node info,
+        I should end up setting the second node info.
+        """
+        self.od.set_node_info(
+            self.od.create_orphan_node_info('i'), collection_name='A')
+        self.assertEqual(self.od.str(), 'i_3')
+
+        self.od.set_node_info(
+            self.od.create_orphan_node_info('ii'), collection_name='A')
+        self.assertEqual(self.od.str(), 'i_ii')
+
+    
          
 if __name__ == '__main__':
     unittest.main()

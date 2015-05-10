@@ -1,6 +1,5 @@
-from types import FunctionType, LambdaType
+from types import FunctionType
 from string import Template
-from collections import OrderedDict
 from copy import copy
 
 # default settings
@@ -8,6 +7,12 @@ NAME_SEPARATOR = '_'
 
 
 class OptionsDictException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+    def __str__(self):
+        return self.msg
+
+class NodeInfoException(Exception):
     def __init__(self, msg):
         self.msg = msg
     def __str__(self):
@@ -120,20 +125,16 @@ class OptionsDict(dict):
         # First pass: instantiate OptionsDict elements
         for index, el in enumerate(elements):
             if isinstance(el, OptionsDict):
-                # # If the element is already an OptionsDict object, use
-                # # its entries to instantiate a fresh OptionsDict.  The
-                # # element's node_info is not needed, however, because we
-                # # are creating a new container.
-                # od = Self(el)
-                
                 # If the element is already an OptionsDict object,
-                # copy it and add a special entry using array_name
+                # copy it and add a special entry using array_name.
+                # Keep track of the node name.
                 od = el.copy()
                 node_name = str(el)
                 od.update({array_name: node_name})
             else:
                 # otherwise, instantiate a new OptionsDict node with
-                # the original element stored under array_name
+                # the original element stored under array_name.
+                # Determine the node name.
                 try:
                     node_name = name_format(el)
                 except TypeError:
@@ -239,18 +240,22 @@ class OptionsDict(dict):
         client can get a particular one by passing in the
         corresponding collection name.
         """
-        # TODO: test what happens when the OptionsDict is updated with
-        # others from the same collection.
+        # def operation(old_node_info):
+        #     return old_node_info
+        # return self._get_or_set_node_info(operation, collection_name)
         if collection_name is None:
             try:
                 return self.node_info[0]
             except IndexError:
-                return None
+                raise NodeInfoException(
+                    "there aren't any node_info objects")
         else:
             for ni in self.node_info:
                 if ni.belongs_to(collection_name):
                     return ni
-            return None
+            raise NodeInfoException(
+                "couldn't find any node information corresponding to '{}'".\
+                format(collection_name))
 
         
     def set_node_info(self, new_node_info, collection_name=None):
@@ -262,19 +267,23 @@ class OptionsDict(dict):
         client can set a particular one by passing in the
         corresponding collection name.
         """
-        # TODO: test what happens when the OptionsDict is updated with
-        # others from the same collection.
+        # def operation(old_node_info):
+        #     old_node_info = new_node_info
+        # self._get_or_set_node_info(operation, collection_name)
         if collection_name is None:
             try:
                 self.node_info[0] = new_node_info
             except IndexError:
-                raise OptionsDictException(
-                    "there aren't any node_info objects to replace.")
+                raise NodeInfoException(
+                    "there aren't any node_info objects")
         else:
-            for ni in self.node_info:
+            for i, ni in enumerate(self.node_info):
                 if ni.belongs_to(collection_name):
-                    ni = new_node_info
-            return None
+                    self.node_info[i] = new_node_info
+                    return
+            raise NodeInfoException(
+                "couldn't find any node information corresponding to '{}'".\
+                format(collection_name))
 
         
     def expand_template(self, buffer_string, loops=1):
@@ -289,7 +298,6 @@ class OptionsDict(dict):
             buffer_string = Template(buffer_string)
             buffer_string = buffer_string.safe_substitute(self)
         return buffer_string
-
 
     def copy(self):
         obj = OptionsDict(dict.copy(self))
@@ -315,13 +323,6 @@ functions).""")
                 self[func.__name__] = func
         except TypeError:
             raise err
-            
-    def _get_node_names(self, array_names):
-        result = []
-        for arr in array_names:
-            ct = self._positions[arr]
-            result.append(str(ct))
-        return result
 
     def _join_substrings(self, substrings):
         if all(substrings):
@@ -329,6 +330,22 @@ functions).""")
         else:
             return ''.join(substrings)
 
+    # def _get_or_set_node_info(self, operation, collection_name):
+    #     if collection_name is None:
+    #         try:
+    #             return operation(self.node_info[0])
+    #         except IndexError:
+    #             raise NodeInfoException(
+    #                 "there aren't any node_info objects")
+    #     else:
+    #         for ni in self.node_info:
+    #             print ni
+    #             if ni.belongs_to(collection_name):
+    #                 return operation(ni)
+    #         raise NodeInfoException(
+    #             "couldn't find any node information corresponding to '{}'".\
+    #             format(collection_name))
+            
     def __str__(self):
         return self.str()
 
