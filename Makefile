@@ -1,5 +1,3 @@
-.PHONY: default examples
-
 default: test
 
 clean:

@@ -1,14 +1,19 @@
+define run
+@echo
+@printf '%70s\n' | tr ' ' =
+@echo ' Running $1*.py'
+@printf '%70s\n' | tr ' ' =
+@echo
+python -m unittest discover -p '$1*.py'
+@printf '%70s\n' | tr ' ' =
+@echo
+endef
 
-test: clean
-	@echo
-	@printf '%70s\n' | tr ' ' =
-	@echo " Testing "
-	@printf '%70s\n' | tr ' ' =
-	@echo
-	python -m unittest discover .
-	@printf '%70s\n' | tr ' ' =
-	@echo
+default: test
 
 clean:
 	rm *.pyc -f
 	rm *~ -f
+
+test%: clean
+	$(call run,${@:%.o=%})
