@@ -9,11 +9,9 @@ python -m unittest discover -p '$1*.py'
 @echo
 endef
 
-default: test
-
 clean:
 	rm *.pyc -f
 	rm *~ -f
 
-test%: clean
-	$(call run,${@:%.o=%})
+t%: clean
+	$(call run,$@)
