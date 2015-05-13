@@ -3,7 +3,7 @@ sys.path.append('..')
 
 from test_functional_common import *
 import unittest
-from tools import product, attach, merge, identify, Lookup
+from tools import product, attach, merge, Lookup
 
 
 class TestOptionsDictCartesianProductSerialIteration(
@@ -65,7 +65,7 @@ class TestOptionsDictTreeSerialIteration(
         self.check_times(resulting_times)
 
     def test_mapping_and_name_check(self):
-        resulting_names = map(identify, self.tree)
+        resulting_names = map(label, self.tree)
         self.check_names(resulting_names)
             
     def test_mapping_and_lookup(self):

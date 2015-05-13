@@ -18,10 +18,16 @@ from tools import merges_dicts, product, attach, flatten
 def distance(opt):
     return opt['speed'] * opt['travel_time']
 
+@merges_dicts
+def label(opt):
+    return str(opt)
+
 # the merges_dicts decorator is not needed for this function, because
 # the function will only serve as a dynamic entry.
 def cost(opt):
     return opt['res']**opt['dim']
+
+
 
 
 class TestOptionsDictCartesianProductIteration(unittest.TestCase):

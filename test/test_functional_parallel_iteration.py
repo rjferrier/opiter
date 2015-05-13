@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 from test_functional_common import *
-from tools import product, identify, Lookup
+from tools import product, Lookup
 from multiprocessing import Pool
 
 def pool():
@@ -32,7 +32,7 @@ class TestOptionsDictTreeParallelIteration(
         TestOptionsDictTreeIteration):
             
     def test_mapping_and_name_check(self):
-        resulting_names = pool().map(identify, self.tree)
+        resulting_names = pool().map(label, self.tree)
         self.check_names(resulting_names)
             
     def test_mapping_and_lookup(self):

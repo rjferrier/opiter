@@ -170,17 +170,6 @@ def merges_dicts(client_function):
         def decorator(dict_combination):
             return client_function(merge(dict_combination))
     return decorator
-
-
-@merges_dicts
-def identify(dictionary):
-    """
-    identify(dict_combination)
-
-    Simply gets the string representation of a dictionary or combination
-    of dictionaries.
-    """
-    return str(dictionary)
     
 
 class Lookup:
