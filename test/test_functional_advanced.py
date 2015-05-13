@@ -46,10 +46,10 @@ class TestOptionsDictTreePostprocessing(
             Postprocessor(self.simulation_errors,
                           IsLastStrategy()))
 
-    # def test_postprocessing_with_lookup_strategy(self):
-    #     self.check_convergence(
-    #         Postprocessor(self.simulation_errors,
-    #                       DictionaryStrategy()))
+    def test_postprocessing_with_lookup_strategy(self):
+        self.check_convergence(
+            Postprocessor(self.simulation_errors,
+                          DictionaryStrategy()))
 
         
 class Postprocessor:
@@ -152,10 +152,12 @@ class DictionaryStrategy:
         current_ID = options.str()
         self.resolutions[current_ID] = options['res']
         self.errors[current_ID] = current_err
+        
         # now try loading the previous values.  If we can't, exit
         # gracefully
-        previous_ID = options.str(relative={'res': -1})
         try:
-            return self.resolutions[previous_ID], self.errors[previous_ID]
-        except KeyError:
+            previous_ID = options.str(relative={'res': -1})
+        except IndexError:
             raise NotEnoughInfoException
+        
+        return self.resolutions[previous_ID], self.errors[previous_ID]
