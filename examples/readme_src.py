@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 from options_dict import OptionsDict
-from tools import product, merge, merges_dicts, identify, Lookup
+from tools import product, merge, merges_dicts, Lookup
 import multiprocessing
 
 # setup
@@ -42,7 +42,11 @@ p = multiprocessing.Pool(4)
 Reynolds_numbers = p.map(calculate_Re, combos)
 
 # for completeness...
-IDs = map(identify, combos)
+@merges_dicts
+def label(opt):
+  return opt.str()
+
+IDs = map(label, combos)
 for ID, Re in zip(IDs, Reynolds_numbers):
     print 'Test ID = {}, Reynolds number = {:.2e}'.\
         format(ID, Re)
@@ -65,7 +69,7 @@ p = multiprocessing.Pool(4)
 Reynolds_numbers = p.map(Lookup('Reynolds_number'), combos)
 
 # for completeness...
-IDs = map(identify, combos)
+IDs = map(label, combos)
 for ID, Re in zip(IDs, Reynolds_numbers):
     print 'Test ID = {}, Reynolds number = {:.2e}'.\
         format(ID, Re)

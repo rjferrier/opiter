@@ -1,5 +1,6 @@
 from copy import copy
 
+
 class NodeInfo:
     """
     Abstract class for describing contextual information about a node.
@@ -83,9 +84,6 @@ class OrphanNodeInfo(NodeInfo):
         Returns the name of the node in question.  The optional arguments
         are not applicable for an orphan node.
         """
-        # for arg in (absolute, relative):
-        #     if isinstance(absolute, dict):
-        #         arg = None
         args = [absolute, relative]
         for i, a in enumerate(args):
             if isinstance(a, dict):
@@ -176,3 +174,16 @@ class ArrayNodeInfo(NodeInfo):
             result *= self.node_index == other.node_index
         return result
 
+
+class SimpleFormatter:
+    def __init__(self, separator='_'):
+        self.separator = separator
+
+    def __call__(self, node_info_list, absolute={}, relative={}):
+        substrings = [ni.str(absolute=absolute, relative=relative) \
+                      for ni in node_info_list]
+        if node_info_list:
+            result = self.separator.join(substrings)
+        else:
+            result = ''.join(substrings)
+        return result

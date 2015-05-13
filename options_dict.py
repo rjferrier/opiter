@@ -1,11 +1,7 @@
 from types import FunctionType
 from string import Template
 
-from node_info import OrphanNodeInfo, ArrayNodeInfo
-
-
-# default settings
-NAME_SEPARATOR = '_'
+from node_info import OrphanNodeInfo, ArrayNodeInfo, SimpleFormatter
 
 
 class OptionsDictException(Exception):
@@ -50,10 +46,6 @@ class OptionsDict(dict):
     (3) An OptionsDict can expand strings as templates.
     """
     
-    # settings
-    name_separator = NAME_SEPARATOR
-
-    
     def __init__(self, entries={}):
         """
         OptionsDict(entries={})
@@ -66,7 +58,6 @@ class OptionsDict(dict):
         # component before it exists
         self.node_info = []
         self.update(entries)
-
         
     @classmethod
     def node(Self, name, entries={}):
@@ -195,9 +186,11 @@ class OptionsDict(dict):
             self._update_from_dynamic_entries(entries)
 
             
-    def str(self, only=[], exclude=[], absolute={}, relative={}):
+    def str(self, only=[], exclude=[], absolute={}, relative={}, 
+            formatter=None):
         """
-        self.str(only=[], exclude=[], absolute={}, relative={})
+        self.str(only=[], exclude=[], absolute={}, relative={}, 
+                 formatter=None)
 
         Returns a string identifier, providing more control than the
         str() idiom through optional arguments.
@@ -214,7 +207,7 @@ class OptionsDict(dict):
             only = [only]
         if isinstance(exclude, str):
             exclude = [exclude]
-        substrings = []
+        filtered_node_info = []
         for ni in self.node_info:
             # filter nodes according to corresponding collection names
             # given in the optional args
@@ -224,10 +217,22 @@ class OptionsDict(dict):
             if ni.belongs_to_any(exclude):
                 continue
             # if we are still in the loop at this point, we can include
-            # the current node name in the result.
-            substrings.append(ni.str(relative=relative, absolute=absolute))
-        # finally join up the node names
-        return self._join_substrings(substrings)
+            # the current node info in the result.
+            filtered_node_info.append(ni)
+        # hand the filtered list to the formatter object
+        if not formatter:
+            formatter = self.create_node_info_formatter()
+        return formatter(filtered_node_info, 
+                         absolute=absolute, relative=relative)
+
+        
+    def create_node_info_formatter(self):
+        """
+        self.create_node_info_format()
+
+        Overrideable factory method, used by OptionsDict.str().
+        """
+        return SimpleFormatter()
 
         
     def get_node_info(self, collection_name=None):
@@ -316,12 +321,6 @@ functions).""")
                 self[func.__name__] = func
         except TypeError:
             raise err
-
-    def _join_substrings(self, substrings):
-        if all(substrings):
-            return self.name_separator.join(substrings)
-        else:
-            return ''.join(substrings)
             
     def __str__(self):
         return self.str()

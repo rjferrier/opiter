@@ -7,14 +7,18 @@ from options_dict import OptionsDict, OptionsDictException, NodeInfoException
 
 class UnitOptionsDict(OptionsDict):
     """
-    This is OptionsDict decoupled from the NodeInfo implementations
-    for unit testing purposes.
+    This is OptionsDict decoupled from the NodeInfo and NodeFormat
+    implementations for unit testing purposes.
     """
+
     def create_orphan_node_info(self, node_name):
         return None
 
     def create_array_node_info(self, array_name, node_names, node_index):
         return None
+
+    def create_node_info_format(self):
+        return lambda node_info, absolute, relative: ''
 
 
 class TestOptionsDictCreation(unittest.TestCase):
