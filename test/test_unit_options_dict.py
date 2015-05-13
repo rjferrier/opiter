@@ -2,7 +2,19 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import OptionsDict, OptionsDictException, NodeInfoException
+from options_dict import OptionsDict, OptionsDictException, NodeInfoException
+
+
+class UnitOptionsDict(OptionsDict):
+    """
+    This is OptionsDict decoupled from the NodeInfo implementations
+    for unit testing purposes.
+    """
+    def create_orphan_node_info(self, node_name):
+        return None
+
+    def create_array_node_info(self, array_name, node_names, node_index):
+        return None
 
 
 class TestOptionsDictCreation(unittest.TestCase):
@@ -11,7 +23,7 @@ class TestOptionsDictCreation(unittest.TestCase):
         """
         When I create an OptionsDict from a dict, there is no error.
         """
-        OptionsDict({'foo': 'bar'})
+        UnitOptionsDict({'foo': 'bar'})
 
     def test_create_from_dynamic_entries(self):
         """
@@ -20,14 +32,14 @@ class TestOptionsDictCreation(unittest.TestCase):
         """
         def foo(opt):
             return 'bar'
-        OptionsDict([foo])
+        UnitOptionsDict([foo])
 
     def test_create_from_non_dict(self):
         """
         When I create an OptionsDict using something other than a dict
         or a list of functions, an error should be raised.
         """
-        create_od = lambda: OptionsDict('foo')
+        create_od = lambda: UnitOptionsDict('foo')
         self.assertRaises(OptionsDictException, create_od)
 
 
@@ -35,7 +47,7 @@ class TestOptionsDictBasics(unittest.TestCase):
     
     def setUp(self):
         "I create an anonymous OptionsDict."
-        self.od = OptionsDict({'foo': 'bar'})
+        self.od = UnitOptionsDict({'foo': 'bar'})
         
     def test_str(self):
         """
@@ -45,10 +57,10 @@ class TestOptionsDictBasics(unittest.TestCase):
         self.assertEqual(str(self.od), '')
 
     def test_equal(self):
-        self.assertEqual(self.od, OptionsDict({'foo': 'bar'}))
+        self.assertEqual(self.od, UnitOptionsDict({'foo': 'bar'}))
 
     def test_unequal(self):
-        self.assertNotEqual(self.od, OptionsDict({'baz': 'bar'}))
+        self.assertNotEqual(self.od, UnitOptionsDict({'baz': 'bar'}))
 
     def test_node_info_empty(self):
         self.assertRaises(NodeInfoException, lambda: self.od.get_node_info())
@@ -65,7 +77,7 @@ class TestOptionsDictBasics(unittest.TestCase):
         # test that entries have been copied and not simply linked (we
         # do not guarantee that their components have been
         # deep-copied, however)
-        other.update(OptionsDict({'foo': 'baz'}))
+        other.update(UnitOptionsDict({'foo': 'baz'}))
         self.assertNotEqual(other, self.od)
 
         
@@ -79,7 +91,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         entry dependent on velocity, pipe_diameter and
         kinematic_viscosity.  I haven't defined velocity yet.
         """
-        self.od = OptionsDict({
+        self.od = UnitOptionsDict({
             'kinematic_viscosity': 1.e-6,
             'pipe_diameter'      : 0.1 })
         def Reynolds_number(d):
@@ -133,7 +145,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         object.  That is, it should be a copy.
         """
         self.od['velocity'] = 0.
-        dd = OptionsDict(self.od)
+        dd = UnitOptionsDict(self.od)
         # test for equivalence and non-identity
         self.assertEqual(dd, self.od)
         self.assertFalse(dd is self.od)
@@ -147,9 +159,9 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
 class TestOptionsDictTemplateExpansion(unittest.TestCase):
 
     def setUp(self):
-        self.od = OptionsDict({'fluid'         : 'water',
-                               'melting_point' :       0,
-                               'boiling_point' :     100})
+        self.od = UnitOptionsDict({'fluid'         : 'water',
+                                   'melting_point' :       0,
+                                   'boiling_point' :     100})
 
     def test_expand_string(self):
         template = "$fluid has a melting point of $melting_point"+\

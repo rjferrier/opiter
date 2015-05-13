@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import ArrayNodeInfo
+from node_info import ArrayNodeInfo
     
 
 class TestArrayNodeInfoBasics(unittest.TestCase):

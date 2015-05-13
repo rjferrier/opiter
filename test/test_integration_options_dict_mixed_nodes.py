@@ -2,8 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import OptionsDictException, NodeInfoException
-from unit_options_dict import OptionsDictUnderTest, HAVE_MOCK
+from options_dict import OptionsDict, OptionsDictException, NodeInfoException
 
 
 class TestOptionsDictsWithMixedNodeInfo(unittest.TestCase):
@@ -16,10 +15,10 @@ class TestOptionsDictsWithMixedNodeInfo(unittest.TestCase):
         and the third element of A.  To make sure the framework is
         really robust, I'm going to do the updating in a funny order.
         """
-        A = OptionsDictUnderTest.array('A', [1, 2, 3])
-        B = OptionsDictUnderTest.array('B', ['i', 'ii', 'iii'])
-        C = OptionsDictUnderTest.array('C', [0.25, 0.5, 1.0])
-        d = OptionsDictUnderTest.node('d', {})
+        A = OptionsDict.array('A', [1, 2, 3])
+        B = OptionsDict.array('B', ['i', 'ii', 'iii'])
+        C = OptionsDict.array('C', [0.25, 0.5, 1.0])
+        d = OptionsDict.node('d', {})
         d.update(A[2])
         C[0].update(d)
         self.od = B[1]
@@ -48,7 +47,7 @@ class TestOptionsDictsWithMixedNodeInfo(unittest.TestCase):
         self.assertFalse(other is self.od)
         # test that node_info objects have been copied and not simply
         # linked
-        E = OptionsDictUnderTest.array('E', ['foo', 'bar'])
+        E = OptionsDict.array('E', ['foo', 'bar'])
         other.update(E[0])
         self.assertRaises(NodeInfoException, \
                           lambda: self.od.get_node_info('E'))

@@ -2,8 +2,63 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import OptionsDict, OptionsDictException, NodeInfoException
-from unit_options_dict import OptionsDictUnderTest
+from options_dict import OptionsDict, OptionsDictException, NodeInfoException
+from node_info import ArrayNodeInfo
+
+class TestOptionsDictArrayCreationOptions(unittest.TestCase):
+
+    def test_create_with_common_entries(self):
+        """
+        I create an OptionsDict array 'A' using three integers and
+        common entry {'foo': 'bar'}.  All elements should have this
+        entry.
+        """
+        seq = OptionsDict.array('A', range(3), {'foo': 'bar'})
+        for el in seq:
+            self.assertEqual(el['foo'], 'bar')
+
+    def test_create_with_bad_common_entries(self):
+        """
+        I create an OptionsDict array 'A' using three integers and
+        something that is not a dictionary for the common_entries
+        argument.  An error should be raised.
+        """
+        create_seq = lambda: \
+            OptionsDict.array('A', range(3), 'foo')
+        self.assertRaises(OptionsDictException, create_seq)
+
+    def test_format_names_with_string(self):
+        """
+        I create an OptionsDict array 'A' using integers 2, 5, 10.
+        Format the element names as A02, A05, A10.
+        """
+        seq = OptionsDict.array('A', [2, 5, 10],
+                                   name_format='A{:02g}')
+        expected_names = ['A02', 'A05', 'A10']
+        for el, expected in zip(seq, expected_names):
+            self.assertEqual(str(el), expected)
+
+    def test_format_names_with_function(self):
+        """
+        I create an OptionsDict array 'A' using floats 1, 2.5,
+        6.25.  Format the element names as 1p00, 2p50, 6p25.
+        """
+        formatter = lambda x: '{:.2f}'.format(x).replace('.', 'p')
+        seq = OptionsDict.array('A', [1., 2.5, 6.25],
+                              name_format=formatter)
+        expected_names = ['1p00', '2p50', '6p25']
+        for el, expected in zip(seq, expected_names):
+            self.assertEqual(str(el), expected)
+
+    def test_format_names_with_bad_formatter(self):
+        """
+        I create an OptionsDict array with an inappropriate object
+        as name_format.  An error should be raised.
+        """
+        create_seq = lambda: \
+            OptionsDict.array('A', [1., 2.5, 6.25],
+                                 name_format=None)
+        self.assertRaises(OptionsDictException, create_seq)
 
 
 class TestOptionsDictArrayBasics(unittest.TestCase):
@@ -61,62 +116,6 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
             else:
                 self.assertEqual(result, self.values[i])
         
-
-class TestOptionsDictArrayCreationOptions(unittest.TestCase):
-
-    def test_create_with_common_entries(self):
-        """
-        I create an OptionsDict array 'A' using three integers and
-        common entry {'foo': 'bar'}.  All elements should have this
-        entry.
-        """
-        seq = OptionsDict.array('A', range(3), {'foo': 'bar'})
-        for el in seq:
-            self.assertEqual(el['foo'], 'bar')
-
-    def test_create_with_bad_common_entries(self):
-        """
-        I create an OptionsDict array 'A' using three integers and
-        something that is not a dictionary for the common_entries
-        argument.  An error should be raised.
-        """
-        create_seq = lambda: \
-            OptionsDict.array('A', range(3), 'foo')
-        self.assertRaises(OptionsDictException, create_seq)
-
-    def test_format_names_with_string(self):
-        """
-        I create an OptionsDict array 'A' using integers 2, 5, 10.
-        Format the element names as A02, A05, A10.
-        """
-        seq = OptionsDict.array('A', [2, 5, 10],
-                                   name_format='A{:02g}')
-        expected_names = ['A02', 'A05', 'A10']
-        for el, expected in zip(seq, expected_names):
-            self.assertEqual(str(el), expected)
-
-    def test_format_names_with_function(self):
-        """
-        I create an OptionsDict array 'A' using floats 1, 2.5,
-        6.25.  Format the element names as 1p00, 2p50, 6p25.
-        """
-        formatter = lambda x: '{:.2f}'.format(x).replace('.', 'p')
-        seq = OptionsDict.array('A', [1., 2.5, 6.25],
-                              name_format=formatter)
-        expected_names = ['1p00', '2p50', '6p25']
-        for el, expected in zip(seq, expected_names):
-            self.assertEqual(str(el), expected)
-
-    def test_format_names_with_bad_formatter(self):
-        """
-        I create an OptionsDict array with an inappropriate object
-        as name_format.  An error should be raised.
-        """
-        create_seq = lambda: \
-            OptionsDict.array('A', [1., 2.5, 6.25],
-                                 name_format=None)
-        self.assertRaises(OptionsDictException, create_seq)
-
         
 class TestOptionsDictArrayNodeInfo(unittest.TestCase):
 
@@ -125,9 +124,22 @@ class TestOptionsDictArrayNodeInfo(unittest.TestCase):
         I create an OptionsDict array 'A' using three integers.  I store
         the second node and its node info object.
         """
-        seq = OptionsDictUnderTest.array('A', [1, 2, 3])
+        seq = OptionsDict.array('A', [1, 2, 3])
         self.od = seq[1]
         self.node_info = self.od.get_node_info()
+
+    def test_node_info_type(self):
+        """
+        The stored node info should be an instance of ArrayNodeInfo.
+        """
+        self.assertIsInstance(self.node_info, ArrayNodeInfo)
+
+    def test_str(self):
+        """
+        The string representation of the node info should be the same as
+        that of the OptionsDict.
+        """
+        self.assertEqual(str(self.node_info), str(self.od))
 
     def test_get_node_info_by_array_name(self):
         """
@@ -158,7 +170,7 @@ class TestOptionsDictArrayNodeUpdatedWithSibling(unittest.TestCase):
         and update one of the OptionsDicts with another from the same
         sequence.
         """
-        seq = OptionsDictUnderTest.array('A', [1, 2, 3])
+        seq = OptionsDict.array('A', [1, 2, 3])
         self.od = seq[1]
         self.od.update(seq[2])
         self.node_info = self.od.get_node_info()

@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from options import OptionsDict
+from options_dict import OptionsDict
 from tools import product, merge, merges_dicts, identify, Lookup
 import multiprocessing
 

@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-from options import OptionsDict
+from options_dict import OptionsDict
 from tools import product, merge, merges_dicts
 
 from multiprocessing import Pool

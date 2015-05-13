@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import OrphanNodeInfo
+from node_info import OrphanNodeInfo
 
 
 class TestOrphanNodeInfoString(unittest.TestCase):

@@ -7,7 +7,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options import OptionsDict
+from options_dict import OptionsDict
 from tools import merges_dicts, product, attach, flatten
 
 # functions to be multiprocessed must be defined outside the unit
