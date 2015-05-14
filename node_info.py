@@ -176,14 +176,41 @@ class ArrayNodeInfo(NodeInfo):
 
 
 class SimpleFormatter:
-    def __init__(self, separator='_'):
-        self.separator = separator
+    def __init__(self, node_separator='_'):
+        self.node_separator = node_separator
 
     def __call__(self, node_info_list, absolute={}, relative={}):
         substrings = [ni.str(absolute=absolute, relative=relative) \
                       for ni in node_info_list]
         if node_info_list:
-            result = self.separator.join(substrings)
+            result = self.node_separator.join(substrings)
         else:
             result = ''.join(substrings)
         return result
+
+        
+class TreeFormatter:
+    def __init__(self, indent_string=' '*4, collection_separator=': '):
+        self.indent_string = indent_string
+        self.collection_separator = collection_separator
+
+    def __call__(self, node_info_list, absolute={}, relative={}):
+        stem = ''
+        branch = ''
+        for level, ni in enumerate(node_info_list):
+            if ni.is_first():
+                # keep adding branch descriptors to the stem string if
+                # this is the first node in an array
+                stem += branch
+            else:
+                # if not the first node, the stem up to this point
+                # will have already been printed.  So reset it here
+                stem = ''
+            # build a branch descriptor.  Include the collection
+            # (array) name if possible
+            branch = '\n' + level*self.indent_string
+            if ni.get_collection_name():
+                branch += ni.get_collection_name() + self.collection_separator
+            branch += ni.str(absolute=absolute, relative=relative)
+        # the end branch is basically a leaf and is always printed
+        return stem + branch

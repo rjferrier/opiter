@@ -219,7 +219,7 @@ class OptionsDict(dict):
             # if we are still in the loop at this point, we can include
             # the current node info in the result.
             filtered_node_info.append(ni)
-        # hand the filtered list to the formatter object
+        # pass the filtered list to the formatter object
         if not formatter:
             formatter = self.create_node_info_formatter()
         return formatter(filtered_node_info, 
@@ -228,7 +228,7 @@ class OptionsDict(dict):
         
     def create_node_info_formatter(self):
         """
-        self.create_node_info_format()
+        self.create_node_info_formatter()
 
         Overrideable factory method, used by OptionsDict.str().
         """

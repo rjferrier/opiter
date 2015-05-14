@@ -4,4 +4,4 @@ from options_dict import OptionsDict, CallableEntry, \
     OptionsDictException, NodeInfoException
 
 # everything else will be accessible via the subpackage syntax,
-# e.g. "from options_iteration.tools import merge".
+# e.g. "from options_iteration.tools import merges_dicts".

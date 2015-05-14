@@ -2,29 +2,47 @@ import sys
 sys.path.append('..')
 
 import unittest
-from node_info import SimpleFormatter
+from node_info import SimpleFormatter, TreeFormatter
 from itertools import product
 
 
 class FakeNodeInfo:
-    def __init__(self, level, name):
+    """
+    For representing a node on this tree:
+    0: a
+        1: a
+            2: a
+            2: b
+            2: c
+        1: b
+            2: a
+            2: b
+            2: c
+    """
+    def __init__(self, level, node_name):
         self.level = level
-        self.name = name
+        self.node_name = node_name
 
     @classmethod
-    def combo(Self, names):
-        return [Self(i, name) for i, name in enumerate(names)]
+    def combo(Self, node_names):
+        return [Self(i, node_name) for i, node_name in enumerate(node_names)]
 
     def str(self, absolute=None, relative=None):
-        result = self.name
+        result = self.node_name
         if absolute:
             result += absolute
         if relative:
             result += relative
         return result
 
+    def get_collection_name(self):
+        return str(self.level)
 
-class TestSimpleFormat(unittest.TestCase):
+    def is_first(self):
+        return self.node_name == 'a'
+
+        
+class TestSimpleFormatter(unittest.TestCase):
 
     def setUp(self):
         self.node_info = FakeNodeInfo.combo('abc')
@@ -46,3 +64,72 @@ class TestSimpleFormat(unittest.TestCase):
         self.assertEqual(self.formatter(self.node_info), 'a,b,c')
 
     
+class TestTreeFormatter(unittest.TestCase):
+
+    def setUp(self):
+        self.formatter = TreeFormatter()
+
+
+    def test_tree_formatter_first_combo(self):
+        """
+        I want to print part of the tree associated with the very first
+        node combination, [a,a,a].
+        """
+        node_info = FakeNodeInfo.combo('aaa')
+        expected = """
+0: a
+    1: a
+        2: a"""
+        self.assertEqual(self.formatter(node_info), expected)
+
+
+    def test_tree_formatter_intermediate_combo(self):
+        """
+        I want to print part of the tree associated with an intermediate
+        combination, [a,b,a].
+        """
+        node_info = FakeNodeInfo.combo('aba')
+        expected = """
+    1: b
+        2: a"""
+        self.assertEqual(self.formatter(node_info), expected)
+
+
+    def test_tree_formatter_leaf_combo_1(self):
+        """
+        I want to print e.g. [a,a,b] which does not have any preamble when
+        it is printed.
+        """
+        node_info = FakeNodeInfo.combo('aab')
+        expected = """
+        2: b"""
+        self.assertEqual(self.formatter(node_info), expected)
+
+
+    def test_tree_formatter_leaf_combo_2(self):
+        """
+        I want to print e.g. [a,b,c] which does not have any preamble when
+        it is printed.
+        """
+        node_info = FakeNodeInfo.combo('abc')
+        expected = """
+        2: c"""
+        self.assertEqual(self.formatter(node_info), expected)
+
+
+    def test_tree_formatter_all(self):
+        """
+        I want to print the entire tree.
+        """
+        expected = """
+0: a
+    1: a
+        2: a
+        2: b
+        2: c
+    1: b
+        2: a
+        2: b
+        2: c"""
+        node_info_combos = [FakeNodeInfo.combo(c) for c in
+                            product('a', 'ab', 'abc')]
