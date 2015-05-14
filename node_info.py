@@ -176,12 +176,18 @@ class ArrayNodeInfo(NodeInfo):
 
 
 class SimpleFormatter:
-    def __init__(self, node_separator='_'):
+    def __init__(self, node_separator='_', collection_separator=None):
         self.node_separator = node_separator
+        self.collection_separator = collection_separator
 
     def __call__(self, node_info_list, absolute={}, relative={}):
-        substrings = [ni.str(absolute=absolute, relative=relative) \
-                      for ni in node_info_list]
+        substrings = []
+        for ni in node_info_list:
+            substr = ''
+            if self.collection_separator:
+                substr += ni.get_collection_name() + self.collection_separator
+            substr += ni.str(absolute=absolute, relative=relative)
+            substrings.append(substr)
         if node_info_list:
             result = self.node_separator.join(substrings)
         else:
@@ -209,7 +215,7 @@ class TreeFormatter:
             # build a branch descriptor.  Include the collection
             # (array) name if possible
             branch = '\n' + level*self.indent_string
-            if ni.get_collection_name():
+            if ni.get_collection_name() and self.collection_separator:
                 branch += ni.get_collection_name() + self.collection_separator
             branch += ni.str(absolute=absolute, relative=relative)
         # the end branch is basically a leaf and is always printed

@@ -63,6 +63,10 @@ class TestSimpleFormatter(unittest.TestCase):
         self.formatter = SimpleFormatter(',')
         self.assertEqual(self.formatter(self.node_info), 'a,b,c')
 
+    def test_simple_formatter_with_collection_names(self):
+        self.formatter = SimpleFormatter(collection_separator='-')
+        self.assertEqual(self.formatter(self.node_info), '0-a_1-b_2-c')
+
     
 class TestTreeFormatter(unittest.TestCase):
 
@@ -95,7 +99,7 @@ class TestTreeFormatter(unittest.TestCase):
         self.assertEqual(self.formatter(node_info), expected)
 
 
-    def test_tree_formatter_leaf_combo_1(self):
+    def test_tree_formatter_leaf_combo(self):
         """
         I want to print e.g. [a,a,b] which does not have any preamble when
         it is printed.
@@ -103,17 +107,6 @@ class TestTreeFormatter(unittest.TestCase):
         node_info = FakeNodeInfo.combo('aab')
         expected = """
         2: b"""
-        self.assertEqual(self.formatter(node_info), expected)
-
-
-    def test_tree_formatter_leaf_combo_2(self):
-        """
-        I want to print e.g. [a,b,c] which does not have any preamble when
-        it is printed.
-        """
-        node_info = FakeNodeInfo.combo('abc')
-        expected = """
-        2: c"""
         self.assertEqual(self.formatter(node_info), expected)
 
 
@@ -131,5 +124,51 @@ class TestTreeFormatter(unittest.TestCase):
         2: a
         2: b
         2: c"""
-        node_info_combos = [FakeNodeInfo.combo(c) for c in
-                            product('a', 'ab', 'abc')]
+        results = [self.formatter(FakeNodeInfo.combo(c)) \
+                   for c in product('a', 'ab', 'abc')]
+        self.assertEqual(''.join(results), expected)
+
+
+    def test_tree_formatter_intermediate_combo_with_optional_args(self):
+        """
+        Should the optional arguments affect which bits of the tree are
+        printed in addition to which node is printed?  I don't think
+        so.
+        """
+        node_info = FakeNodeInfo.combo('aba')
+        expected = """
+    1: bAR
+        2: aAR"""
+        self.assertEqual(self.formatter(node_info, absolute='A', relative='R'),
+                         expected)
+
+
+    def test_tree_formatter_intermediate_combo_with_custom_separator(self):
+        self.formatter = TreeFormatter(collection_separator='-')
+        node_info = FakeNodeInfo.combo('aba')
+        expected = """
+    1-b
+        2-a"""
+        self.assertEqual(self.formatter(node_info), expected)
+
+
+    def test_tree_formatter_intermediate_combo_omitting_collection_names(self):
+        """
+        I want to omit the collection names altogether, so I'll specify
+        the collection separator as None.
+        """
+        self.formatter = TreeFormatter(collection_separator=None)
+        node_info = FakeNodeInfo.combo('aba')
+        expected = """
+    b
+        a"""
+        self.assertEqual(self.formatter(node_info), expected)
+
+
+    def test_tree_formatter_intermediate_combo_with_custom_indent(self):
+        self.formatter = TreeFormatter(indent_string='...')
+        node_info = FakeNodeInfo.combo('aba')
+        expected = """
+...1: b
+......2: a"""
+        self.assertEqual(self.formatter(node_info), expected)
