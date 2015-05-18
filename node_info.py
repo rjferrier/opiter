@@ -77,9 +77,9 @@ class OrphanNodeInfo(NodeInfo):
         """
         return index in (0, -1)
 
-    def str(self, absolute=None, relative=None):
+    def str(self, absolute=None, relative=None, collection_separator=None):
         """
-        self.str(absolute=None, relative=None)
+        self.str(absolute=None, relative=None, collection_separator=None)
         
         Returns the name of the node in question.  The optional arguments
         are not applicable for an orphan node.
@@ -131,9 +131,9 @@ class ArrayNodeInfo(NodeInfo):
         return self.node_index == index or \
             self.node_index == index + len(self.node_names)
         
-    def str(self, absolute=None, relative=None):
+    def str(self, absolute=None, relative=None, collection_separator=None):
         """
-        self.str(absolute=None, relative=None)
+        self.str(absolute=None, relative=None, collection_separator=None)
         
         Returns the name of the node in question or, if arguments are
         given, one of its siblings.  The optional arguments correspond
@@ -146,6 +146,9 @@ class ArrayNodeInfo(NodeInfo):
         entries of the form {array_name: index}.  In this case, the
         the indices will be dereferenced if possible using the present
         array name.
+
+        If collection_separator is given, the array name will be
+        prepended to the string followed by collection_separator.
         """
         args = [absolute, relative]
         for i, a in enumerate(args):
@@ -159,9 +162,12 @@ class ArrayNodeInfo(NodeInfo):
                 # if argument is not a dict, it is presumably already
                 # an index
                 pass
-        return self.node_names[
-            self._create_index(self.node_index, *args)]
-
+        result = ''
+        if collection_separator is not None:
+            result += self.array_name + collection_separator
+        result += self.node_names[self._create_index(self.node_index, *args)]
+        return result
+        
     def copy(self):
         return ArrayNodeInfo(
             self.array_name, copy(self.node_names), self.node_index)
@@ -184,9 +190,8 @@ class SimpleFormatter:
         substrings = []
         for ni in node_info_list:
             substr = ''
-            if self.collection_separator:
-                substr += ni.get_collection_name() + self.collection_separator
-            substr += ni.str(absolute=absolute, relative=relative)
+            substr += ni.str(absolute=absolute, relative=relative, 
+                             collection_separator=self.collection_separator)
             substrings.append(substr)
         if node_info_list:
             result = self.node_separator.join(substrings)
@@ -207,16 +212,17 @@ class TreeFormatter:
             if ni.is_first():
                 # keep adding branch descriptors to the stem string if
                 # this is the first node in an array
-                stem += branch
+                if branch:
+                    stem += branch + '\n'
+                else:
+                    stem += branch
             else:
                 # if not the first node, the stem up to this point
                 # will have already been printed.  So reset it here
                 stem = ''
-            # build a branch descriptor.  Include the collection
-            # (array) name if possible
-            branch = '\n' + level*self.indent_string
-            if ni.get_collection_name() and self.collection_separator:
-                branch += ni.get_collection_name() + self.collection_separator
-            branch += ni.str(absolute=absolute, relative=relative)
+            # build a branch descriptor
+            branch = level*self.indent_string + \
+                     ni.str(absolute=absolute, relative=relative, 
+                            collection_separator=self.collection_separator)
         # the end branch is basically a leaf and is always printed
         return stem + branch

@@ -3,6 +3,7 @@ sys.path.append('..')
 
 from options_dict import OptionsDict
 from tools import product, merge, merges_dicts, Lookup
+from node_info import TreeFormatter
 import multiprocessing
 
 # setup
@@ -15,7 +16,7 @@ ethanol = OptionsDict.node('ethanol', {
     'density'           : 0.79e3,
     'dynamic_viscosity' : 1.09e-3})
 
-fluids     = [water, ethanol]
+fluids     = OptionsDict.array('fluid', [water, ethanol])
 pipe_dias  = OptionsDict.array('pipe_diameter', [0.10, 0.15])
 velocities = OptionsDict.array('velocity', [0.01, 0.02, 0.04])
 combos = product(fluids, pipe_dias, velocities)
@@ -24,11 +25,10 @@ print "\nUsing serial loop:\n"
 
 for combo in combos:
     opt = merge(combo)
-    ID = str(opt)
+    descr = opt.str(formatter=TreeFormatter())
     kinematic_visc = opt['dynamic_viscosity'] / opt['density']
     Re = opt['velocity'] * opt['pipe_diameter'] / kinematic_visc
-    print 'Test ID = {}, Reynolds number = {:.2e}'.\
-        format(ID, Re)
+    print descr + '    Reynolds number = {:.2e}'.format(Re)
 
 
 print "\nUsing parallel iterator:\n"
@@ -43,13 +43,10 @@ Reynolds_numbers = p.map(calculate_Re, combos)
 
 # for completeness...
 @merges_dicts
-def label(opt):
-  return opt.str()
-
-IDs = map(label, combos)
-for ID, Re in zip(IDs, Reynolds_numbers):
-    print 'Test ID = {}, Reynolds number = {:.2e}'.\
-        format(ID, Re)
+def describe(opt):
+  return opt.str(formatter=TreeFormatter(collection_separator=': '))
+for descr, Re in zip(map(describe, combos), Reynolds_numbers):
+    print descr + '    Reynolds number = {:.2e}'.format(Re)
     
 
 print "\nUsing dynamic entries:\n"
@@ -57,7 +54,7 @@ print "\nUsing dynamic entries:\n"
 def kinematic_viscosity(opt):
     return opt['dynamic_viscosity'] / opt['density']
 fluids = OptionsDict.array('fluid', [water, ethanol], 
-                              common_entries=[kinematic_viscosity])
+                           common_entries=[kinematic_viscosity])
 
 def Reynolds_number(opt):
     return opt['velocity'] * opt['pipe_diameter'] / \
@@ -69,7 +66,5 @@ p = multiprocessing.Pool(4)
 Reynolds_numbers = p.map(Lookup('Reynolds_number'), combos)
 
 # for completeness...
-IDs = map(label, combos)
-for ID, Re in zip(IDs, Reynolds_numbers):
-    print 'Test ID = {}, Reynolds number = {:.2e}'.\
-        format(ID, Re)
+for descr, Re in zip(map(describe, combos), Reynolds_numbers):
+    print descr + '    Reynolds number = {:.2e}'.format(Re)

@@ -87,6 +87,14 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
             self.node_info.str(relative={'seq': -1, 'foo': -1}), 'A')
         self.assertEqual(
             self.node_info.str(relative={'foo': -1}), 'B')
+        
+    def test_array_and_node_name(self):
+        self.assertEqual(self.node_info.str(collection_separator=': '),
+                         'seq: B')
+        
+    def test_array_and_node_name_no_separation(self):
+        self.assertEqual(self.node_info.str(collection_separator=''),
+                         'seqB')
 
         
 class TestArrayNodeInfoIndex(unittest.TestCase):

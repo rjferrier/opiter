@@ -33,18 +33,17 @@ are easily expressed by creating arrays of OptionsDicts and using
 ```
 
 A combination of OptionsDicts can be merged so that the client only
-ever needs to consult one OptionsDict.  The string representation of
-the merged OptionsDict gives the client a unique identifier for the
-combination.  The client can look up any variable in the dictionary
-through the usual syntax.
+ever needs to consult one OptionsDict.  The str() method can be used
+to form an ID or print the combination in tree form.  The client can
+look up any variable in the dictionary through the usual syntax.
   
 ```python
   for combo in combos:
       opt = merge(combo)
-      ID = str(opt)
+      descr = opt.str(formatter=TreeFormatter())
       kinematic_visc = opt['dynamic_viscosity'] / opt['density']
       Re = opt['velocity'] * opt['pipe_diameter'] / kinematic_visc
-      print 'Test ID = {}, Reynolds number = {:.2e}'.format(ID, Re)
+      print descr + '    Reynolds number = {:.2e}'.format(Re)
 ```
   
 A serial `for` loop is not the only means of performing a batch of
