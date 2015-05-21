@@ -1,16 +1,13 @@
+from copy import deepcopy
 from types import FunctionType
 from string import Template
 
-from node_info import OrphanNodeInfo, ArrayNodeInfo, SimpleFormatter
+from base import OptionsBaseException
+from node_info import OrphanNodeInfo, ArrayNodeInfo, SimpleFormatter, \
+    NodeInfoException
 
 
-class OptionsDictException(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-    def __str__(self):
-        return self.msg
-
-class NodeInfoException(OptionsDictException):
+class OptionsDictException(OptionsBaseException):
     pass
 
         
@@ -19,15 +16,16 @@ class OptionsDict(dict):
     An OptionsDict inherits from a conventional dict, but it has a few
     enhancements:
 
-    (1) An OptionsDict can be created as a named node, or as part of
-        an array of named nodes.  This node information accumulates
-        when OptionsDicts are merged via the update() method, and can
-        be used to form a string identifier for the ensemble.  For
-        example, updating node 'A' with node 'B' will produce node
-        'A_B'.  The identifier can be accessed via the usual str()
-        idiom, but a str() method is also provided with optional
-        arguments for customising the identifier and inferring the
-        identifiers of other combinations.
+    (1) An OptionsDict can be given 'node information' which lends the
+        OptionsDict a name and describes its position in a tree.  This
+        node information accumulates when OptionsDicts are merged via
+        the update() method, and can be used to form a string
+        identifier for the ensemble.  For example, updating node 'A'
+        with node 'B' will produce node 'A_B'.  The identifier can be
+        accessed via the usual str() idiom, but a str() method is also
+        provided with optional arguments for customising the
+        identifier and inferring the identifiers of other
+        combinations.
 
     (2) Values can be runtime-dependent upon the state of other values
         in the dictionary.  Each of these special values is specified
@@ -52,15 +50,24 @@ class OptionsDict(dict):
 
         Returns an OptionsDict with no node information.
         """
-        # with just an entries argument, treat as a simple dict.
-        # Default the node_info component first.  This is necessary to
-        # prevent dynamic entries from possibly referencing the
-        # component before it exists
+        # with just an entries argument, treat as a simple dict.  Set
+        # the node_info component first.  This is necessary to prevent
+        # dynamic entries from possibly referencing the component
+        # before it exists
         self.node_info = []
         self.update(entries)
         
     @classmethod
-    def node(Self, name, entries={}):
+    def another(Class, entries={}):
+        return Class(entries)
+
+    def copy(self):
+        obj = self.another(dict.copy(self))
+        obj.node_info = [ni.copy() for ni in self.node_info]
+        return obj
+
+    @classmethod
+    def node(Class, name, entries={}):
         """
         OptionsDict.node(name, entries={})
 
@@ -74,13 +81,13 @@ class OptionsDict(dict):
             raise OptionsDictException(
                 "name argument must be a string (or None).")
         # instantiate object and set the first node information
-        obj = Self(entries)
+        obj = Class(entries)
         obj.node_info.append(obj.create_orphan_node_info(name))
         return obj
 
         
     @classmethod
-    def array(Self, array_name, elements, common_entries={}, name_format='{}'):
+    def array(Class, array_name, elements, common_entries={}, name_format='{}'):
         """
         OptionsDict.array(array_name, elements, common_entries={},
                           name_format='{}')
@@ -134,7 +141,7 @@ class OptionsDict(dict):
                         raise OptionsDictException(
                             "name_format must be a callable "+\
                             "or a format string.")
-                od = Self.node(node_name, {array_name: el})
+                od = Class.node(node_name, {array_name: el})
 
             # add entries
             od.update(common_entries)
@@ -272,8 +279,7 @@ class OptionsDict(dict):
             try:
                 self.node_info[0] = new_node_info
             except IndexError:
-                raise NodeInfoException(
-                    "there aren't any node_info objects")
+                self.node_info.append(new_node_info)
         else:
             for i, ni in enumerate(self.node_info):
                 if ni.belongs_to(collection_name):
@@ -296,11 +302,6 @@ class OptionsDict(dict):
             buffer_string = Template(buffer_string)
             buffer_string = buffer_string.safe_substitute(self)
         return buffer_string
-
-    def copy(self):
-        obj = OptionsDict(dict.copy(self))
-        obj.node_info = [ni.copy() for ni in self.node_info]
-        return obj
 
     def _update_from_dict(self, other):
         # update OptionsDict attributes
@@ -332,9 +333,10 @@ functions).""")
         yield self
         
     def __eq__(self, other):
-        result = True
-        result *= self.node_info == other.node_info
-        result *= dict.__eq__(self, other)
+        result = isinstance(other, OptionsDict)
+        if result:
+            result *= self.node_info == other.node_info
+            result *= dict.__eq__(self, other)
         return result
 
     def __ne__(self, other):

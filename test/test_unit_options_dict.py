@@ -2,23 +2,8 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options_dict import OptionsDict, OptionsDictException, NodeInfoException
-
-
-class UnitOptionsDict(OptionsDict):
-    """
-    This is OptionsDict decoupled from the NodeInfo and NodeFormat
-    implementations for unit testing purposes.
-    """
-
-    def create_orphan_node_info(self, node_name):
-        return None
-
-    def create_array_node_info(self, array_name, node_names, node_index):
-        return None
-
-    def create_node_info_format(self):
-        return lambda node_info, absolute, relative: ''
+from unit_options_dict import UnitOptionsDict
+from options_dict import OptionsDictException, NodeInfoException
 
 
 class TestOptionsDictCreation(unittest.TestCase):
@@ -68,10 +53,14 @@ class TestOptionsDictBasics(unittest.TestCase):
 
     def test_node_info_empty(self):
         self.assertRaises(NodeInfoException, lambda: self.od.get_node_info())
-
-    def test_set_node_info(self):
-        ni = self.od.create_orphan_node_info('foo')
-        self.assertRaises(NodeInfoException, lambda: self.od.set_node_info(ni))
+    
+    def test_set_and_get_node_info(self):
+        od = UnitOptionsDict({'foo': 'bar'})
+        ni = od.create_orphan_node_info('foo')
+        # ni should be some throwaway value
+        self.assertIsNotNone(ni)
+        od.set_node_info(ni)
+        self.assertEqual(ni, od.get_node_info())
         
     def test_copy(self):
         other = self.od.copy()

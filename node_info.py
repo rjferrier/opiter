@@ -1,12 +1,20 @@
 from copy import copy
+from base import OptionsBaseException
 
 
+class NodeInfoException(OptionsBaseException):
+    pass
+
+    
 class NodeInfo:
     """
     Abstract class for describing contextual information about a node.
     The concrete methods herein are special cases which defer to the
     more general subclass methods.
     """
+    def copy(self):
+        return self.from_other(self)
+
     def belongs_to_any(self, collection_names):
         """
         self.belongs_to_any(collection_names)
@@ -59,6 +67,10 @@ class OrphanNodeInfo(NodeInfo):
     def __init__(self, node_name):
         self.node_name = node_name
 
+    @classmethod
+    def from_other(Class, other):
+        return Class(other.node_name)
+
     def belongs_to(self, collection_name):
         """
         self.belongs_to(collection_name)
@@ -93,9 +105,6 @@ class OrphanNodeInfo(NodeInfo):
         else:
             raise IndexError("list index out of range")
 
-    def copy(self):
-        return OrphanNodeInfo(self.node_name)
-
     def __eq__(self, other):
         result = isinstance(other, OrphanNodeInfo)
         if result:
@@ -111,6 +120,11 @@ class ArrayNodeInfo(NodeInfo):
         self.array_name = array_name
         self.node_names = node_names
         self.node_index = node_index
+
+    @classmethod
+    def from_other(Class, other):
+        return Class(
+            other.array_name, copy(other.node_names), other.node_index)
 
     def belongs_to(self, collection_name):
         """
@@ -167,10 +181,6 @@ class ArrayNodeInfo(NodeInfo):
             result += self.array_name + collection_separator
         result += self.node_names[self._create_index(self.node_index, *args)]
         return result
-        
-    def copy(self):
-        return ArrayNodeInfo(
-            self.array_name, copy(self.node_names), self.node_index)
         
     def __eq__(self, other):
         result = isinstance(other, ArrayNodeInfo)
