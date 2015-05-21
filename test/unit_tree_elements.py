@@ -7,13 +7,15 @@ class UnitOptionsNode(OptionsNode):
     OrphanNodeInfo implementations for unit testing purposes.
     """
     def create_options_dict(self, entries):
+        "Throwaway implementation."
         class FakeOptionsDict(dict):
             def set_node_info(self, node_info):
                 pass
-        return FakeOptionsDict()
-
+        return FakeOptionsDict(entries)
+        
     def create_node_info(self):
-        return None
+        "Throwaway implementation."
+        return self.name
 
 
 class UnitOptionsArray(OptionsArray):
@@ -25,4 +27,5 @@ class UnitOptionsArray(OptionsArray):
         return UnitOptionsNode(node_name, entries)
 
     def create_node_info(self, index):
-        return None
+        "Throwaway implementation."
+        return ':'.join((self.name, self.node_names[index]))

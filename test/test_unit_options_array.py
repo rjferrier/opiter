@@ -6,8 +6,28 @@ from unit_tree_elements import UnitOptionsArray, UnitOptionsNode
 from tree_elements import OptionsArrayException
 
 
-class TestOptionsArrayCreationOptions(unittest.TestCase):
+class TestOptionsArrayCreation(unittest.TestCase):
 
+    def test_create_from_assorted(self):
+        """
+        I should be able to create an array from assorted objects.
+        """
+        some_node = UnitOptionsNode('some_dict', {'foo': 'bar'})
+        UnitOptionsArray( 'random', ['A', 2, 3.14, some_node])
+
+        
+    def test_create_with_unwrapped_dictionary(self):
+        """
+        I should not be able to create an array when one of the input
+        elements is a dictionary.  This is because it is not obvious
+        how to name the resulting nodes or what to store under the
+        array key ('random').
+        """
+        create_array = lambda: UnitOptionsArray('random',
+                                                ['A', 2, {'pi': 3.14}])
+        self.assertRaises(OptionsArrayException, create_array)
+
+        
     def test_format_names_with_string(self):
         """
         I create an OptionsArray 'A' using integers 2, 5, 10.
@@ -43,12 +63,12 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
 
     def setUp(self):
         """
-        I create an OptionsArray from a list of different-typed
-        values, one of which is already an OptionsNode.
+        I create an OptionsArray from a list of differently-typed values,
+        one of which is already an OptionsNode.
         """
-        od = UnitOptionsNode('some_dict', {'foo': 'bar'})
-        self.values = ['A', od, 2, 3.14]
-        self.array = UnitOptionsArray('random_things', self.values)
+        node = UnitOptionsNode('some_dict', {'foo': 'bar'})
+        self.values = ['A', 2, 3.14, node]
+        self.array = UnitOptionsArray('random', self.values)
 
     def test_element_names(self):
         """
@@ -58,8 +78,27 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         """
         for el, v in zip(self.array, self.values):
             self.assertEqual(str(el), str(v))
-        
-        
+
+    def test_copy(self):
+        other = self.array.copy()
+        # test for equivalence and non-identity
+        self.assertEqual(other, self.array)
+        self.assertFalse(other is self.array)
+
+
+class TestOptionsDictArrayOperations(unittest.TestCase):
+
+    def setUp(self):
+        self.letters = UnitOptionsArray('letter', ['A', 'B'])
+        self.numbers = UnitOptionsArray('number', range(2))
+
+    # def test_multiplication(self):
+    #     tree = self.letters * self.numbers
+    #     expected_names = ['A_0', 'A_1', 'B_0', 'B_1']
+    #     for el, expected in tree.collapse():
+    #         self.assertEqual(str(el), expected)
+
+    
 if __name__ == '__main__':
     unittest.main()
         

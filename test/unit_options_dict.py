@@ -13,7 +13,7 @@ class UnitOptionsDict(OptionsDict):
 
     def create_array_node_info(self, array_name, node_names, node_index):
         "Throwaway implementation."
-        return ':'.join(array_name, node_names(node_index))
+        return ':'.join((array_name, node_names[node_index]))
 
     def create_node_info_format(self):
         return lambda node_info, absolute, relative: ''

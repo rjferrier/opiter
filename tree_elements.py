@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from base import OptionsBaseException
 from options_dict import OptionsDict
 from node_info import OrphanNodeInfo, ArrayNodeInfo
@@ -9,8 +11,27 @@ class OptionsNodeException(OptionsBaseException):
 class OptionsArrayException(OptionsBaseException):
     pass
 
+
+# class OptionsTreeElement:
+#     """
+#     A composite to enable recursion over arbitrary combinations of
+#     arrays and nodes.  It differs from the conventional Composite
+#     pattern in that the parent-child functionality is shared between
+#     'Array' and 'Node' components, and these components refer to
+#     instances of one another rather than the abstract class.
+#     """
+#     def __mul__(self, other):
+#         """
+#         Like add_sub in the subclasses that follow, but provides a new
+#         object instead of modifying the current one.  This means the
+#         function can be inlined neatly.
+#         """
+#         result = deepcopy(self)
+#         result.add_sub(other)
+#         return result
     
-class OptionsNode:
+    
+class OptionsNode():
     """
     Contains an OptionsDict and optionally a child OptionsNode or
     OptionsArray, thus forming a tree.
@@ -57,7 +78,7 @@ class OptionsNode:
         self.node_info = node_info
 
     def update(self, entries):
-        # delegation
+        # delegate
         self.options_dict.update(entries)
         
     def __eq__(self, other):
@@ -71,8 +92,6 @@ class OptionsNode:
         return str(self.name)
 
 
-        
-        
 class OptionsArray(list):
     """
     A sequence of OptionsNodes.
@@ -113,13 +132,19 @@ class OptionsArray(list):
                 
         # First pass: instantiate OptionsNodes
         for el in elements:
-            if isinstance(el, OptionsNode):
-                # If the element is already an OptionsNode, copy it
-                # and add a special entry to its embedded dictionary
-                # using array_name.  Keep track of the node name.
+            
+            if isinstance(el, dict):
+                raise OptionsArrayException(
+                    "\nDictionaries as elements are not allowed, because "+\
+                    "it is not obvious\nhow to name them or what to enter "+\
+                    "under the array key.  Please use\nOptionsNodes instead.")
+                
+            elif isinstance(el, OptionsNode):
+                # If the element is alrady an OptionsNode, simply copy
+                # it and keep track of the node name.
                 node = el.copy()
                 node_name = str(el)
-                node.update({array_name: node_name})
+                
             else:
                 # otherwise, instantiate a new OptionsNode with the
                 # original element stored under array_name.  Determine
@@ -145,7 +170,16 @@ class OptionsArray(list):
         # any preexisting orphan node information.
         for i, node in enumerate(self):
             node.set_node_info(self.create_node_info(i))
+
+
+    @classmethod
+    def another(Class, array_name, elements, common_entries={},
+                name_format='{}'):
+        return Class(array_name, elements, common_entries, name_format)
         
+    def copy(self):
+        return self.another(self.name, deepcopy(list(self)))
+ 
         
     def create_options_node(self, node_name, entries):
         """
@@ -163,3 +197,19 @@ class OptionsArray(list):
         return ArrayNodeInfo(self.name, self.node_names, index)
 
     
+    # def add_sub(self, tree_element):
+    #     """
+    #     Appends a copy of tree_element to each leaf node in the present
+    #     tree structure.
+    #     """
+    #     for el in self:
+    #         el.add_sub(tree_element)
+
+
+    def __eq__(self, other):
+        result = isinstance(other, OptionsArray)
+        if result:
+            result *= self.name == other.name
+            result *= self.node_names == other.node_names
+            result *= list(self) == list(other)
+        return result
