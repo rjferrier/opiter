@@ -6,7 +6,18 @@ from tree_elements import OptionsArray, OptionsNode
 from options_dict import OptionsDict, OptionsDictException
     
 
-class TestOptionsArrayCreationOptions(unittest.TestCase):
+class TestOptionsArrayCreation(unittest.TestCase):
+
+    def test_create_with_common_entries(self):
+        """
+        I create an OptionsArray 'A' using three integers and a valid
+        common_entries argument.  I should be able to use the latter
+        after collapsing the array to get options dictionaries.
+        """
+        array = OptionsArray('A', range(3), {'foo': 'bar'})
+        ods = array.collapse()
+        for od in ods:
+            self.assertEqual(od['foo'], 'bar') 
 
     def test_create_with_bad_common_entries(self):
         """
@@ -16,6 +27,10 @@ class TestOptionsArrayCreationOptions(unittest.TestCase):
         """
         create_array = lambda: OptionsArray('A', range(3), 'foo')
         self.assertRaises(OptionsDictException, create_array)
+
+    # TODO fill more of these out to reflect
+    # test_integration_options_dict_array_nodes
+
 
 
 class TestOptionsArrayBasics(unittest.TestCase):
@@ -46,7 +61,8 @@ class TestOptionsArrayBasics(unittest.TestCase):
         """
         Getting the options dictionaries and querying 'random' should
         return the various values; alternatively, the OptionsNode
-        dictionary we started with should now be queryable.
+        dictionary we started with should now be queryable.  All
+        dictionaries should have the common entry.
         """
         for i, el in enumerate(self.array.collapse()):
             if i==3:
@@ -102,17 +118,3 @@ class TestOptionsArraySlice(unittest.TestCase):
         for i, el in enumerate(self.array.collapse()):
             ni = el.get_node_info()
             self.assertTrue(ni.at(i))
-        
-            
-
-class TestOptionsArrayOperations(unittest.TestCase):
-
-    def setUp(self):
-        self.letters = OptionsArray('letter', ['A', 'B'])
-        self.numbers = OptionsArray('number', range(2))
-
-    # def test_multiplication(self):
-    #     tree = self.letters * self.numbers
-    #     expected_names = ['A_0', 'A_1', 'B_0', 'B_1']
-    #     for el, expected in zip(tree.collapse(), expected_names):
-    #         self.assertEqual(str(el), expected)

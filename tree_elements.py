@@ -89,19 +89,21 @@ class OptionsNode(OptionsTreeElement):
         result of a merge from the root, through the branch nodes, to
         the corresponding leaf.
         """
-        # At this point it is appropriate to inject node information.
+        # At this stage it is appropriate to inject node information.
         # Injecting it earlier on would mess up copy operations, since
         # updating OptionsDicts with one another duplicates node info.
-        od = self.options_dict.copy()
-        od.set_node_info(self.info)
-        
-        # might rework this function as a generator in future.
+        def create_parent_options_dict():
+            od = self.options_dict.copy()
+            od.set_node_info(self.info)
+            return od
+        # TODO: consider reworking this function as a generator.
         try:
             # recurse 
             result = []
             for sub_od in self.child.collapse():
-                # copy and update the present dictionary with each
-                # element in the result of the recursion
+                # copy, inform and update the present dictionary with
+                # each element in the result of the recursion
+                od = create_parent_options_dict()
                 od.update(sub_od)
                 result.append(od)
             # return the merged dictionaries
@@ -110,7 +112,8 @@ class OptionsNode(OptionsTreeElement):
         except AttributeError:
             # this is a leaf, so just return the current options
             # dictionary as a one-element list
-            return [od]
+            return [create_parent_options_dict()]
+
             
     def copy_to_leaves(self, tree_element):
         """
