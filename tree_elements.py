@@ -16,7 +16,7 @@ class OptionsTreeElement:
     """
     Abstract class to be inherited by OptionsArray and OptionsNode.
     This inheritance hierarchy is similar to the Composite pattern in
-    that it can be used to build an arbitrary tree.  However, an
+    that it can be used to build an arbitrary tree.  However,
     OptionsNode can act as a branch as well as a leaf, so it shares
     some of the parent-child functionality.
     """
@@ -126,9 +126,9 @@ class OptionsNode(OptionsTreeElement):
 
     def update(self, entries):
         self.options_dict.update(entries)
-            
-    def set_node_info(self, node_info):
-        self.node_info = node_info
+        
+    def set_info(self, node_info):
+        self.info = node_info
         
     def __eq__(self, other):
         result = isinstance(other, OptionsNode)
@@ -219,7 +219,7 @@ class OptionsArray(OptionsTreeElement, list):
         # Second pass: set array node information.  This will replace
         # any preexisting node information.
         for i, node in enumerate(self):
-            node.set_info = self.create_info(i)
+            node.set_info(self.create_info(i))
 
 
     @classmethod
@@ -267,6 +267,9 @@ class OptionsArray(OptionsTreeElement, list):
         for el in self:
             el.copy_to_leaves(tree_element)
 
+    def update(self, entries):
+        for el in self:
+            el.update(entries)
 
     def __eq__(self, other):
         result = isinstance(other, OptionsArray)
@@ -275,3 +278,11 @@ class OptionsArray(OptionsTreeElement, list):
             result *= self.node_names == other.node_names
             result *= list(self) == list(other)
         return result
+
+    def __getitem__(self, index_or_slice):
+        elements = list.__getitem__(self, index_or_slice)
+        if isinstance(elements, list):
+            return self.another(self.name, elements)
+        else:
+            return elements
+        

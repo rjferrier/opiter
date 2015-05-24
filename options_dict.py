@@ -287,7 +287,7 @@ class OptionsDict(dict):
             raise NodeInfoException(
                 "couldn't find any node information corresponding to '{}'".\
                 format(collection_name))
-
+        
         
     def expand_template(self, buffer_string, loops=1):
         """
