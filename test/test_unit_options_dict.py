@@ -36,7 +36,7 @@ class TestOptionsDictBasics(unittest.TestCase):
     
     def setUp(self):
         "I create an anonymous OptionsDict."
-        self.od = UnitOptionsDict({'foo': 'bar'})
+        self.od = UnitOptionsDict(entries={'foo': 'bar'})
         
     def test_str(self):
         """

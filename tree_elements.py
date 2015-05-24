@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import copy
 
 from base import OptionsBaseException
 from options_dict import OptionsDict
@@ -12,53 +12,53 @@ class OptionsArrayException(OptionsBaseException):
     pass
 
 
-# class OptionsTreeElement:
-#     """
-#     A composite to enable recursion over arbitrary combinations of
-#     arrays and nodes.  It differs from the conventional Composite
-#     pattern in that the parent-child functionality is shared between
-#     'Array' and 'Node' components, and these components refer to
-#     instances of one another rather than the abstract class.
-#     """
-#     def __mul__(self, other):
-#         """
-#         Like add_sub in the subclasses that follow, but provides a new
-#         object instead of modifying the current one.  This means the
-#         function can be inlined neatly.
-#         """
-#         result = deepcopy(self)
-#         result.add_sub(other)
-#         return result
+class OptionsTreeElement:
+    """
+    Abstract class to be inherited by OptionsArray and OptionsNode.
+    This inheritance hierarchy is similar to the Composite pattern in
+    that it can be used to build an arbitrary tree.  However, an
+    OptionsNode can act as a branch as well as a leaf, so it shares
+    some of the parent-child functionality.
+    """
+    def __mul__(self, other):
+        """
+        Delegates to the copy_to_leaves method, but provides a new object
+        instead of modifying the current one.  This means the function
+        can be inlined neatly.
+        """
+        result = self.copy()
+        result.copy_to_leaves(other)
+        return result
     
     
-class OptionsNode():
+class OptionsNode(OptionsTreeElement):
     """
-    Contains an OptionsDict and optionally a child OptionsNode or
-    OptionsArray, thus forming a tree.
+    Contains an options dictionary and optionally a child
+    OptionsTreeElement, hence forming a tree structure.
     """
-
-    def __init__(self, name, entries={}):
-        """
-        Creates a named OptionsNode and embeds an options dictionary based
-        on entries.
-        """
+    def __init__(self, name, entries={}, child=None, info=None):
         # check name argument
         if name is None:
             name = ''
         elif not isinstance(name, str):
             raise OptionsNodeException(
-                "name argument must be a string (or None).")
-        # instantiate options dictionary and inject default node info
+                "name argument must be a string (or None)")
+        # check child argument
+        if child is not None and not isinstance(child, OptionsTreeElement):
+            raise OptionsNodeException(
+                "child argument must be an OptionsTreeElement (or None)")
+        # set attributes
         self.name = name
         self.options_dict = self.create_options_dict(entries)
-        self.options_dict.set_node_info(self.create_node_info())
+        self.child = child
+        if info:
+            self.info = info
+        else:
+            self.info = self.create_info()
         
     @classmethod
-    def another(Class, name, entries={}):
-        return Class(name, entries)
-
-    def copy(self):
-        return self.another(self.name, self.options_dict)
+    def another(Class, name, entries={}, child=None, info=None):
+        return Class(name, entries, child, info)
 
     def create_options_dict(self, entries):
         """
@@ -67,19 +67,68 @@ class OptionsNode():
         """
         return OptionsDict(entries)
         
-    def create_node_info(self):
+    def create_info(self):
         """
         Overrideable factory method, used by the OptionsNode
         constructor.
         """
         return OrphanNodeInfo(self.name)
 
-    def set_node_info(self, node_info):
-        self.node_info = node_info
+    def copy(self):
+        if self.child:
+            child = self.child.copy()
+        else:
+            child = None
+        return self.another(self.name, entries=self.options_dict.copy(), 
+                            child=child, info=self.info)
+        
+    def collapse(self):
+        """
+        Returns a list of options dictionaries corresponding to the leaves
+        in the the present tree structure.  Each dictionary is the
+        result of a merge from the root, through the branch nodes, to
+        the corresponding leaf.
+        """
+        # At this point it is appropriate to inject node information.
+        # Injecting it earlier on would mess up copy operations, since
+        # updating OptionsDicts with one another duplicates node info.
+        od = self.options_dict.copy()
+        od.set_node_info(self.info)
+        
+        # might rework this function as a generator in future.
+        try:
+            # recurse 
+            result = []
+            for sub_od in self.child.collapse():
+                # copy and update the present dictionary with each
+                # element in the result of the recursion
+                od.update(sub_od)
+                result.append(od)
+            # return the merged dictionaries
+            return result
+            
+        except AttributeError:
+            # this is a leaf, so just return the current options
+            # dictionary as a one-element list
+            return [od]
+            
+    def copy_to_leaves(self, tree_element):
+        """
+        Appends a copy of tree_element to each leaf node in the present
+        tree structure.
+        """
+        try:
+            # recurse
+            self.child.copy_to_leaves()
+        except AttributeError:
+            # can no longer recurse, so this is a leaf
+            self.child = tree_element.copy()
 
     def update(self, entries):
-        # delegate
         self.options_dict.update(entries)
+            
+    def set_node_info(self, node_info):
+        self.node_info = node_info
         
     def __eq__(self, other):
         result = isinstance(other, OptionsNode)
@@ -92,7 +141,7 @@ class OptionsNode():
         return str(self.name)
 
 
-class OptionsArray(list):
+class OptionsArray(OptionsTreeElement, list):
     """
     A sequence of OptionsNodes.
     """
@@ -130,7 +179,7 @@ class OptionsArray(list):
         self.name = array_name
         self.node_names = []
                 
-        # First pass: instantiate OptionsNodes
+        # First pass: instantiate OptionsNodes and record node names
         for el in elements:
             
             if isinstance(el, dict):
@@ -162,14 +211,15 @@ class OptionsArray(list):
 
             # add entries
             node.update(common_entries)
+            
             # append to the lists
             self.append(node)
             self.node_names.append(node_name)
 
         # Second pass: set array node information.  This will replace
-        # any preexisting orphan node information.
+        # any preexisting node information.
         for i, node in enumerate(self):
-            node.set_node_info(self.create_node_info(i))
+            node.set_info = self.create_info(i)
 
 
     @classmethod
@@ -178,7 +228,7 @@ class OptionsArray(list):
         return Class(array_name, elements, common_entries, name_format)
         
     def copy(self):
-        return self.another(self.name, deepcopy(list(self)))
+        return self.another(self.name, copy(list(self)))
  
         
     def create_options_node(self, node_name, entries):
@@ -189,21 +239,33 @@ class OptionsArray(list):
         return OptionsNode(node_name, entries)
 
         
-    def create_node_info(self, index):
+    def create_info(self, index):
         """
         Overrideable factory method, used by the OptionsArray
         constructor.
         """
         return ArrayNodeInfo(self.name, self.node_names, index)
 
-    
-    # def add_sub(self, tree_element):
-    #     """
-    #     Appends a copy of tree_element to each leaf node in the present
-    #     tree structure.
-    #     """
-    #     for el in self:
-    #         el.add_sub(tree_element)
+
+    def collapse(self):
+        """
+        Returns a list of options dictionaries corresponding to the leaves
+        in the the present tree structure.  Each dictionary is the
+        result of a merge from the root, through the branch nodes, to
+        the corresponding leaf.
+        """
+        result = []
+        for el in self:
+            result += el.collapse()
+        return result
+            
+    def copy_to_leaves(self, tree_element):
+        """
+        Appends a copy of tree_element to each leaf node in the present
+        tree structure.
+        """
+        for el in self:
+            el.copy_to_leaves(tree_element)
 
 
     def __eq__(self, other):

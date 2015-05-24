@@ -18,7 +18,7 @@ class TestOptionsArrayCreationOptions(unittest.TestCase):
         self.assertRaises(OptionsDictException, create_array)
 
 
-class TestOptionsDictArrayBasics(unittest.TestCase):
+class TestOptionsArrayBasics(unittest.TestCase):
 
     def setUp(self):
         """
@@ -33,16 +33,31 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         for el in self.array:
             self.assertIsInstance(el, OptionsNode)
 
-    def test_element_contents(self):
-        """
-        Getting the node's options_dict and querying 'random' should
-        return the various values; additionally, the various
-        dictionary entries we started with should now be queryable.
-        """
-        for i, el in enumerate(self.array):
-            if i==3:
-                self.assertEqual(el.options_dict['foo'], 'bar')
-            else:
-                self.assertEqual(el.options_dict['random'], self.values[i])
-                
+    def test_element_types_after_collapse(self):
+        for el in self.array.collapse():
+            self.assertIsInstance(el, OptionsDict)
 
+    def test_element_contents_after_collapse(self):
+        """
+        Getting the options dictionaries and querying 'random' should
+        return the various values; alternatively, the OptionsNode
+        dictionary we started with should now be queryable.
+        """
+        for i, el in enumerate(self.array.collapse()):
+            if i==3:
+                self.assertEqual(el['foo'], 'bar')
+            else:
+                self.assertEqual(el['random'], self.values[i])
+
+
+class TestOptionsArrayOperations(unittest.TestCase):
+
+    def setUp(self):
+        self.letters = OptionsArray('letter', ['A', 'B'])
+        self.numbers = OptionsArray('number', range(2))
+
+    # def test_multiplication(self):
+    #     tree = self.letters * self.numbers
+    #     expected_names = ['A_0', 'A_1', 'B_0', 'B_1']
+    #     for el, expected in zip(tree.collapse(), expected_names):
+    #         self.assertEqual(str(el), expected)

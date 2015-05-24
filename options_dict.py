@@ -50,10 +50,10 @@ class OptionsDict(dict):
 
         Returns an OptionsDict with no node information.
         """
-        # with just an entries argument, treat as a simple dict.  Set
-        # the node_info component first.  This is necessary to prevent
+        # With just an entries argument, treat as a simple dict.  Set
+        # the node_info list first.  This is necessary to prevent
         # dynamic entries from possibly referencing the component
-        # before it exists
+        # before it exists.
         self.node_info = []
         self.update(entries)
         
@@ -231,7 +231,6 @@ class OptionsDict(dict):
             formatter = self.create_node_info_formatter()
         return formatter(filtered_node_info, 
                          absolute=absolute, relative=relative)
-
         
     def create_node_info_formatter(self):
         """
@@ -307,6 +306,7 @@ class OptionsDict(dict):
         # update OptionsDict attributes
         if isinstance(other, OptionsDict):
             self.node_info += other.node_info
+            # if len(self.node_info) > 1: raise Exception
         # now pass to superclass
         dict.update(self, other)
 

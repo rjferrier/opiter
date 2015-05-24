@@ -140,3 +140,13 @@ class TestTreeFormatter(unittest.TestCase):
 ...1: b
 ......2: a"""
         self.assertEqual('\n'+self.formatter(node_info), expected)
+
+        
+        
+class TestEmptyNodeInfo(unittest.TestCase):
+
+    def test_simple_formatter(self):
+        self.assertEqual(SimpleFormatter()([]), '')
+
+    def test_tree_formatter(self):
+        self.assertEqual(TreeFormatter()([]), '')

@@ -15,6 +15,14 @@ class TestOptionsNodeCreation(unittest.TestCase):
         """
         create_node = lambda: UnitOptionsNode({'foo': 'bar'})
         self.assertRaises(OptionsNodeException, create_node)
+
+    def test_create_node_with_bad_child(self):
+        """
+        When I create a node with a child that is not another
+        OptionsTreeElement, an error should be raised.
+        """
+        create_node = lambda: UnitOptionsNode('foo', child='bar')
+        self.assertRaises(OptionsNodeException, create_node)
         
         
 class TestOptionsNodeBasics(unittest.TestCase):

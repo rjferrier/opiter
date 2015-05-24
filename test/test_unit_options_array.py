@@ -85,18 +85,9 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         self.assertEqual(other, self.array)
         self.assertFalse(other is self.array)
 
-
-class TestOptionsDictArrayOperations(unittest.TestCase):
-
-    def setUp(self):
-        self.letters = UnitOptionsArray('letter', ['A', 'B'])
-        self.numbers = UnitOptionsArray('number', range(2))
-
-    # def test_multiplication(self):
-    #     tree = self.letters * self.numbers
-    #     expected_names = ['A_0', 'A_1', 'B_0', 'B_1']
-    #     for el, expected in tree.collapse():
-    #         self.assertEqual(str(el), expected)
+    def test_collapse(self):
+        for el, v in zip(self.array, self.values):
+            self.assertEqual(str(el), str(v))
 
     
 if __name__ == '__main__':

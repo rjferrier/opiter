@@ -1,12 +1,12 @@
 from copy import copy
-from base import OptionsBaseException
+from base import OptionsBaseException, INodeInfo
 
 
 class NodeInfoException(OptionsBaseException):
     pass
 
     
-class NodeInfo:
+class NodeInfo(INodeInfo):
     """
     Abstract class for describing contextual information about a node.
     The concrete methods herein are special cases which defer to the
