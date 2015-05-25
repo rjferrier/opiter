@@ -1,10 +1,11 @@
 from copy import deepcopy
 from types import FunctionType
 from string import Template
+from warnings import warn
 
 from base import OptionsBaseException
 from node_info import OrphanNodeInfo, ArrayNodeInfo, SimpleFormatter, \
-    NodeInfoException
+    TreeFormatter, NodeInfoException
 
 
 class OptionsDictException(OptionsBaseException):
@@ -46,8 +47,6 @@ class OptionsDict(dict):
     
     def __init__(self, entries={}):
         """
-        OptionsDict(entries={})
-
         Returns an OptionsDict with no node information.
         """
         # With just an entries argument, treat as a simple dict.  Set
@@ -64,11 +63,13 @@ class OptionsDict(dict):
     @classmethod
     def node(Class, name, entries={}):
         """
-        OptionsDict.node(name, entries={})
-
         Returns an OptionsDict as an orphan node, i.e. having a name
         for identification purposes but not belonging to a collection.
         """
+
+        warn("\nThis is a deprecated method.  Consider using "+\
+             "tree_elements.OptionsNode \ninstead.")
+        
         # check name argument
         if not name:
             name = ''
@@ -82,11 +83,9 @@ class OptionsDict(dict):
 
         
     @classmethod
-    def array(Class, array_name, elements, common_entries={}, name_format='{}'):
+    def array(Class, array_name, elements, common_entries={},
+              name_format='{}'):
         """
-        OptionsDict.array(array_name, elements, common_entries={},
-                          name_format='{}')
-
         Returns a list of OptionsDicts, wrapping the given elements as
         necessary.
 
@@ -111,6 +110,10 @@ class OptionsDict(dict):
         name_format, which can either be a format string or a callable
         that takes the element value and returns a string.
         """
+
+        warn("\nThis is a deprecated method.  Consider using "+\
+             "tree_elements.OptionsArray\n instead.")
+
         options_dicts = []
         node_names = []
         
@@ -161,8 +164,6 @@ class OptionsDict(dict):
         
     def create_orphan_node_info(self, node_name):
         """
-        self.create_orphan_node_info(node_name)
-
         Overrideable factory method, used by OptionsDict.node().
         """
         return OrphanNodeInfo(node_name)
@@ -170,8 +171,6 @@ class OptionsDict(dict):
         
     def create_array_node_info(self, array_name, node_names, node_index):
         """
-        self.create_array_node_info(node_name)
-
         Overrideable factory method, used by OptionsDict.array().
         """
         return ArrayNodeInfo(array_name, node_names, node_index)
@@ -179,8 +178,6 @@ class OptionsDict(dict):
     
     def update(self, entries):
         """
-        self.update(entries)
-        
         As with conventional dicts, updates entries with the key-value
         pairs given in the entries argument.  Alternatively, a list of
         functions may be supplied which will go on to become dynamic
@@ -197,9 +194,6 @@ class OptionsDict(dict):
     def str(self, only=[], exclude=[], absolute={}, relative={}, 
             formatter=None):
         """
-        self.str(only=[], exclude=[], absolute={}, relative={}, 
-                 formatter=None)
-
         Returns a string identifier, providing more control than the
         str() idiom through optional arguments.
 
@@ -229,23 +223,35 @@ class OptionsDict(dict):
             filtered_node_info.append(ni)
         # pass the filtered list to the formatter object
         if not formatter:
-            formatter = self.create_node_info_formatter()
+            formatter = self.create_default_node_info_formatter()
         return formatter(filtered_node_info, 
                          absolute=absolute, relative=relative)
-        
-    def create_node_info_formatter(self):
-        """
-        self.create_node_info_formatter()
 
+        
+    def create_default_node_info_formatter(self):
+        """
         Overrideable factory method, used by OptionsDict.str().
         """
         return SimpleFormatter()
 
+
+    # def pretty(self, only=[], exclude=[], absolute={}, relative={}):
+    #     """
+    #     As str(), but with formatter chosen.
+    #     """        
+    #     return str(self, only=[], exclude=[], absolute={}, relative={}, 
+    #                formatter=self.create_pretty_node_info_formatter)
+
+        
+    # def create_pretty_node_info_formatter(self):
+    #     """
+    #     Overrideable factory method, used by OptionsDict.str_pretty().
+    #     """
+    #     return TreeFormatter()
+
         
     def get_node_info(self, collection_name=None):
         """
-        self.get_node_info(collection_name=None)
-        
         Returns the OptionDict's first NodeInfo object.  If the
         OptionsDict has accumulated several NodeInfo objects, the
         client can get a particular one by passing in the
@@ -268,8 +274,6 @@ class OptionsDict(dict):
         
     def set_node_info(self, new_node_info, collection_name=None):
         """
-        self.set_node_info(new_node_info, collection_name=None)
-        
         Sets the OptionDict's first NodeInfo object.  If the
         OptionsDict has accumulated several NodeInfo objects, the
         client can set a particular one by passing in the
@@ -312,9 +316,8 @@ class OptionsDict(dict):
         dict.update(self, other)
 
     def _update_from_dynamic_entries(self, functions):
-        err = OptionsDictException("""
-entries must be a dict or a sequence of dynamic entries (i.e.
-functions).""")
+        err = OptionsDictException("entries must be a dict or a sequence "+\
+                                   "of dynamic entries (i.e.functions).")
         try:
             for func in functions:
                 if not isinstance(func, FunctionType):
@@ -356,8 +359,6 @@ functions).""")
         
 class CallableEntry:
     """
-    CallableEntry(function)
-
     Because the OptionsDict works by evaluating all function objects
     recursively, it is not able to return other functions specified by
     the client unless these are wrapped as callable objects.  This class
@@ -368,3 +369,17 @@ class CallableEntry:
         
     def __call__(self, *args, **kwargs):
         return self.function(*args, **kwargs)
+
+
+class Lookup:
+    """
+    Provides a function object that simply looks up a key in a
+    dictionary or combination of dictionaries.  This functionality was
+    originally implemented as a closure, but the multiprocessing
+    module couldn't pickle it.
+    """
+    def __init__(self, key):
+        self.key = key
+
+    def __call__(self, dictionary):
+        return dictionary[self.key]

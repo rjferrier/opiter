@@ -6,8 +6,7 @@ import unittest
 import numpy
 
 
-class TestOptionsDictTreePostprocessing(
-        TestOptionsDictTreeIteration):
+class TestOptionsDictTreePostprocessing(TestOptionsDictTreeIteration):
     
     def setUp(self):
         """
@@ -28,7 +27,7 @@ class TestOptionsDictTreePostprocessing(
             'sim_3d_20': 0.061, }
 
     def check_convergence(self, postprocess):
-        resulting_rates = map(postprocess, self.tree)
+        resulting_rates = map(postprocess, self.tree.collapse())
         expect_not_applicable = (0, 4, 7)
         for i, result in enumerate(resulting_rates):
             if i in expect_not_applicable:
@@ -63,7 +62,6 @@ class Postprocessor:
         self.simulation_errors = simulation_errors
         self.strategy = strategy
 
-    @merges_dicts
     def __call__(self, options):
         
         # get the current mesh resolution and error metric

@@ -202,7 +202,8 @@ class SimpleFormatter:
             substr = ''
             substr += ni.str(absolute=absolute, relative=relative, 
                              collection_separator=self.collection_separator)
-            substrings.append(substr)
+            if substr:
+                substrings.append(substr)
         if node_info_list:
             result = self.node_separator.join(substrings)
         else:

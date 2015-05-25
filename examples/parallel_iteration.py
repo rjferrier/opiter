@@ -2,8 +2,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-from options_dict import OptionsDict
-from tools import product, merge, merges_dicts
+from __init__ import OptionsArray
 
 from multiprocessing import Pool
 from time import time, sleep
@@ -20,20 +19,19 @@ job_times = [0.1, 0.3]
 ## PREPROCESSING
 
 # create iterable structure and some operation
-modifier_seq = OptionsDict.array('modifier', modifiers)
-job_time_seq = OptionsDict.array('job_time', job_times)
-combos = product(modifier_seq, job_time_seq)
+modifier_seq = OptionsArray('modifier', modifiers)
+job_time_seq = OptionsArray('job_time', job_times)
+options_tree = modifier_seq * job_time_seq
+options_dicts = options_tree.collapse()
 
 sleep_time = lambda opt: opt['modifier'] * opt['job_time']
-@merges_dicts
 def dummy_operation_time(opt):
     return sleep_time(opt)
-@merges_dicts
 def dummy_operation(opt):
     sleep(sleep_time(opt))
 
 print "\nIteration over jobs with total times:"
-print map(dummy_operation_time, combos)
+print map(dummy_operation_time, options_dicts)
 
 p = Pool(n_proc)
 n_test = 3
@@ -50,11 +48,11 @@ for i in range(n_samples):
     for j in range(n_test):
         t0 = time()
         if j==0:
-            map(dummy_operation, combos)
+            map(dummy_operation, options_dicts)
         elif j==1:
-            p.map(dummy_operation, combos)
+            p.map(dummy_operation, options_dicts)
         else:
-            p.map(dummy_operation, reversed(combos))
+            p.map(dummy_operation, reversed(options_dicts))
         T[i,j] = time() - t0
     # report
     print "{0:5g} ".format(i+1) + results_fmt.format(*T[i])

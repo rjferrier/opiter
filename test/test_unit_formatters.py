@@ -40,13 +40,18 @@ class FakeNodeInfo:
 class TestSimpleFormatter(unittest.TestCase):
 
     def setUp(self):
-        self.node_info = FakeNodeInfo.combo('abc')
         self.formatter = SimpleFormatter()
 
     def test_simple_formatter(self):
+        self.node_info = FakeNodeInfo.combo('abc')
         self.assertEqual(self.formatter(self.node_info), 'a_b_c')
 
+    def test_simple_formatter_with_blank(self):
+        self.node_info = FakeNodeInfo.combo(['a', '', 'c'])
+        self.assertEqual(self.formatter(self.node_info), 'a_c')
+
     def test_simple_formatter_with_custom_separator(self):
+        self.node_info = FakeNodeInfo.combo('abc')
         self.formatter = SimpleFormatter(',')
         self.assertEqual(self.formatter(self.node_info), 'a,b,c')
 
@@ -55,7 +60,6 @@ class TestTreeFormatter(unittest.TestCase):
 
     def setUp(self):
         self.formatter = TreeFormatter()
-
 
     def test_tree_formatter_first_combo(self):
         """

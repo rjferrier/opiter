@@ -1,70 +1,62 @@
 import sys
 sys.path.append('..')
 
-from options_dict import OptionsDict
-from tools import product, merge, merges_dicts, Lookup
-from node_info import TreeFormatter
+from __init__ import OptionsNode, OptionsArray, Lookup, TreeFormatter
 import multiprocessing
 
 # setup
 
-water = OptionsDict.node('water', {
+water = OptionsNode('water', {
     'density'           : 1.00e3,
     'dynamic_viscosity' : 0.89e-3})
 
-ethanol = OptionsDict.node('ethanol', {
+ethanol = OptionsNode('ethanol', {
     'density'           : 0.79e3,
     'dynamic_viscosity' : 1.09e-3})
 
-fluids     = OptionsDict.array('fluid', [water, ethanol])
-pipe_dias  = OptionsDict.array('pipe_diameter', [0.10, 0.15])
-velocities = OptionsDict.array('velocity', [0.01, 0.02, 0.04])
-combos = product(fluids, pipe_dias, velocities)
+fluids     = OptionsArray('fluid', [water, ethanol])
+pipe_dias  = OptionsArray('pipe_diameter', [0.10, 0.15])
+velocities = OptionsArray('velocity', [0.01, 0.02, 0.04])
+options_tree = fluids * pipe_dias * velocities
 
 print "\nUsing serial loop:\n"
 
-for combo in combos:
-    opt = merge(combo)
-    descr = opt.str(formatter=TreeFormatter())
+for opt in options_tree.collapse():
     kinematic_visc = opt['dynamic_viscosity'] / opt['density']
     Re = opt['velocity'] * opt['pipe_diameter'] / kinematic_visc
-    print descr + '    Reynolds number = {:.2e}'.format(Re)
-
+    print 'ID = {}, Reynolds number = {:.2e}'.format(opt.str(), Re)
 
 print "\nUsing parallel iterator:\n"
 
-@merges_dicts
 def calculate_Re(opt):
   kinematic_visc = opt['dynamic_viscosity'] / opt['density']
   return opt['velocity'] * opt['pipe_diameter'] / kinematic_visc
 
 p = multiprocessing.Pool(4)
-Reynolds_numbers = p.map(calculate_Re, combos)
+Reynolds_numbers = p.map(calculate_Re, options_tree.collapse())
 
 # for completeness...
-@merges_dicts
-def describe(opt):
-  return opt.str(formatter=TreeFormatter(collection_separator=': '))
-for descr, Re in zip(map(describe, combos), Reynolds_numbers):
-    print descr + '    Reynolds number = {:.2e}'.format(Re)
+def label(opt):
+  return opt.str()
+for descr, Re in zip(map(label, options_tree.collapse()), Reynolds_numbers):
+    print 'ID = {}, Reynolds number = {:.2e}'.format(opt.str(), Re)
     
 
 print "\nUsing dynamic entries:\n"
 
 def kinematic_viscosity(opt):
     return opt['dynamic_viscosity'] / opt['density']
-fluids = OptionsDict.array('fluid', [water, ethanol], 
-                           common_entries=[kinematic_viscosity])
+fluids = OptionsArray('fluid', [water, ethanol], 
+                      common_entries=[kinematic_viscosity])
 
 def Reynolds_number(opt):
-    return opt['velocity'] * opt['pipe_diameter'] / \
-        opt['kinematic_viscosity']
-common = OptionsDict([Reynolds_number])
+    return opt['velocity'] * opt['pipe_diameter'] / opt['kinematic_viscosity']
+common = OptionsNode('', [Reynolds_number])
 
-combos = product(common, fluids, pipe_dias, velocities)
+options_tree = common * fluids * pipe_dias * velocities
 p = multiprocessing.Pool(4)
-Reynolds_numbers = p.map(Lookup('Reynolds_number'), combos)
+Reynolds_numbers = p.map(Lookup('Reynolds_number'), options_tree.collapse())
 
 # for completeness...
-for descr, Re in zip(map(describe, combos), Reynolds_numbers):
-    print descr + '    Reynolds number = {:.2e}'.format(Re)
+for descr, Re in zip(map(label, options_tree.collapse()), Reynolds_numbers):
+    print 'ID = {}, Reynolds number = {:.2e}'.format(descr, Re)

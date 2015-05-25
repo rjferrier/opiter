@@ -7,27 +7,20 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options_dict import OptionsDict
-from tools import merges_dicts, product, attach, flatten
+from __init__ import OptionsNode, OptionsArray, OptionsDict, Lookup
 
 # functions to be multiprocessed must be defined outside the unit
 # testing framework (i.e. here), otherwise there will be pickling
 # errors.
 
-@merges_dicts
 def distance(opt):
     return opt['speed'] * opt['travel_time']
 
-@merges_dicts
 def label(opt):
     return str(opt)
 
-# the merges_dicts decorator is not needed for this function, because
-# the function will only serve as a dynamic entry.
 def cost(opt):
     return opt['res']**opt['dim']
-
-
 
 
 class TestOptionsDictCartesianProductIteration(unittest.TestCase):
@@ -37,8 +30,8 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
         I create two OptionsDict arrays, one for 'speed' and one
         for 'travel time'.
         """
-        self.speed = OptionsDict.array('speed', [30, 40, 60])
-        self.time  = OptionsDict.array('travel_time', [0.5, 1])
+        self.speed = OptionsArray('speed', [30, 40, 60])
+        self.time  = OptionsArray('travel_time', [0.5, 1])
         self.expected_distances = [15, 30, 20, 40, 30, 60]
 
         
@@ -60,13 +53,11 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         functions.  I will implement a dynamic entry at the root of
         the tree to calculate the computational cost.
         """
-        dims = OptionsDict.array('dim', [1, 2, 3], name_format='{}d')
-        res1d = OptionsDict.array('res', [10, 20, 40, 80])
-        res2d = OptionsDict.array('res', [10, 20, 40])
-        res3d = OptionsDict.array('res', [10, 20])
-        branches = attach(dims, (res1d, res2d, res3d))
-        root = OptionsDict.node('sim', [cost])
-        self.tree = product(root, branches)
+        dims = OptionsArray('dim', [1, 2, 3], name_format='{}d')
+        res1d = OptionsArray('res', [10, 20, 40, 80])
+        res2d = OptionsArray('res', [10, 20, 40])
+        res3d = OptionsArray('res', [10, 20])
+        self.tree = OptionsNode('sim', [cost]) + dims + (res1d, res2d, res3d)
 
     def check_names(self, resulting_names):
         "Helper for name_check tests."

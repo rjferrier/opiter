@@ -1,3 +1,9 @@
+"""
+This module is deprecated in favour of tree_elements.py, which
+provides a more intuitive means of putting together combinations of
+options.
+"""
+
 from collections import Iterable
 from itertools import imap, izip, chain, product as _product
 from functools import wraps
@@ -176,10 +182,10 @@ class Lookup:
     """
     Lookup(key)
     
-    Provides a functor that simply looks up a key in a dictionary or
-    combination of dictionaries.  This functionality was originally
-    implemented as a closure, but the multiprocessing module couldn't
-    pickle it.
+    Provides a function object that simply looks up a key in a
+    dictionary or combination of dictionaries.  This functionality was
+    originally implemented as a closure, but the multiprocessing
+    module couldn't pickle it.
     """
     def __init__(self, key):
         self.key = key
