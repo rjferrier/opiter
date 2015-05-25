@@ -77,16 +77,6 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         for el, v in zip(self.array, self.values):
             self.assertEqual(str(el), str(v))
 
-    # def test_append(self):
-    #     self.array.append(5)
-    #     self.assertEqual(len(self.array), 4)
-    #     self.assertEqual(str(self.array[-1]), '5')
-
-    # def test_appendleft(self):
-    #     self.array.append(5)
-    #     self.assertEqual(len(self.array), 4)
-    #     self.assertEqual(str(self.array[0]), '5')
-
     def test_copy(self):
         other = self.array.copy()
         # test for equivalence and non-identity
@@ -102,6 +92,23 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         self.assertEqual(str(subarray[0]), '2')
         self.assertEqual(str(subarray[1]), 'some_dict')
         self.assertEqual(len(subarray), 2)
+
+    def test_append(self):
+        self.array.append(UnitOptionsNode('5'))
+        self.assertEqual(len(self.array), 5)
+        self.assertEqual(str(self.array[-1]), '5')
+
+    def test_appendleft(self):
+        self.array.appendleft(UnitOptionsNode('5'))
+        self.assertEqual(len(self.array), 5)
+        self.assertEqual(str(self.array[0]), '5')
+
+    def test_append_with_bad_value_raises_error(self):
+        self.assertRaises(OptionsArrayException, lambda: self.array.append(5))
+
+    def test_appendleft_with_bad_value_raises_error(self):
+        self.assertRaises(OptionsArrayException,
+                          lambda: self.array.appendleft(5))
 
     def test_pop_and_check_values(self):
         node = self.array.pop()

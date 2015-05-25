@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
-from tree_elements import OptionsArray, OptionsNode
+from tree_elements import OptionsArray, OptionsNode, OptionsArrayException
 from options_dict import OptionsDict, OptionsDictException
 from node_info import OrphanNodeInfo, ArrayNodeInfo
     
@@ -29,9 +29,35 @@ class TestOptionsArrayCreation(unittest.TestCase):
         create_array = lambda: OptionsArray('A', range(3), 'foo')
         self.assertRaises(OptionsDictException, create_array)
 
-    # TODO fill more of these out to reflect
-    # test_integration_options_dict_array_nodes
+    def test_format_names_with_string(self):
+        """
+        I create an OptionsDict array 'A' using integers 2, 5, 10.
+        Format the element names as A02, A05, A10.
+        """
+        seq = OptionsArray('A', [2, 5, 10], name_format='A{:02g}')
+        expected_names = ['A02', 'A05', 'A10']
+        for el, expected in zip(seq, expected_names):
+            self.assertEqual(str(el), expected)
 
+    def test_format_names_with_function(self):
+        """
+        I create an OptionsDict array 'A' using floats 1, 2.5, 6.25.
+        Format the element names as 1p00, 2p50, 6p25.
+        """
+        formatter = lambda x: '{:.2f}'.format(x).replace('.', 'p')
+        seq = OptionsArray('A', [1., 2.5, 6.25], name_format=formatter)
+        expected_names = ['1p00', '2p50', '6p25']
+        for el, expected in zip(seq, expected_names):
+            self.assertEqual(str(el), expected)
+
+    def test_format_names_with_bad_formatter(self):
+        """
+        I create an OptionsDict array with an inappropriate object
+        as name_format.  An error should be raised.
+        """
+        create_seq = lambda: OptionsArray('A', [1., 2.5, 6.25],
+                                          name_format=None)
+        self.assertRaises(OptionsArrayException, create_seq)
 
 
 class TestOptionsArrayBasics(unittest.TestCase):
@@ -90,31 +116,6 @@ class TestOptionsArrayBasics(unittest.TestCase):
             ni = el.get_node_info()
             self.assertTrue(ni.at(i))
 
-    # def test_append_from_primitive(self):
-    #     self.array.append(5)
-    #     self.assertEqual(len(self.array), 4)
-    #     self.assertEqual(str(self.array[-1]), '5')
-    #     self.assertIsInstance(self.array[-1], OptionsNode)
-
-    # def test_appendleft_from_primitive(self):
-    #     self.array.appendleft(5)
-    #     self.assertEqual(len(self.array), 4)
-    #     self.assertEqual(str(self.array[0]), '5')
-    #     self.assertIsInstance(self.array[0], OptionsNode)
-
-    # def test_append_from_options_node(self):
-    #     node = OptionsNode('another_node')
-    #     self.array.append(node)
-    #     self.assertEqual(len(self.array), 4)
-    #     self.assertEqual(str(self.array[-1]), 'another_node')
-    #     self.assertIsInstance(self.array[-1], OptionsNode)
-
-    # def test_appendleft_from_options_node(self):
-    #     node = OptionsNode('another_node')
-    #     self.assertEqual(len(self.array), 4)
-    #     self.assertEqual(str(self.array[0]), 'another_node')
-    #     self.assertIsInstance(self.array[0], OptionsNode)
-
     def test_getitem_from_index_and_check_type(self):
         """
         The getitem idiom should return an OptionsNode when passed an
@@ -131,18 +132,43 @@ class TestOptionsArrayBasics(unittest.TestCase):
             ni = od.get_node_info()
             self.assertTrue(ni.at(i))
 
+    def check_array_node_info(self, index, expected_node_names):
+        """
+        Helper function.  Checks that node info is up to date in the
+        OptionsArray under test.
+        """
+        od = self.array.collapse()[index]
+        ni = od.get_node_info()
+        self.assertIsInstance(ni, ArrayNodeInfo)
+        self.assertTrue(ni.at(index))
+        self.assertEqual(ni.node_names, expected_node_names)
+
+    def test_append_and_check_node_info(self):
+        # append with primitive
+        self.array.append(OptionsNode('5'))
+        self.check_array_node_info(-1, self.expected_names + ['5'])
+        # append with node
+        self.array.append(OptionsNode('another_dict'))
+        self.check_array_node_info(
+            -1, self.expected_names + ['5', 'another_dict'])
+
+    def test_appendleft_and_check_node_info(self):
+        # prepend with primitive
+        self.array.appendleft(OptionsNode('5'))
+        self.check_array_node_info(0, ['5'] + self.expected_names)
+        # prepend with node
+        self.array.appendleft(OptionsNode('another_dict'))
+        self.check_array_node_info(
+            -1, ['another_dict', '5'] + self.expected_names)
+
     def test_pop_and_check_node_info(self):
         node = self.array.pop()
         # check that this node is now an orphan node
         od = node.collapse()[0]
         ni = od.get_node_info()
         self.assertIsInstance(ni, OrphanNodeInfo)
-        # check that node info is up to date in the remaining array
-        last_od = self.array.collapse()[-1]
-        last_ni = last_od.get_node_info()
-        self.assertIsInstance(last_ni, ArrayNodeInfo)
-        self.assertTrue(last_ni.is_last())
-        self.assertEqual(last_ni.node_names, ['A', '2', '3.14'])
+        # check remaining array
+        self.check_array_node_info(-1, self.expected_names[:-1])
 
     def test_popleft_and_check_node_info(self):
         node = self.array.popleft()
@@ -150,11 +176,8 @@ class TestOptionsArrayBasics(unittest.TestCase):
         od = node.collapse()[0]
         ni = od.get_node_info()
         self.assertIsInstance(ni, OrphanNodeInfo)
-        # check that node info is up to date in the remaining array
-        first_od = self.array.collapse()[0]
-        first_ni = first_od.get_node_info()
-        self.assertTrue(first_ni.is_first())
-        self.assertEqual(first_ni.node_names, ['2', '3.14', 'some_dict'])
+        # check remaining array
+        self.check_array_node_info(0, self.expected_names[1:])
         
             
 

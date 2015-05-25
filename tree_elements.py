@@ -327,6 +327,18 @@ class OptionsArray(OptionsTreeElement):
         for i, node in enumerate(self.nodes):
             node.update_info(self.create_info(i))
 
+    def append(self, item):
+        if not isinstance(item, OptionsNode):
+            raise OptionsArrayException("item needs to be an OptionsNode")
+        self.nodes.append(item)
+        self.update_node_info()
+
+    def appendleft(self, item):
+        if not isinstance(item, OptionsNode):
+            raise OptionsArrayException("item needs to be an OptionsNode")
+        self.nodes.appendleft(item)
+        self.update_node_info()
+            
     def pop(self):
         node = self.nodes.pop()
         # update node info on both sides
