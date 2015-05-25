@@ -1,6 +1,6 @@
 from copy import copy
 
-from base import OptionsBaseException
+from base import nonmutable, OptionsBaseException
 from options_dict import OptionsDict
 from node_info import OrphanNodeInfo, ArrayNodeInfo
 
@@ -11,7 +11,7 @@ class OptionsNodeException(OptionsBaseException):
 class OptionsArrayException(OptionsBaseException):
     pass
 
-
+    
 class OptionsTreeElement:
     """
     Abstract class to be inherited by OptionsArray and OptionsNode.
@@ -20,16 +20,15 @@ class OptionsTreeElement:
     OptionsNode can act as a branch as well as a leaf, so it shares
     some of the parent-child functionality.
     """
+
+    @nonmutable
     def __mul__(self, other):
-        """
-        Delegates to the copy_to_leaves method, but provides a new object
-        instead of modifying the current one.  This means the function
-        can be inlined neatly.
-        """
-        result = self.copy()
-        result.copy_to_leaves(other)
-        return result
-    
+        self.multiply_attach(other)
+
+    @nonmutable
+    def __add__(self, other):
+        self.attach(other)
+        
     
 class OptionsNode(OptionsTreeElement):
     """
@@ -111,17 +110,57 @@ class OptionsNode(OptionsTreeElement):
             return [self.options_dict.copy()]
 
             
-    def copy_to_leaves(self, tree_element):
+    def multiply_attach(self, tree):
         """
-        Appends a copy of tree_element to each leaf node in the present
+        Appends a copy of tree to each leaf node in the present
         tree structure.
         """
         try:
             # recurse
-            self.child.copy_to_leaves()
+            self.child.multiply_attach()
         except AttributeError:
             # can no longer recurse, so this is a leaf
-            self.child = tree_element.copy()
+            self.child = tree.copy()
+
+            
+    def attach(self, tree):
+        """
+        Appends a copy of each root node in the given tree (or
+        whichever elements get traversed during iteration) to a
+        corresponding leaf node in the present tree.
+        """
+        try:
+            # recurse
+            return self.child.attach(tree)
+        except AttributeError:
+            # This is a leaf.  Copy and split the tree, making the
+            # first element the child of this node and returning the
+            # rest to the client.
+            try:
+                new_child = tree[0].copy()
+                remainder = tree[1:]
+            except AttributeError:
+                # wrap non-iterables as a one-element list
+                new_child = tree.copy()
+                remainder = []
+            except IndexError:
+                # no more elements in tree
+                new_child = None
+                remainder = []
+            self.child = new_child
+            return remainder
+
+            
+    # def get_leaf_nodes(self):
+    #     """
+    #     Returns the leaf nodes of the present tree structure in a list.
+    #     """
+    #     result = []
+    #     try:
+    #         # recurse 
+    #         return self.child.get_leaf_nodes()
+    #     except AttributeError:
+    #         return [self]
 
             
     def update(self, entries):
@@ -263,15 +302,36 @@ class OptionsArray(OptionsTreeElement, list):
         return result
 
         
-    def copy_to_leaves(self, tree_element):
+    def multiply_attach(self, tree):
         """
-        Appends a copy of tree_element to each leaf node in the present
-        tree structure.
+        Appends a copy of the given tree to each leaf node in the
+        present tree.
         """
         for el in self:
-            el.copy_to_leaves(tree_element)
+            el.multiply_attach(tree)
+
+
+    def attach(self, tree):
+        """
+        Appends a copy of each root node in the given tree (or
+        whichever elements get traversed during iteration) to a
+        corresponding leaf node in the present tree.
+        """
+        for el in self:
+            tree = el.attach(tree)
+        return tree
 
             
+    # def get_leaf_nodes(self):
+    #     """
+    #     Returns the leaf nodes of the present tree structure in a list.
+    #     """
+    #     result = []
+    #     for el in self:
+    #         result += el.get_leaf_nodes()
+    #     return result
+
+        
     def update(self, entries):
         for el in self:
             el.update(entries)

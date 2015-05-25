@@ -1,9 +1,25 @@
 """
-This module contains a base exception for the package, in addition
-to pure abstract base classes that may be useful for testing and
-extension purposes.
+This module contains helper functions, a base exception for the
+package, and pure abstract base classes that may be useful for testing
+and extension purposes.
 """
 
+from functools import wraps
+
+
+def nonmutable(method):
+    """
+    Decorator that calls method but provides a new object instead of
+    modifying the current one.  This means the call can be inlined
+    neatly without mutating the operands.
+    """
+    def decorator(self, other):
+        result = self.copy()
+        method(result, other)
+        return result
+    return decorator
+
+    
 class OptionsBaseException(Exception):
     def __init__(self, msg):
         self.msg = msg

@@ -90,9 +90,20 @@ class TestOptionsArrayBasics(unittest.TestCase):
             self.assertTrue(ni.at(i))
 
     def test_getitem(self):
+        """
+        The getitem idiom should return an OptionsNode when passed an
+        integer index.
+        """
         node = self.array[2]
         self.assertIsInstance(node, OptionsNode)
         self.assertEqual(str(node), '3.14')
+
+    # def test_get_leaf_nodes(self):
+    #     """
+    #     This trivial use of get_leaf_nodes should return all the nodes
+    #     that a list conversion would return.
+    #     """
+    #     self.assertEqual(self.array.get_leaf_nodes(), list(self.array))
         
             
 
@@ -118,3 +129,4 @@ class TestOptionsArraySlice(unittest.TestCase):
         for i, el in enumerate(self.array.collapse()):
             ni = el.get_node_info()
             self.assertTrue(ni.at(i))
+

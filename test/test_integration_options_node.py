@@ -25,6 +25,13 @@ class TestOptionsNodeBasics(unittest.TestCase):
     def test_collapse(self):
         self.assertEqual(len(self.node.collapse()), 1)
 
+    # def test_get_leaf_nodes(self):
+    #     """
+    #     This trivial use of get_leaf_nodes should return the node in a
+    #     one-element list.
+    #     """
+    #     self.assertEqual(self.node.get_leaf_nodes(), [self.node])
+
 
 class TestOrphanNodeAfterCollapse(unittest.TestCase):
 

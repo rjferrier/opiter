@@ -14,23 +14,15 @@ class TestNodeOperationsWithNode(unittest.TestCase):
 
     def test_multiplication(self):
         product = self.A * self.B
-        self.assertIsInstance(product, OptionsNode)
-        # the collapsed product should be a one-element list
         ods = product.collapse()
         self.assertEqual(len(ods), 1)
-        # inspect this element 
-        self.assertIsInstance(ods[0], OptionsDict)
-        self.assertEqual(str(ods[0]), 'A_B')
+        self.assertEqual([str(od) for od in ods], ['A_B'])
 
-    # def test_addition(self):
-    #     summation = self.A + self.B
-    #     self.assertIsInstance(summation, OptionsNode)
-    #     # the collapsed product should be a one-element list
-    #     ods = summation.collapse()
-    #     self.assertEqual(len(ods), 1)
-    #     # inspect this element 
-    #     self.assertIsInstance(ods[0], OptionsDict)
-    #     self.assertEqual(str(ods[0]), 'A_B')
+    def test_addition(self):
+        summation = self.A + self.B
+        ods = summation.collapse()
+        self.assertEqual(len(ods), 1)
+        self.assertEqual([str(od) for od in ods], ['A_B'])
 
         
 class TestNodeOperationsWithArray(unittest.TestCase):
@@ -41,15 +33,21 @@ class TestNodeOperationsWithArray(unittest.TestCase):
 
     def test_multiplication(self):
         product = self.A * self.numbers
-        self.assertIsInstance(product, OptionsNode)
-        # the collapsed product should be a three-element list
         ods = product.collapse()
         self.assertEqual(len(ods), 3)
-        # inspect the elements
-        expected_names = ['A_0', 'A_1', 'A_2']
-        for od, expected in zip(ods, expected_names):
-            self.assertIsInstance(od, OptionsDict)
-            self.assertEqual(str(od), expected)
+        self.assertEqual([str(od) for od in ods], ['A_0', 'A_1', 'A_2'])
+
+    def test_addition(self):
+        """
+        Adding many nodes on the right (R) to a single node on the left
+        (L) should work, but the surplus right hand nodes will get
+        discarded (to leave L_R).
+        """
+        summation = self.A + self.numbers
+        ods = summation.collapse()
+        self.assertEqual(len(ods), 1)
+        self.assertEqual([str(od) for od in ods], ['A_0'])
+        
 
         
 class TestArrayOperationsWithNode(unittest.TestCase):
@@ -60,32 +58,40 @@ class TestArrayOperationsWithNode(unittest.TestCase):
 
     def test_multiplication(self):
         product = self.numbers * self.A
-        self.assertIsInstance(product, OptionsArray)
-        # the collapsed product should be a three-element list
         ods = product.collapse()
         self.assertEqual(len(ods), 3)
-        # inspect the elements
-        expected_names = ['0_A', '1_A', '2_A']
-        for od, expected in zip(ods, expected_names):
-            self.assertIsInstance(od, OptionsDict)
-            self.assertEqual(str(od), expected)
-            
+        self.assertEqual([str(od) for od in ods], ['0_A', '1_A', '2_A'])
 
+    def test_addition(self):
+        """
+        Adding one node on the right (R) to many on the left (L) should
+        work, but the result will be uneven (L_R, L, L).
+        """
+        summation = self.numbers + self.A
+        ods = summation.collapse()
+        self.assertEqual(len(ods), 3)
+        self.assertEqual([str(od) for od in ods], ['0_A', '1', '2'])
+
+        
 class TestArrayOperationsWithArray(unittest.TestCase):
 
     def setUp(self):
-        self.letters = OptionsArray('letter', ['A', 'B'])
-        self.numbers = OptionsArray('number', range(2))
+        self.letters = OptionsArray('letter', ['A', 'B', 'C'])
+        self.numbers = OptionsArray('number', range(3))
 
     def test_multiplication(self):
         product = self.letters * self.numbers
-        self.assertIsInstance(product, OptionsArray)
-        # the collapsed product should be a four-element list
         ods = product.collapse()
-        self.assertEqual(len(ods), 4)
-        # inspect the elements
-        expected_names = ['A_0', 'A_1', 'B_0', 'B_1']
-        for el, expected in zip(ods, expected_names):
-            self.assertEqual(str(el), expected)
+        self.assertEqual(len(ods), 9)
+        self.assertEqual([str(od) for od in ods],
+                         ['A_0', 'A_1', 'A_2',
+                          'B_0', 'B_1', 'B_2',
+                          'C_0', 'C_1', 'C_2'])
+
+    def test_addition(self):
+        summation = self.letters + self.numbers
+        ods = summation.collapse()
+        self.assertEqual(len(ods), 3)
+        self.assertEqual([str(od) for od in ods], ['A_0', 'B_1', 'C_2'])
 
             
