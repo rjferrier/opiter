@@ -56,15 +56,10 @@ class OptionsDict(dict):
         # before it exists.
         self.node_info = []
         self.update(entries)
-        
+
     @classmethod
     def another(Class, entries={}):
         return Class(entries)
-
-    def copy(self):
-        obj = self.another(dict.copy(self))
-        obj.node_info = [ni.copy() for ni in self.node_info]
-        return obj
 
     @classmethod
     def node(Class, name, entries={}):
@@ -156,6 +151,12 @@ class OptionsDict(dict):
                 od.create_array_node_info(array_name, node_names, index))
         
         return options_dicts
+
+
+    def copy(self):
+        obj = self.another(dict.copy(self))
+        obj.node_info = [ni.copy() for ni in self.node_info]
+        return obj
 
         
     def create_orphan_node_info(self, node_name):

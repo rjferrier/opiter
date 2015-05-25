@@ -36,51 +36,54 @@ class OptionsNode(OptionsTreeElement):
     Contains an options dictionary and optionally a child
     OptionsTreeElement, hence forming a tree structure.
     """
-    def __init__(self, name, entries={}, child=None, info=None):
-        # check name argument
+    def __init__(self, name, entries={}, child=None):
+
+        # check and set name argument
         if name is None:
             name = ''
         elif not isinstance(name, str):
             raise OptionsNodeException(
                 "name argument must be a string (or None)")
+        self.name = name
+
+        # set attributes
+        self.options_dict = self.create_options_dict(entries)
+
         # check child argument
         if child is not None and not isinstance(child, OptionsTreeElement):
             raise OptionsNodeException(
                 "child argument must be an OptionsTreeElement (or None)")
-        # set attributes
-        self.name = name
-        self.options_dict = self.create_options_dict(entries)
         self.child = child
-        if info:
-            self.info = info
-        else:
-            self.info = self.create_info()
+
         
     @classmethod
-    def another(Class, name, entries={}, child=None, info=None):
-        return Class(name, entries, child, info)
+    def another(Class, name, entries={}, child=None):
+        return Class(name, entries, child)
 
+        
     def create_options_dict(self, entries):
         """
         Overrideable factory method, used by the OptionsNode
         constructor.
         """
-        return OptionsDict(entries)
+        od = OptionsDict(entries)
+        od.set_node_info(self.create_info())
+        return od
+
         
     def create_info(self):
         """
-        Overrideable factory method, used by the OptionsNode
-        constructor.
+        Overrideable factory method, used by
+        OptionsNode.create_options_dict.
         """
         return OrphanNodeInfo(self.name)
 
+        
     def copy(self):
-        if self.child:
-            child = self.child.copy()
-        else:
-            child = None
-        return self.another(self.name, entries=self.options_dict.copy(), 
-                            child=child, info=self.info)
+        return self.another(
+            self.name, entries=self.options_dict.copy(),
+            child=self.child.copy() if self.child else None)
+
         
     def collapse(self):
         """
@@ -89,13 +92,6 @@ class OptionsNode(OptionsTreeElement):
         result of a merge from the root, through the branch nodes, to
         the corresponding leaf.
         """
-        # At this stage it is appropriate to inject node information.
-        # Injecting it earlier on would mess up copy operations, since
-        # updating OptionsDicts with one another duplicates node info.
-        def create_parent_options_dict():
-            od = self.options_dict.copy()
-            od.set_node_info(self.info)
-            return od
         # TODO: consider reworking this function as a generator.
         try:
             # recurse 
@@ -103,7 +99,7 @@ class OptionsNode(OptionsTreeElement):
             for sub_od in self.child.collapse():
                 # copy, inform and update the present dictionary with
                 # each element in the result of the recursion
-                od = create_parent_options_dict()
+                od = self.options_dict.copy()
                 od.update(sub_od)
                 result.append(od)
             # return the merged dictionaries
@@ -112,7 +108,7 @@ class OptionsNode(OptionsTreeElement):
         except AttributeError:
             # this is a leaf, so just return the current options
             # dictionary as a one-element list
-            return [create_parent_options_dict()]
+            return [self.options_dict.copy()]
 
             
     def copy_to_leaves(self, tree_element):
@@ -127,11 +123,14 @@ class OptionsNode(OptionsTreeElement):
             # can no longer recurse, so this is a leaf
             self.child = tree_element.copy()
 
+            
     def update(self, entries):
+        # delegate
         self.options_dict.update(entries)
         
     def set_info(self, node_info):
-        self.info = node_info
+        # delegate
+        self.options_dict.set_node_info(node_info)
         
     def __eq__(self, other):
         result = isinstance(other, OptionsNode)
@@ -229,10 +228,7 @@ class OptionsArray(OptionsTreeElement, list):
     def another(Class, array_name, elements, common_entries={},
                 name_format='{}'):
         return Class(array_name, elements, common_entries, name_format)
-        
-    def copy(self):
-        return self.another(self.name, copy(list(self)))
- 
+
         
     def create_options_node(self, node_name, entries):
         """
@@ -249,7 +245,11 @@ class OptionsArray(OptionsTreeElement, list):
         """
         return ArrayNodeInfo(self.name, self.node_names, index)
 
+        
+    def copy(self):
+        return self.another(self.name, copy(list(self)))
 
+        
     def collapse(self):
         """
         Returns a list of options dictionaries corresponding to the leaves
@@ -261,7 +261,8 @@ class OptionsArray(OptionsTreeElement, list):
         for el in self:
             result += el.collapse()
         return result
-            
+
+        
     def copy_to_leaves(self, tree_element):
         """
         Appends a copy of tree_element to each leaf node in the present
@@ -270,6 +271,7 @@ class OptionsArray(OptionsTreeElement, list):
         for el in self:
             el.copy_to_leaves(tree_element)
 
+            
     def update(self, entries):
         for el in self:
             el.update(entries)
