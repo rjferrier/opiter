@@ -4,6 +4,7 @@ sys.path.append('..')
 import unittest
 from tree_elements import OptionsArray, OptionsNode
 from options_dict import OptionsDict, OptionsDictException
+from node_info import OrphanNodeInfo, ArrayNodeInfo
     
 
 class TestOptionsArrayCreation(unittest.TestCase):
@@ -89,21 +90,71 @@ class TestOptionsArrayBasics(unittest.TestCase):
             ni = el.get_node_info()
             self.assertTrue(ni.at(i))
 
-    def test_getitem(self):
+    # def test_append_from_primitive(self):
+    #     self.array.append(5)
+    #     self.assertEqual(len(self.array), 4)
+    #     self.assertEqual(str(self.array[-1]), '5')
+    #     self.assertIsInstance(self.array[-1], OptionsNode)
+
+    # def test_appendleft_from_primitive(self):
+    #     self.array.appendleft(5)
+    #     self.assertEqual(len(self.array), 4)
+    #     self.assertEqual(str(self.array[0]), '5')
+    #     self.assertIsInstance(self.array[0], OptionsNode)
+
+    # def test_append_from_options_node(self):
+    #     node = OptionsNode('another_node')
+    #     self.array.append(node)
+    #     self.assertEqual(len(self.array), 4)
+    #     self.assertEqual(str(self.array[-1]), 'another_node')
+    #     self.assertIsInstance(self.array[-1], OptionsNode)
+
+    # def test_appendleft_from_options_node(self):
+    #     node = OptionsNode('another_node')
+    #     self.assertEqual(len(self.array), 4)
+    #     self.assertEqual(str(self.array[0]), 'another_node')
+    #     self.assertIsInstance(self.array[0], OptionsNode)
+
+    def test_getitem_from_index_and_check_type(self):
         """
         The getitem idiom should return an OptionsNode when passed an
         integer index.
         """
         node = self.array[2]
         self.assertIsInstance(node, OptionsNode)
-        self.assertEqual(str(node), '3.14')
 
-    # def test_get_leaf_nodes(self):
-    #     """
-    #     This trivial use of get_leaf_nodes should return all the nodes
-    #     that a list conversion would return.
-    #     """
-    #     self.assertEqual(self.array.get_leaf_nodes(), list(self.array))
+    def test_getitem_from_slice_and_check_type_and_node_info(self):
+        subarray = self.array[1:4:2]
+        self.assertIsInstance(subarray, OptionsArray)
+        # check that node info is up to date in this subarray
+        for i, od in enumerate(subarray.collapse()):
+            ni = od.get_node_info()
+            self.assertTrue(ni.at(i))
+
+    def test_pop_and_check_node_info(self):
+        node = self.array.pop()
+        # check that this node is now an orphan node
+        od = node.collapse()[0]
+        ni = od.get_node_info()
+        self.assertIsInstance(ni, OrphanNodeInfo)
+        # check that node info is up to date in the remaining array
+        last_od = self.array.collapse()[-1]
+        last_ni = last_od.get_node_info()
+        self.assertIsInstance(last_ni, ArrayNodeInfo)
+        self.assertTrue(last_ni.is_last())
+        self.assertEqual(last_ni.node_names, ['A', '2', '3.14'])
+
+    def test_popleft_and_check_node_info(self):
+        node = self.array.popleft()
+        # check that this node is now an orphan node
+        od = node.collapse()[0]
+        ni = od.get_node_info()
+        self.assertIsInstance(ni, OrphanNodeInfo)
+        # check that node info is up to date in the remaining array
+        first_od = self.array.collapse()[0]
+        first_ni = first_od.get_node_info()
+        self.assertTrue(first_ni.is_first())
+        self.assertEqual(first_ni.node_names, ['2', '3.14', 'some_dict'])
         
             
 

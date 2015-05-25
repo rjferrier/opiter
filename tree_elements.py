@@ -1,3 +1,5 @@
+from collections import deque
+from itertools import islice
 from copy import copy
 
 from base import nonmutable, OptionsBaseException
@@ -129,33 +131,35 @@ class OptionsNode(OptionsTreeElement):
         whichever elements get traversed during iteration) to a
         corresponding leaf node in the present tree.
         """
+        if not tree:
+            # no more elements to attach, so exit early
+            return None
         try:
             # recurse
             return self.child.attach(tree)
         except AttributeError:
-            # This is a leaf.  Copy and split the tree, making the
-            # first element the child of this node and returning the
-            # rest to the client.
+            # This is a leaf.  We can attach (nodes from) the given tree
+            # element, but copy so as not to mutate it
+            _tree = tree.copy()
             try:
-                new_child = tree[0].copy()
-                remainder = tree[1:]
+                # pop the first element off the tree, making it the
+                # child of this node, and return the rest to the client
+                self.child = _tree.popleft()
+                return _tree
             except AttributeError:
-                # wrap non-iterables as a one-element list
-                new_child = tree.copy()
-                remainder = []
-            except IndexError:
-                # no more elements in tree
-                new_child = None
-                remainder = []
-            self.child = new_child
-            return remainder
+                # treat non-iterable as single element
+                self.child = _tree
+                return None
 
-            
+                
     def update(self, entries):
         # delegate
         self.options_dict.update(entries)
         
-    def set_info(self, node_info):
+    def update_info(self, node_info=None):
+        # default node info
+        if not node_info:
+            node_info = self.create_info()
         # delegate
         self.options_dict.set_node_info(node_info)
         
@@ -206,7 +210,7 @@ class OptionsArray(OptionsTreeElement):
         a string.
         """
         self.name = array_name
-        self.nodes = []
+        self.nodes = deque()
                 
         # First pass: instantiate and record OptionsNodes
         for el in elements:
@@ -245,8 +249,7 @@ class OptionsArray(OptionsTreeElement):
 
         # Second pass: set array node information.  This will replace
         # any preexisting node information.
-        for i, node in enumerate(self.nodes):
-            node.set_info(self.create_info(i))
+        self.update_node_info()
 
 
     @classmethod
@@ -294,6 +297,7 @@ class OptionsArray(OptionsTreeElement):
         Appends a copy of the given tree to each leaf node in the
         present tree.
         """
+        # delegate to each node
         for el in self:
             el.multiply_attach(tree)
 
@@ -304,29 +308,59 @@ class OptionsArray(OptionsTreeElement):
         whichever elements get traversed during iteration) to a
         corresponding leaf node in the present tree.
         """
+        # delegate to each node
         for el in self:
-            tree = el.attach(tree)
+            try:
+                tree = el.attach(tree)
+            except OptionsNodeException:
+                print el
+                raise
         return tree
 
         
     def update(self, entries):
+        # delegate to each node
         for el in self:
             el.update(entries)
 
+    def update_node_info(self):
+        for i, node in enumerate(self.nodes):
+            node.update_info(self.create_info(i))
+
+    def pop(self):
+        node = self.nodes.pop()
+        # update node info on both sides
+        node.update_info()
+        self.update_node_info()
+        return node
+            
+    def popleft(self):
+        node = self.nodes.popleft()
+        # update node info on both sides
+        node.update_info()
+        self.update_node_info()
+        return node
+        
+    def __len__(self):
+        return len(self.nodes)
+            
     def __eq__(self, other):
         result = isinstance(other, OptionsArray)
         if result:
             result *= self.name == other.name
             result *= self.nodes == other.nodes
-            result *= list(self) == list(other)
         return result
 
+    def __iter__(self):
+        return iter(self.nodes)
+
     def __getitem__(self, index_or_slice):
-        node_or_nodes = self.nodes[index_or_slice]
-        if isinstance(node_or_nodes, list):
-            # multiple nodes - wrap in a new OptionsArray
-            return self.another(self.name, node_or_nodes)
+        if isinstance(index_or_slice, slice):
+            # multiple OptionsNodes; return a new OptionsArray
+            return self.another(
+                self.name, islice(
+                    self.nodes, *index_or_slice.indices(len(self.nodes))))
         else:
-            # single OptionsNode
-            return node_or_nodes
+            # return single OptionsNode
+            return self.nodes[index_or_slice]
             

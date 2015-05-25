@@ -7,7 +7,7 @@ from options_dict import OptionsDict
 
 
 class NodeAndArrayOperationsTestFixture(unittest.TestCase):
-    """Contains procedures common to the tests in this module."""
+    """Provides common test functions."""
 
     @staticmethod
     def plus(left_operand, right_operand):
@@ -19,25 +19,19 @@ class NodeAndArrayOperationsTestFixture(unittest.TestCase):
     
     def check_array_or_node_operation(
             self, left_operand, right_operand, operator, expected_names):
-        
         # perform operation and flatten the result so we can inspect it
         result = operator(left_operand, right_operand)
         ods = result.collapse()
-        
         # check result
         self.assertEqual(len(ods), len(expected_names))
         self.assertEqual([str(od) for od in ods], expected_names)
     
-
     def check_array_or_node_operation_does_not_mutate(
             self, left_operand, right_operand, operator):
-
         left_operand_init = left_operand.copy()
         right_operand_init = right_operand.copy()
-        
         # perform operation 
         result = operator(left_operand, right_operand)
-        
         # check the operands haven't mutated
         self.assertEqual(left_operand_init, left_operand)
         self.assertEqual(right_operand_init, right_operand)

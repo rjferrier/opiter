@@ -70,20 +70,50 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         self.values = ['A', 2, 3.14, node]
         self.array = UnitOptionsArray('random', self.values)
 
-    def test_element_names(self):
-        """
-        The name of each element, given by its string representation,
-        should be identical to the string representation of the
-        corresponding initial value.
-        """
+    def test_len(self):
+        self.assertEqual(len(self.array), 4)
+
+    def test_iteration(self):
         for el, v in zip(self.array, self.values):
             self.assertEqual(str(el), str(v))
+
+    # def test_append(self):
+    #     self.array.append(5)
+    #     self.assertEqual(len(self.array), 4)
+    #     self.assertEqual(str(self.array[-1]), '5')
+
+    # def test_appendleft(self):
+    #     self.array.append(5)
+    #     self.assertEqual(len(self.array), 4)
+    #     self.assertEqual(str(self.array[0]), '5')
 
     def test_copy(self):
         other = self.array.copy()
         # test for equivalence and non-identity
         self.assertEqual(other, self.array)
         self.assertFalse(other is self.array)
+
+    def test_getitem_from_index_and_check_value(self):
+        node = self.array[2]
+        self.assertEqual(str(node), '3.14')
+
+    def test_getitem_from_slice_and_check_values(self):
+        subarray = self.array[1:4:2]
+        self.assertEqual(str(subarray[0]), '2')
+        self.assertEqual(str(subarray[1]), 'some_dict')
+        self.assertEqual(len(subarray), 2)
+
+    def test_pop_and_check_values(self):
+        node = self.array.pop()
+        self.assertEqual(str(node), 'some_dict')
+        self.assertEqual(str(self.array[-1]), '3.14')
+        self.assertEqual(len(self.array), 3)
+
+    def test_popleft_and_check_values(self):
+        node = self.array.popleft()
+        self.assertEqual(str(node), 'A')
+        self.assertEqual(str(self.array[0]), '2')
+        self.assertEqual(len(self.array), 3)
 
     def test_collapse(self):
         for el, v in zip(self.array, self.values):
