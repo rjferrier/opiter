@@ -151,18 +151,6 @@ class OptionsNode(OptionsTreeElement):
             return remainder
 
             
-    # def get_leaf_nodes(self):
-    #     """
-    #     Returns the leaf nodes of the present tree structure in a list.
-    #     """
-    #     result = []
-    #     try:
-    #         # recurse 
-    #         return self.child.get_leaf_nodes()
-    #     except AttributeError:
-    #         return [self]
-
-            
     def update(self, entries):
         # delegate
         self.options_dict.update(entries)
@@ -182,7 +170,7 @@ class OptionsNode(OptionsTreeElement):
         return str(self.name)
 
 
-class OptionsArray(OptionsTreeElement, list):
+class OptionsArray(OptionsTreeElement):
     """
     A sequence of OptionsNodes.
     """
@@ -218,9 +206,9 @@ class OptionsArray(OptionsTreeElement, list):
         a string.
         """
         self.name = array_name
-        self.node_names = []
+        self.nodes = []
                 
-        # First pass: instantiate OptionsNodes and record node names
+        # First pass: instantiate and record OptionsNodes
         for el in elements:
             
             if isinstance(el, dict):
@@ -230,10 +218,9 @@ class OptionsArray(OptionsTreeElement, list):
                     "under the array key.  Please use\nOptionsNodes instead.")
                 
             elif isinstance(el, OptionsNode):
-                # If the element is alrady an OptionsNode, simply copy
-                # it and keep track of the node name.
+                # If the element is already an OptionsNode, simply
+                # copy it
                 node = el.copy()
-                node_name = str(el)
                 
             else:
                 # otherwise, instantiate a new OptionsNode with the
@@ -253,13 +240,12 @@ class OptionsArray(OptionsTreeElement, list):
             # add entries
             node.update(common_entries)
             
-            # append to the lists
-            self.append(node)
-            self.node_names.append(node_name)
+            # append to the list
+            self.nodes.append(node)
 
         # Second pass: set array node information.  This will replace
         # any preexisting node information.
-        for i, node in enumerate(self):
+        for i, node in enumerate(self.nodes):
             node.set_info(self.create_info(i))
 
 
@@ -282,7 +268,8 @@ class OptionsArray(OptionsTreeElement, list):
         Overrideable factory method, used by the OptionsArray
         constructor.
         """
-        return ArrayNodeInfo(self.name, self.node_names, index)
+        node_names = [str(node) for node in self.nodes]
+        return ArrayNodeInfo(self.name, node_names, index)
 
         
     def copy(self):
@@ -321,16 +308,6 @@ class OptionsArray(OptionsTreeElement, list):
             tree = el.attach(tree)
         return tree
 
-            
-    # def get_leaf_nodes(self):
-    #     """
-    #     Returns the leaf nodes of the present tree structure in a list.
-    #     """
-    #     result = []
-    #     for el in self:
-    #         result += el.get_leaf_nodes()
-    #     return result
-
         
     def update(self, entries):
         for el in self:
@@ -340,14 +317,16 @@ class OptionsArray(OptionsTreeElement, list):
         result = isinstance(other, OptionsArray)
         if result:
             result *= self.name == other.name
-            result *= self.node_names == other.node_names
+            result *= self.nodes == other.nodes
             result *= list(self) == list(other)
         return result
 
     def __getitem__(self, index_or_slice):
-        elements = list.__getitem__(self, index_or_slice)
-        if isinstance(elements, list):
-            return self.another(self.name, elements)
+        node_or_nodes = self.nodes[index_or_slice]
+        if isinstance(node_or_nodes, list):
+            # multiple nodes - wrap in a new OptionsArray
+            return self.another(self.name, node_or_nodes)
         else:
-            return elements
-        
+            # single OptionsNode
+            return node_or_nodes
+            
