@@ -1,4 +1,3 @@
-from collections import deque
 from itertools import islice
 from copy import copy
 
@@ -119,10 +118,10 @@ class OptionsNode(OptionsTreeElement):
         """
         try:
             # recurse
-            self.child.multiply_attach()
+            self.child.multiply_attach(tree)
         except AttributeError:
             # can no longer recurse, so this is a leaf
-            self.child = tree.copy()
+            self.child = copy(tree)
 
             
     def attach(self, tree):
@@ -138,18 +137,18 @@ class OptionsNode(OptionsTreeElement):
             # recurse
             return self.child.attach(tree)
         except AttributeError:
-            # This is a leaf.  We can attach (nodes from) the given tree
-            # element, but copy so as not to mutate it
-            _tree = tree.copy()
+            # This is a leaf.  Copy and split the tree, making the
+            # first element the child of this node and returning the
+            # rest to the client.
             try:
-                # pop the first element off the tree, making it the
-                # child of this node, and return the rest to the client
-                self.child = _tree.popleft()
-                return _tree
+                new_child = copy(tree[0])
+                remainder = tree[1:]
             except AttributeError:
-                # treat non-iterable as single element
-                self.child = _tree
-                return None
+                # treat non-iterable as a one-element list
+                new_child = copy(tree)
+                remainder = []
+            self.child = new_child
+            return remainder
 
                 
     def update(self, entries):
@@ -210,7 +209,7 @@ class OptionsArray(OptionsTreeElement):
         a string.
         """
         self.name = array_name
-        self.nodes = deque()
+        self.nodes = []
                 
         # First pass: instantiate and record OptionsNodes
         for el in elements:
@@ -332,22 +331,9 @@ class OptionsArray(OptionsTreeElement):
             raise OptionsArrayException("item needs to be an OptionsNode")
         self.nodes.append(item)
         self.update_node_info()
-
-    def appendleft(self, item):
-        if not isinstance(item, OptionsNode):
-            raise OptionsArrayException("item needs to be an OptionsNode")
-        self.nodes.appendleft(item)
-        self.update_node_info()
             
     def pop(self):
         node = self.nodes.pop()
-        # update node info on both sides
-        node.update_info()
-        self.update_node_info()
-        return node
-            
-    def popleft(self):
-        node = self.nodes.popleft()
         # update node info on both sides
         node.update_info()
         self.update_node_info()

@@ -98,28 +98,13 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         self.assertEqual(len(self.array), 5)
         self.assertEqual(str(self.array[-1]), '5')
 
-    def test_appendleft(self):
-        self.array.appendleft(UnitOptionsNode('5'))
-        self.assertEqual(len(self.array), 5)
-        self.assertEqual(str(self.array[0]), '5')
-
     def test_append_with_bad_value_raises_error(self):
         self.assertRaises(OptionsArrayException, lambda: self.array.append(5))
-
-    def test_appendleft_with_bad_value_raises_error(self):
-        self.assertRaises(OptionsArrayException,
-                          lambda: self.array.appendleft(5))
 
     def test_pop_and_check_values(self):
         node = self.array.pop()
         self.assertEqual(str(node), 'some_dict')
         self.assertEqual(str(self.array[-1]), '3.14')
-        self.assertEqual(len(self.array), 3)
-
-    def test_popleft_and_check_values(self):
-        node = self.array.popleft()
-        self.assertEqual(str(node), 'A')
-        self.assertEqual(str(self.array[0]), '2')
         self.assertEqual(len(self.array), 3)
 
     def test_collapse(self):

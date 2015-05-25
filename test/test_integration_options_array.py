@@ -152,15 +152,6 @@ class TestOptionsArrayBasics(unittest.TestCase):
         self.check_array_node_info(
             -1, self.expected_names + ['5', 'another_dict'])
 
-    def test_appendleft_and_check_node_info(self):
-        # prepend with primitive
-        self.array.appendleft(OptionsNode('5'))
-        self.check_array_node_info(0, ['5'] + self.expected_names)
-        # prepend with node
-        self.array.appendleft(OptionsNode('another_dict'))
-        self.check_array_node_info(
-            -1, ['another_dict', '5'] + self.expected_names)
-
     def test_pop_and_check_node_info(self):
         node = self.array.pop()
         # check that this node is now an orphan node
@@ -169,15 +160,6 @@ class TestOptionsArrayBasics(unittest.TestCase):
         self.assertIsInstance(ni, OrphanNodeInfo)
         # check remaining array
         self.check_array_node_info(-1, self.expected_names[:-1])
-
-    def test_popleft_and_check_node_info(self):
-        node = self.array.popleft()
-        # check that this node is now an orphan node
-        od = node.collapse()[0]
-        ni = od.get_node_info()
-        self.assertIsInstance(ni, OrphanNodeInfo)
-        # check remaining array
-        self.check_array_node_info(0, self.expected_names[1:])
         
             
 
