@@ -129,7 +129,6 @@ class TestArrayNodeInfoIndex(unittest.TestCase):
         self.assertTrue(self.c.is_last())
 
 
-        
 if __name__ == '__main__':
     unittest.main()
         

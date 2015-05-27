@@ -7,7 +7,8 @@ import sys
 sys.path.append('..')
 
 import unittest
-from __init__ import OptionsNode, OptionsArray, OptionsDict, Lookup
+from tree_elements import OptionsNode, OptionsArray
+from options_dict import OptionsDict, Lookup
 
 # functions to be multiprocessed must be defined outside the unit
 # testing framework (i.e. here), otherwise there will be pickling

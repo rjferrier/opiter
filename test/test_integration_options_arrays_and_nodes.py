@@ -244,3 +244,7 @@ class TestTreeOperationsWithList(NodeAndArrayOperationsTestFixture):
     def test_addition_does_not_mutate(self):
         self.check_array_or_node_operation_does_not_mutate(
             self.tree, self.numbers, self.plus)
+
+            
+if __name__ == '__main__':
+    unittest.main()

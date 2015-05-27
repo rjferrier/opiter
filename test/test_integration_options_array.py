@@ -186,3 +186,6 @@ class TestOptionsArraySlice(unittest.TestCase):
             ni = el.get_node_info()
             self.assertTrue(ni.at(i))
 
+            
+if __name__ == '__main__':
+    unittest.main()

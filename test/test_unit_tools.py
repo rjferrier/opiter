@@ -107,4 +107,7 @@ class TestDictTools(unittest.TestCase):
         self.assertEqual(lookup(self.dicts), 1)
         lookup = Lookup('a')
         self.assertEqual(lookup(self.dicts), 3)
+
         
+if __name__ == '__main__':
+    unittest.main()

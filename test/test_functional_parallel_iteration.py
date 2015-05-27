@@ -43,4 +43,3 @@ class TestOptionsDictTreeParallelIteration(
             
 if __name__ == '__main__':
     unittest.main()
-        

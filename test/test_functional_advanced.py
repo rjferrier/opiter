@@ -159,3 +159,7 @@ class DictionaryStrategy:
             raise NotEnoughInfoException
         
         return self.resolutions[previous_ID], self.errors[previous_ID]
+
+            
+if __name__ == '__main__':
+    unittest.main()
