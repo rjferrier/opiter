@@ -129,8 +129,8 @@ class TestNodeOperations(NodeAndArrayOperationsTestFixture):
 
     # def test_addition_with_options_dict(self):
     #     self.node += self.od
-    #     A_od = result.collapse()[0]
-    #     self.assertEqual(self.node_od['foo'], 'bar')
+    #     node_od = self.node.collapse()[0]
+    #     self.assertEqual(node_od['foo'], 'bar')
         
 
         

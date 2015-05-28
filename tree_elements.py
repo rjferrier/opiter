@@ -152,15 +152,23 @@ class OptionsNode(OptionsTreeElement):
             # first element the child of this node and returning the
             # rest to the client.
             try:
-                new_child = copy(tree[0])
-                remainder = tree[1:]
+                # polymorphic implementation
+                self.child, remainder = tree.donate_copy(self.child)
             except AttributeError:
-                # treat non-iterable as a one-element list
-                new_child = copy(tree)
-                remainder = []
-            self.child = new_child
-            return remainder
+                # manual implementation, for native iterables
+                self.child = copy(tree[0])
+                return tree[1:]
 
+
+    def donate_copy(self, acceptor):
+        node_copy = self.copy()
+        try:
+            acceptor.attach(node_copy)
+        except AttributeError:
+            acceptor = node_copy
+            # print 'acceptor =', node_copy
+            # raise OptionsNodeException('')
+        return acceptor, []
                 
     def update(self, entries):
         # delegate
@@ -329,6 +337,9 @@ class OptionsArray(OptionsTreeElement):
             tree = el.attach(tree)
         return tree
 
+
+    def copy_popleft(self):
+        return copy(self[0]), self[1:]
         
     def update(self, entries):
         # delegate to each node

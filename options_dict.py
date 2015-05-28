@@ -307,6 +307,13 @@ class OptionsDict(dict):
             buffer_string = buffer_string.safe_substitute(self)
         return buffer_string
 
+
+    def donate_copy(self, acceptor):
+        # polymorphic; used by tree_elements
+        acceptor.update(self)
+        return acceptor, []
+
+
     def _update_from_dict(self, other):
         # update OptionsDict attributes
         if isinstance(other, OptionsDict):
