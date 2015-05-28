@@ -27,17 +27,28 @@ class TestOptionsNodeCreation(unittest.TestCase):
         
 class TestOptionsNodeBasics(unittest.TestCase):
 
+    @staticmethod
+    def make_node(name='foo', entries={'bar': 1},
+                  child=UnitOptionsNode('qux')):
+        return UnitOptionsNode(name, entries, child)
+    
     def setUp(self):
-        self.node = UnitOptionsNode('foo', {'bar': 1})
+        self.node = self.make_node()
 
-    def test_equal_names_and_dicts(self):
-        self.assertEqual(self.node, UnitOptionsNode('foo', {'bar': 1}))
+    def test_equal(self):
+        self.assertEqual(self.node, self.make_node())
 
-    def test_equal_names_but_unequal_dicts(self):
-        self.assertNotEqual(self.node, UnitOptionsNode('foo', {'bar': 2}))
+    def test_unequal_names(self):
+        self.assertNotEqual(self.node,
+                            self.make_node(name='baz'))
 
-    def test_unequal_names_but_equal_dicts(self):
-        self.assertNotEqual(self.node, UnitOptionsNode('baz', {'bar': 1}))
+    def test_unequal_dicts(self):
+        self.assertNotEqual(self.node, 
+                            self.make_node(entries={'bar': 2}))
+
+    def test_unequal_dicts(self):
+        self.assertNotEqual(self.node, 
+                            self.make_node(child=UnitOptionsNode('baz')))
 
     def test_copy(self):
         other = self.node.copy()
@@ -46,7 +57,7 @@ class TestOptionsNodeBasics(unittest.TestCase):
         self.assertFalse(other is self.node)
 
     def test_str(self):
-        self.assertEqual(str(self.node), 'foo')
+        self.assertEqual(str(self.node), 'foo:qux')
         
     
 if __name__ == '__main__':

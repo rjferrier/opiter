@@ -70,6 +70,17 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         self.values = ['A', 2, 3.14, node]
         self.array = UnitOptionsArray('random', self.values)
 
+    def test_equal(self):
+        self.assertEqual(self.array, UnitOptionsArray('random', self.values))
+
+    def test_unequal_names(self):
+        self.assertNotEqual(self.array, UnitOptionsArray('things', self.values))
+
+    def test_unequal_nodes(self):
+        values = self.values
+        values[0] = 'B'
+        self.assertNotEqual(self.array, UnitOptionsArray('random', values))
+
     def test_len(self):
         self.assertEqual(len(self.array), 4)
 

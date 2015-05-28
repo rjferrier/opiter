@@ -22,6 +22,9 @@ class OptionsTreeElement:
     some of the parent-child functionality.
     """
 
+    def __ne__(self, other):
+        return not self == other
+
     @nonmutable
     def __mul__(self, other):
         self.multiply_attach(other)
@@ -29,7 +32,15 @@ class OptionsTreeElement:
     @nonmutable
     def __add__(self, other):
         self.attach(other)
-        
+
+    def __imul__(self, other):
+        self.multiply_attach(other)
+        return self
+
+    def __iadd__(self, other):
+        self.attach(other)
+        return self
+
     
 class OptionsNode(OptionsTreeElement):
     """
@@ -167,10 +178,16 @@ class OptionsNode(OptionsTreeElement):
         if result:
             result *= self.name == other.name
             result *= self.options_dict == other.options_dict
+            result *= self.child == other.child
         return result
-        
+
     def __str__(self):
-        return str(self.name)
+        if self.child:
+            child_str = ':' + str(self.child)
+        else:
+            child_str = ''
+        return str(self.name) + child_str
+
 
 
 class OptionsArray(OptionsTreeElement):
@@ -309,11 +326,7 @@ class OptionsArray(OptionsTreeElement):
         """
         # delegate to each node
         for el in self:
-            try:
-                tree = el.attach(tree)
-            except OptionsNodeException:
-                print el
-                raise
+            tree = el.attach(tree)
         return tree
 
         
@@ -346,11 +359,10 @@ class OptionsArray(OptionsTreeElement):
         result = isinstance(other, OptionsArray)
         if result:
             result *= self.name == other.name
-            result *= self.nodes == other.nodes
+            result *= len(self.nodes) == len(other.nodes)
+            for node, other in zip(self.nodes, other.nodes):
+                result *= node == other
         return result
-
-    def __iter__(self):
-        return iter(self.nodes)
 
     def __getitem__(self, index_or_slice):
         if isinstance(index_or_slice, slice):
@@ -362,3 +374,5 @@ class OptionsArray(OptionsTreeElement):
             # return single OptionsNode
             return self.nodes[index_or_slice]
             
+    def __str__(self):
+        return str(self.name) + ':' + str([str(node) for node in self.nodes])
