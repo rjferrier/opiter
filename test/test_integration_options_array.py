@@ -160,13 +160,6 @@ class TestOptionsArrayBasics(unittest.TestCase):
         self.assertIsInstance(ni, OrphanNodeInfo)
         # check remaining array
         self.check_array_node_info(-1, self.expected_names[:-1])
-
-    # def test_donate_copy(self):
-    #     array_init = self.array.copy()
-    #     acceptor = OptionsNode('baz')
-    #     acceptor, remainder = self.array.donate_copy(acceptor)
-    #     self.assertEqual(acceptor.child, array_init)
-    #     self.assertEqual(len(remainder), 0)
         
             
 

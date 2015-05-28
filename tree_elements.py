@@ -144,31 +144,21 @@ class OptionsNode(OptionsTreeElement):
         if not tree:
             # no more elements to attach, so exit early
             return None
-        try:
-            # recurse
-            return self.child.attach(tree)
-        except AttributeError:
+        elif not self.child:
             # This is a leaf.  Copy and split the tree, making the
             # first element the child of this node and returning the
             # rest to the client.
             try:
-                # polymorphic implementation
-                self.child, remainder = tree.donate_copy(self.child)
-            except AttributeError:
-                # manual implementation, for native iterables
                 self.child = copy(tree[0])
                 return tree[1:]
+            except AttributeError:
+                # cater for single nodes
+                self.child = copy(tree)
+                return []
+        else:
+            # keep going
+            return self.child.attach(tree)
 
-
-    def donate_copy(self, acceptor):
-        node_copy = self.copy()
-        try:
-            acceptor.attach(node_copy)
-        except AttributeError:
-            acceptor = node_copy
-            # print 'acceptor =', node_copy
-            # raise OptionsNodeException('')
-        return acceptor, []
                 
     def update(self, entries):
         # delegate
@@ -337,9 +327,6 @@ class OptionsArray(OptionsTreeElement):
             tree = el.attach(tree)
         return tree
 
-
-    def copy_popleft(self):
-        return copy(self[0]), self[1:]
         
     def update(self, entries):
         # delegate to each node
@@ -386,4 +373,5 @@ class OptionsArray(OptionsTreeElement):
             return self.nodes[index_or_slice]
             
     def __str__(self):
-        return str(self.name) + ':' + str([str(node) for node in self.nodes])
+        return str(self.name)
+        + ':' + str([str(node) for node in self.nodes])

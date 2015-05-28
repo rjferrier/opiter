@@ -51,13 +51,7 @@ class NodeAndArrayOperationsTestFixture(unittest.TestCase):
         
         # check the states of the operands
         if is_incremental:
-            try:
-                self.assertNotEqual(left_operand_init, left_operand)
-            except AssertionError:
-                print '\n'
-                print str(left_operand_init), '==', str(left_operand)
-                print str(result)
-                raise
+            self.assertNotEqual(left_operand_init, left_operand)
         else:
             self.assertEqual(left_operand_init, left_operand)
         self.assertEqual(right_operand_init, right_operand)
@@ -127,10 +121,10 @@ class TestNodeOperations(NodeAndArrayOperationsTestFixture):
             self.node, self.node_list, self.plus_equals, ['A_0'],
             is_incremental=True)
 
-    # def test_addition_with_options_dict(self):
-    #     self.node += self.od
-    #     node_od = self.node.collapse()[0]
-    #     self.assertEqual(node_od['foo'], 'bar')
+    def test_update_with_options_dict(self):
+        self.node.update(self.od)
+        node_od = self.node.collapse()[0]
+        self.assertEqual(node_od['foo'], 'bar')
         
 
         
@@ -141,6 +135,7 @@ class TestArrayOperations(NodeAndArrayOperationsTestFixture):
         self.other_array = OptionsArray('number', range(3))
         self.node = OptionsNode('0')
         self.node_list = [OptionsNode(str(i)) for i in range(3)]
+        self.od = OptionsDict({'foo': 'bar'})
 
     def test_addition_with_node(self):
         self.check_array_or_node_operation(
@@ -199,6 +194,12 @@ class TestArrayOperations(NodeAndArrayOperationsTestFixture):
             self.array, self.node_list, self.plus_equals,
             ['A_0', 'B_1', 'C_2'], is_incremental=True)
 
+    def test_update_with_options_dict(self):
+        self.array.update(self.od)
+        array_ods = self.array.collapse()[0]
+        for od in array_ods:
+            self.assertEqual(od['foo'], 'bar')
+
         
 class TestTreeOperations(NodeAndArrayOperationsTestFixture):
 
@@ -208,6 +209,7 @@ class TestTreeOperations(NodeAndArrayOperationsTestFixture):
         self.node = OptionsNode('0')
         self.array = OptionsArray('number', range(3))
         self.node_list = [OptionsNode(str(i)) for i in range(3)]
+        self.od = OptionsDict({'foo': 'bar'})
 
     def test_addition_with_node(self):
         self.check_array_or_node_operation(
@@ -266,6 +268,12 @@ class TestTreeOperations(NodeAndArrayOperationsTestFixture):
             self.tree, self.node_list, self.plus_equals,
             ['root_A_0', 'root_B_1', 'root_C_2'],
             is_incremental=True)
+
+    def test_update_with_options_dict(self):
+        self.tree.update(self.od)
+        tree_ods = self.tree.collapse()[0]
+        for od in tree_ods:
+            self.assertEqual(od['foo'], 'bar')
 
             
 if __name__ == '__main__':
