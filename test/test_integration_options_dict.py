@@ -3,7 +3,7 @@ sys.path.append('..')
 
 import unittest
 from options_dict import OptionsDict, CallableEntry
-from tree_elements import OptionsNode
+from tree_elements import OptionsNode, OptionsArray
 
 
 class TestOptionsDictInteractionsWithNode(unittest.TestCase):
@@ -23,6 +23,46 @@ class TestOptionsDictInteractionsWithNode(unittest.TestCase):
         self.assertEqual(node_od['bar'], 1)
         self.assertEqual(len(remainder), 0)
 
+
+class TestOptionsDictAfterTreeCollapse(unittest.TestCase):
+
+    def setUp(self):
+        """
+        Run tests on this tree:
+        0: a
+            1: a
+                2: a
+                2: b
+                2: c
+            1: b
+                2: a
+                2: b
+                2: c
+        """
+        self.tree = OptionsArray('0', ['a']) * \
+                    OptionsArray('1', ['a', 'b']) * \
+                    OptionsArray('2', ['a', 'b', 'c'])
+        
+#     def test_tree_str(self):
+#         # import pdb
+#         # pdb.set_trace()
+#         ods = self.tree.collapse()
+#         expected = """
+# 0: a
+#     1: a
+#         2: a
+#         2: b
+#         2: c
+#     1: b
+#         2: a
+#         2: b
+#         2: c"""
+#         result = ''
+#         for od in ods:
+#             result += '\n' + od.tree_str()
+#         print result
+#         self.assertEqual(result, expected)
+        
         
 class TestCallableEntry(unittest.TestCase):
     

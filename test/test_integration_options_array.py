@@ -116,13 +116,6 @@ class TestOptionsArrayBasics(unittest.TestCase):
             ni = el.get_node_info()
             self.assertTrue(ni.at(i))
 
-    def test_getitem_from_index_and_check_type(self):
-        """
-        The getitem idiom should return an OptionsNode when passed an
-        integer index.
-        """
-        node = self.array[2]
-        self.assertIsInstance(node, OptionsNode)
 
     def test_getitem_from_slice_and_check_type_and_node_info(self):
         subarray = self.array[1:4:2]

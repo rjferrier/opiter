@@ -58,7 +58,13 @@ class TestOptionsNodeBasics(unittest.TestCase):
 
     def test_str(self):
         self.assertEqual(str(self.node), 'foo:qux')
-        
+
+    def test_donate_copy(self):
+        node_init = self.node.copy()
+        acceptor = UnitOptionsNode('baz')
+        acceptor, remainder = self.node.donate_copy(acceptor)
+        self.assertEqual(acceptor.child, node_init)
+        self.assertEqual(len(remainder), 0)        
     
 if __name__ == '__main__':
     unittest.main()

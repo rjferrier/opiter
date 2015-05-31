@@ -204,69 +204,75 @@ class TestArrayOperations(NodeAndArrayOperationsTestFixture):
 class TestTreeOperations(NodeAndArrayOperationsTestFixture):
 
     def setUp(self):
-        self.tree = OptionsNode('root') * \
-                    OptionsArray('letter', ['A', 'B', 'C'])
-        self.node = OptionsNode('0')
-        self.array = OptionsArray('number', range(3))
-        self.node_list = [OptionsNode(str(i)) for i in range(3)]
+        self.tree = OptionsArray('letter', ['A']) * \
+                    OptionsArray('number', range(3))
+        self.node = OptionsNode('i')
+        self.array = OptionsArray('subnumber', ['i', 'ii', 'iii'])
+        self.node_list = [OptionsNode(name) for name in ['i', 'ii', 'iii']]
         self.od = OptionsDict({'foo': 'bar'})
+
+    def test_copy(self):
+        other = self.tree.copy()
+        # test for equivalence and non-identity
+        self.assertEqual(other, self.tree)
+        self.assertFalse(other is self.tree)
 
     def test_addition_with_node(self):
         self.check_array_or_node_operation(
             self.tree, self.node, self.plus, 
-            ['root_A_0', 'root_B', 'root_C'])
+            ['A_0_i', 'A_1', 'A_2'])
 
     def test_incremental_addition_with_node(self):
         self.check_array_or_node_operation(
             self.tree, self.node, self.plus_equals, 
-            ['root_A_0', 'root_B', 'root_C'], is_incremental=True)
+            ['A_0_i', 'A_1', 'A_2'], is_incremental=True)
 
     def test_multiplication_with_node(self):
         self.check_array_or_node_operation(
             self.tree, self.node, self.times,
-            ['root_A_0', 'root_B_0', 'root_C_0'])
+            ['A_0_i', 'A_1_i', 'A_2_i'])
 
     def test_incremental_multiplication_with_node(self):
         self.check_array_or_node_operation(
             self.tree, self.node, self.times_equals,
-            ['root_A_0', 'root_B_0', 'root_C_0'],
+            ['A_0_i', 'A_1_i', 'A_2_i'],
             is_incremental=True)
 
     def test_addition_with_array(self):
         self.check_array_or_node_operation(
             self.tree, self.array, self.plus,
-            ['root_A_0', 'root_B_1', 'root_C_2'])
+            ['A_0_i', 'A_1_ii', 'A_2_iii'])
 
     def test_incremental_addition_with_array(self):
         self.check_array_or_node_operation(
             self.tree, self.array, self.plus_equals,
-            ['root_A_0', 'root_B_1', 'root_C_2'],
+            ['A_0_i', 'A_1_ii', 'A_2_iii'],
             is_incremental=True)
 
     def test_multiplication_with_array(self):
         self.check_array_or_node_operation(
             self.tree, self.array, self.times,
-            ['root_A_0', 'root_A_1', 'root_A_2',
-             'root_B_0', 'root_B_1', 'root_B_2',
-             'root_C_0', 'root_C_1', 'root_C_2'])
+            ['A_0_i', 'A_0_ii', 'A_0_iii',
+             'A_1_i', 'A_1_ii', 'A_1_iii',
+             'A_2_i', 'A_2_ii', 'A_2_iii'])
 
     def test_incremental_multiplication_with_array(self):
         self.check_array_or_node_operation(
             self.tree, self.array, self.times_equals,
-            ['root_A_0', 'root_A_1', 'root_A_2',
-             'root_B_0', 'root_B_1', 'root_B_2',
-             'root_C_0', 'root_C_1', 'root_C_2'],
+            ['A_0_i', 'A_0_ii', 'A_0_iii',
+             'A_1_i', 'A_1_ii', 'A_1_iii',
+             'A_2_i', 'A_2_ii', 'A_2_iii'],
             is_incremental=True)
 
     def test_addition_with_list(self):
         self.check_array_or_node_operation(
             self.tree, self.node_list, self.plus,
-            ['root_A_0', 'root_B_1', 'root_C_2'])
+            ['A_0_i', 'A_1_ii', 'A_2_iii'])
 
     def test_incremental_addition_with_list(self):
         self.check_array_or_node_operation(
             self.tree, self.node_list, self.plus_equals,
-            ['root_A_0', 'root_B_1', 'root_C_2'],
+            ['A_0_i', 'A_1_ii', 'A_2_iii'],
             is_incremental=True)
 
     def test_update_with_options_dict(self):

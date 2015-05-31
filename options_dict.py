@@ -223,31 +223,31 @@ class OptionsDict(dict):
             filtered_node_info.append(ni)
         # pass the filtered list to the formatter object
         if not formatter:
-            formatter = self.create_default_node_info_formatter()
+            formatter = self.create_node_info_default_formatter()
         return formatter(filtered_node_info, 
                          absolute=absolute, relative=relative)
 
+
+    def tree_str(self, only=[], exclude=[], absolute={}, relative={}):
+        """
+        As str(), but with a tree-formatter selected.
+        """        
+        return self.str(only=[], exclude=[], absolute={}, relative={}, 
+                        formatter=self.create_node_info_tree_formatter())
+
         
-    def create_default_node_info_formatter(self):
+    def create_node_info_default_formatter(self):
         """
         Overrideable factory method, used by OptionsDict.str().
         """
         return SimpleFormatter()
 
-
-    # def pretty(self, only=[], exclude=[], absolute={}, relative={}):
-    #     """
-    #     As str(), but with formatter chosen.
-    #     """        
-    #     return str(self, only=[], exclude=[], absolute={}, relative={}, 
-    #                formatter=self.create_pretty_node_info_formatter)
-
         
-    # def create_pretty_node_info_formatter(self):
-    #     """
-    #     Overrideable factory method, used by OptionsDict.str_pretty().
-    #     """
-    #     return TreeFormatter()
+    def create_node_info_tree_formatter(self):
+        """
+        Overrideable factory method, used by OptionsDict.str_pretty().
+        """
+        return TreeFormatter()
 
         
     def get_node_info(self, collection_name=None):

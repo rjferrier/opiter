@@ -122,6 +122,13 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         for el, v in zip(self.array, self.values):
             self.assertEqual(str(el), str(v))
 
+    def test_donate_copy(self):
+        array_init = self.array.copy()
+        acceptor = UnitOptionsNode('baz')
+        acceptor, remainder = self.array.donate_copy(acceptor)
+        self.assertEqual(acceptor.child, array_init[0])
+        self.assertEqual(len(remainder), 3)
+
     
 if __name__ == '__main__':
     unittest.main()

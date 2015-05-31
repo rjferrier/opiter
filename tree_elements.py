@@ -1,5 +1,5 @@
 from itertools import islice
-from copy import copy
+from copy import deepcopy
 
 from base import nonmutable, OptionsBaseException
 from options_dict import OptionsDict
@@ -132,14 +132,15 @@ class OptionsNode(OptionsTreeElement):
             self.child.multiply_attach(tree)
         except AttributeError:
             # can no longer recurse, so this is a leaf
-            self.child = copy(tree)
+            self.child = deepcopy(tree)
 
             
     def attach(self, tree):
         """
-        Appends a copy of each root node in the given tree (or
+        Appends a copy of each root node in the tree argument (or
         whichever elements get traversed during iteration) to a
-        corresponding leaf node in the present tree.
+        corresponding leaf node in the present tree.  Returns the
+        depleted source tree.
         """
         if not tree:
             # no more elements to attach, so exit early
@@ -149,16 +150,26 @@ class OptionsNode(OptionsTreeElement):
             # first element the child of this node and returning the
             # rest to the client.
             try:
-                self.child = copy(tree[0])
-                return tree[1:]
+                # polymorphic implementation, needed for handling
+                # embedded node info correctly
+                self.child, remainder = tree.donate_copy(self.child)
+                return remainder
             except AttributeError:
-                # cater for single nodes
-                self.child = copy(tree)
-                return []
+                # manual implementation, for native iterables
+                self.child = deepcopy(tree[0])
+                return tree[1:]
         else:
             # keep going
             return self.child.attach(tree)
 
+
+    def donate_copy(self, acceptor):
+        node_copy = self.copy()
+        if acceptor:
+            acceptor.attach(node_copy)
+        else:
+            acceptor = node_copy
+        return acceptor, []
                 
     def update(self, entries):
         # delegate
@@ -290,7 +301,11 @@ class OptionsArray(OptionsTreeElement):
 
         
     def copy(self):
-        return self.another(self.name, copy(list(self)))
+        return deepcopy(self)
+        # TODO: find out why 
+        #   return self.another(self.name, [el.copy() for el in self])
+        # causes problems for non-shallow trees.  Probably has
+        # something to do with the accumulated node info objects.
 
         
     def collapse(self):
@@ -318,15 +333,26 @@ class OptionsArray(OptionsTreeElement):
 
     def attach(self, tree):
         """
-        Appends a copy of each root node in the given tree (or
+        Appends a copy of each root node in the tree argument (or
         whichever elements get traversed during iteration) to a
-        corresponding leaf node in the present tree.
+        corresponding leaf node in the present tree.  Returns the
+        depleted source tree.
         """
         # delegate to each node
         for el in self:
             tree = el.attach(tree)
         return tree
 
+
+    def donate_copy(self, acceptor):
+        # emulate a popleft()
+        node_copy = self[0].copy()
+        node_copy.update_info()
+        if acceptor:
+            acceptor.attach(node_copy)
+        else:
+            acceptor = node_copy
+        return acceptor, self[1:]
         
     def update(self, entries):
         # delegate to each node
@@ -369,9 +395,9 @@ class OptionsArray(OptionsTreeElement):
                 self.name, islice(
                     self.nodes, *index_or_slice.indices(len(self.nodes))))
         else:
-            # return single OptionsNode
+            # return single OptionsNode.  Note that, unlike a slice,
+            # this neither returns a copy nor modifies the node info.
             return self.nodes[index_or_slice]
             
     def __str__(self):
         return str(self.name)
-        + ':' + str([str(node) for node in self.nodes])
