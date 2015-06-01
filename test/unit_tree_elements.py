@@ -13,7 +13,7 @@ class UnitOptionsNode(OptionsNode):
                 pass
         return FakeOptionsDict(entries)
         
-    def create_node_info(self):
+    def create_info(self):
         "Throwaway implementation."
         return self.name
 
@@ -28,4 +28,4 @@ class UnitOptionsArray(OptionsArray):
 
     def create_node_info(self, index):
         "Throwaway implementation."
-        return ':'.join((self.name, self.node_names[index]))
+        return ':'.join((self.name, str(self.nodes[index])))

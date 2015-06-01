@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from __init__ import OptionsNode, OptionsArray, Lookup, TreeFormatter
+from __init__ import OptionsNode, OptionsArray, OptionsDict, Lookup
 import multiprocessing
 
 # setup
@@ -48,12 +48,12 @@ def kinematic_viscosity(opt):
     return opt['dynamic_viscosity'] / opt['density']
 fluids = OptionsArray('fluid', [water, ethanol], 
                       common_entries=[kinematic_viscosity])
+options_tree = fluids * pipe_dias * velocities
 
 def Reynolds_number(opt):
     return opt['velocity'] * opt['pipe_diameter'] / opt['kinematic_viscosity']
-common = OptionsNode('', [Reynolds_number])
+options_tree.update(OptionsDict([Reynolds_number]))
 
-options_tree = common * fluids * pipe_dias * velocities
 p = multiprocessing.Pool(4)
 Reynolds_numbers = p.map(Lookup('Reynolds_number'), options_tree.collapse())
 

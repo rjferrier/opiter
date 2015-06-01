@@ -26,8 +26,5 @@ class UnitOptionsDict(OptionsDict):
     def create_array_node_info(self, array_name, node_names, node_index):
         return UnitNodeInfo(':'.join((array_name, node_names[node_index])))
 
-    def create_node_info_default_formatter(self):
-        return lambda node_info, absolute, relative: ''
-
-    def create_node_info_tree_formatter(self):
+    def create_node_info_formatter(self, which=None):
         return lambda node_info, absolute, relative: ''

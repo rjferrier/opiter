@@ -72,6 +72,16 @@ class TestOptionsArrayBasics(unittest.TestCase):
         self.array = OptionsArray('random', self.values)
         self.expected_names = ['A', '2', '3.14', 'some_dict']
 
+    def test_create_options_dict(self):
+        node = self.array.create_options_node('baz', {})
+        self.assertIsInstance(node, OptionsNode)
+        self.assertEqual(str(node), 'baz')
+
+    def test_create_node_info(self):
+        ni = self.array.create_node_info(2)
+        self.assertIsInstance(ni, ArrayNodeInfo)
+        self.assertEqual(ni.str(collection_separator=':'), 'random:3.14')
+
     def test_element_types(self):
         for el in self.array:
             self.assertIsInstance(el, OptionsNode)

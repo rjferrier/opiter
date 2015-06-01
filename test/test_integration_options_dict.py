@@ -2,8 +2,29 @@ import sys
 sys.path.append('..')
 
 import unittest
-from options_dict import OptionsDict, CallableEntry
+from options_dict import OptionsDict, CallableEntry, OptionsDictException
+from node_info import SimpleFormatter, TreeFormatter
 from tree_elements import OptionsNode, OptionsArray
+
+
+class TestOptionsDictFactoryMethods(unittest.TestCase):
+
+    def setUp(self):
+        self.od = OptionsDict({})
+    
+    def test_create_node_info_formatter_simple(self):
+        self.assertIsInstance(
+            self.od.create_node_info_formatter('simple'), SimpleFormatter)
+
+    def test_create_node_info_formatter_tree(self):
+        self.assertIsInstance(
+            self.od.create_node_info_formatter('tree'), TreeFormatter)
+
+    def test_create_node_info_formatter_error(self):
+        self.assertRaises(
+            OptionsDictException, 
+            lambda: self.od.create_node_info_formatter('madethisup'))
+        
 
 
 class TestOptionsDictInteractionsWithNode(unittest.TestCase):
@@ -43,25 +64,20 @@ class TestOptionsDictAfterTreeCollapse(unittest.TestCase):
                     OptionsArray('1', ['a', 'b']) * \
                     OptionsArray('2', ['a', 'b', 'c'])
         
-#     def test_tree_str(self):
-#         # import pdb
-#         # pdb.set_trace()
-#         ods = self.tree.collapse()
-#         expected = """
-# 0: a
-#     1: a
-#         2: a
-#         2: b
-#         2: c
-#     1: b
-#         2: a
-#         2: b
-#         2: c"""
-#         result = ''
-#         for od in ods:
-#             result += '\n' + od.tree_str()
-#         print result
-#         self.assertEqual(result, expected)
+    def test_str_tree(self):
+        ods = self.tree.collapse()
+        expected = """
+0: a
+    1: a
+        2: a
+        2: b
+        2: c
+    1: b
+        2: a
+        2: b
+        2: c"""
+        result = ''.join(['\n' + od.str(formatter='tree') for od in ods])
+        self.assertEqual(result, expected)
         
         
 class TestCallableEntry(unittest.TestCase):

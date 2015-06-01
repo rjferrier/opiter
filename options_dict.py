@@ -197,18 +197,34 @@ class OptionsDict(dict):
         Returns a string identifier, providing more control than the
         str() idiom through optional arguments.
 
-        Specifically, if the OptionsDict was initialised from a
-        collection and/or has been updated from other
-        collection-initialised OptionsDicts, it is possible to control
-        which substrings appear through the 'only' and 'exclude'
-        arguments.  These arguments take an collection name or list of
-        collection names.
+        Specifically, if the OptionsDict was part of a collection
+        and/or has been updated from other such OptionsDicts, it is
+        possible to control which substrings appear through the 'only'
+        and 'exclude' arguments.  These arguments take a collection
+        name or list of collection names.
+
+        If the OptionsDict was part of a tree, the 'absolute' and
+        'relative' arguments can be used to infer the name of an
+        OptionsDict corresponding to a different node in the tree.
+        These arguments take the form of key-value pairs with
+        collection names as the keys and indices as the values.  In
+        accordance with Python indexing rules, a negative absolute
+        index returns a node from the end of the array.  To prevent
+        confusion, however, this shall not apply when a relative index
+        is given.
+        
+        If the formatter argument is a string or omitted, the
+        OptionsDict constructs and applies a formatter object (see
+        OptionsDict.create_node_info_formatter).  Alternatively, the
+        client may construct and pass a formatter object directly.
         """
         # wrap 'only' and 'exclude' strings as lists if necessary
         if isinstance(only, str):
             only = [only]
         if isinstance(exclude, str):
             exclude = [exclude]
+
+        # filter the nodes to represent
         filtered_node_info = []
         for ni in self.node_info:
             # filter nodes according to corresponding collection names
@@ -221,34 +237,30 @@ class OptionsDict(dict):
             # if we are still in the loop at this point, we can include
             # the current node info in the result.
             filtered_node_info.append(ni)
+
+        # create a formatter object if necessary
+        if isinstance(formatter, str) or not formatter:
+            formatter = self.create_node_info_formatter(formatter)
         # pass the filtered list to the formatter object
-        if not formatter:
-            formatter = self.create_node_info_default_formatter()
         return formatter(filtered_node_info, 
                          absolute=absolute, relative=relative)
 
-
-    def tree_str(self, only=[], exclude=[], absolute={}, relative={}):
-        """
-        As str(), but with a tree-formatter selected.
-        """        
-        return self.str(only=[], exclude=[], absolute={}, relative={}, 
-                        formatter=self.create_node_info_tree_formatter())
-
         
-    def create_node_info_default_formatter(self):
+    def create_node_info_formatter(self, which=None):
         """
-        Overrideable factory method, used by OptionsDict.str().
+        Overrideable factory method, used by OptionsDict.str().  The
+        argument may be 'simple', 'tree', or omitted (defaulting to
+        'simple').
         """
-        return SimpleFormatter()
-
-        
-    def create_node_info_tree_formatter(self):
-        """
-        Overrideable factory method, used by OptionsDict.str_pretty().
-        """
-        return TreeFormatter()
-
+        if not which:
+            which = 'simple'
+        if which == 'simple':
+            return SimpleFormatter()
+        elif which == 'tree':
+            return TreeFormatter()
+        else:
+            raise OptionsDictException("'{}' not recognised.".format(which))
+            
         
     def get_node_info(self, collection_name=None):
         """
@@ -296,8 +308,6 @@ class OptionsDict(dict):
         
     def expand_template(self, buffer_string, loops=1):
         """
-        self.expand_template(buffer_string, loops=1)
-        
         In buffer_string, replaces substrings prefixed '$' with
         corresponding values in the OptionsDict.  More than one loop
         will be needed if the placeholders are nested.
@@ -381,9 +391,8 @@ class CallableEntry:
 class Lookup:
     """
     Provides a function object that simply looks up a key in a
-    dictionary or combination of dictionaries.  This functionality was
-    originally implemented as a closure, but the multiprocessing
-    module couldn't pickle it.
+    dictionary.  This functionality was originally implemented as a
+    closure, but the multiprocessing module couldn't pickle it.
     """
     def __init__(self, key):
         self.key = key

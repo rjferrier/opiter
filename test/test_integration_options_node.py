@@ -4,26 +4,41 @@ sys.path.append('..')
 import unittest
 from tree_elements import OptionsNode
 from options_dict import OptionsDict, OptionsDictException
+from node_info import OrphanNodeInfo
     
 
-class TestOptionsNodeCreationOptions(unittest.TestCase):
+class TestOptionsNodeCreation(unittest.TestCase):
 
     def test_create_with_bad_common_entries(self):
         """
         I create an OptionsNode using something that is not a dictionary
         for the entries argument.  An error should be raised.
         """
-        create_array = lambda: OptionsNode('A', 'foo')
-        self.assertRaises(OptionsDictException, create_array)
+        create_node = lambda: OptionsNode('A', 'foo')
+        self.assertRaises(OptionsDictException, create_node)
 
 
 class TestOptionsNodeBasics(unittest.TestCase):
 
     def setUp(self):
-        self.node = OptionsNode('B', {'foo': 'bar'})
+        self.node = OptionsNode('B', {'foo': 1})
+
+    def test_create_options_dict(self):
+        od = self.node.create_options_dict({'bar': 2})
+        self.assertIsInstance(od, OptionsDict)
+        self.assertEqual(od['bar'], 2)
+
+    def test_create_info(self):
+        ni = self.node.create_info()
+        self.assertIsInstance(ni, OrphanNodeInfo)
+        self.assertEqual(str(ni), 'B')
 
     def test_collapse(self):
-        self.assertEqual(len(self.node.collapse()), 1)
+        ods = self.node.collapse()
+        self.assertEqual(len(ods), 1)
+        od = ods[0]
+        self.assertIsInstance(od, OptionsDict)
+        self.assertEqual(od['foo'], 1)
 
 
 class TestOrphanNodeAfterCollapse(unittest.TestCase):

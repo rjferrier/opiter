@@ -172,10 +172,17 @@ class OptionsNode(OptionsTreeElement):
         return acceptor, []
                 
     def update(self, entries):
-        # delegate
+        """
+        Updates the dictionaries with entries.
+        """
         self.options_dict.update(entries)
         
     def update_info(self, node_info=None):
+        """
+        Updates the nodes with node information.  If the argument is
+        omitted, node info appropriate to an OptionsNode is
+        constructed.
+        """
         # default node info
         if not node_info:
             node_info = self.create_info()
@@ -218,15 +225,11 @@ class OptionsArray(OptionsTreeElement):
 
         For example,
            OptionsArray('velocity', [0.01, 0.02, 0.04])
-        would contain
+        will contain
           [OptionsNode('0.01', {'velocity': 0.01}),
            OptionsNode('0.02', {'velocity': 0.02}),
            OptionsNode('0.04', {'velocity': 0.04})]
-        but with different NodeInfo components.
-
-        If an element is already an OptionsNode, the embedded
-        dictionary simply acquires the entry {array_name:
-        str(element)}.
+        but the nodes will contain different node info.
         
         All embedded dictionaries are initialised with common_entries
         if this argument is given.  The element-to-string conversion
@@ -237,7 +240,7 @@ class OptionsArray(OptionsTreeElement):
         self.name = array_name
         self.nodes = []
                 
-        # First pass: instantiate and record OptionsNodes
+        # instantiate and record OptionsNodes
         for el in elements:
             
             if isinstance(el, dict):
@@ -272,7 +275,7 @@ class OptionsArray(OptionsTreeElement):
             # append to the list
             self.nodes.append(node)
 
-        # Second pass: set array node information.  This will replace
+        # set array node information in each node.  This will replace
         # any preexisting node information.
         self.update_node_info()
 
@@ -291,21 +294,12 @@ class OptionsArray(OptionsTreeElement):
         return OptionsNode(node_name, entries)
 
         
-    def create_info(self, index):
-        """
-        Overrideable factory method, used by the OptionsArray
-        constructor.
-        """
-        node_names = [str(node) for node in self.nodes]
-        return ArrayNodeInfo(self.name, node_names, index)
-
-        
     def copy(self):
-        return deepcopy(self)
         # TODO: find out why 
         #   return self.another(self.name, [el.copy() for el in self])
         # causes problems for non-shallow trees.  Probably has
         # something to do with the accumulated node info objects.
+        return deepcopy(self)
 
         
     def collapse(self):
@@ -353,15 +347,33 @@ class OptionsArray(OptionsTreeElement):
         else:
             acceptor = node_copy
         return acceptor, self[1:]
+
         
     def update(self, entries):
-        # delegate to each node
+        """
+        Updates the dictionaries with entries.
+        """
         for el in self:
             el.update(entries)
 
+
     def update_node_info(self):
+        """
+        Updates the nodes with node information appropriate to an
+        OptionsArray.
+        """
         for i, node in enumerate(self.nodes):
-            node.update_info(self.create_info(i))
+            node.update_info(self.create_node_info(i))
+
+        
+    def create_node_info(self, index):
+        """
+        Overrideable factory method, used by
+        OptionsArray.update_node_info.
+        """
+        node_names = [str(node) for node in self.nodes]
+        return ArrayNodeInfo(self.name, node_names, index)
+
 
     def append(self, item):
         if not isinstance(item, OptionsNode):

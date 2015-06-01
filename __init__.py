@@ -5,4 +5,4 @@ from tree_elements import OptionsNode, OptionsArray
 from node_info import SimpleFormatter, TreeFormatter
 
 # everything else will be accessible via the subpackage syntax,
-# e.g. "from options_iteration.dict import OptionsDictException".
+# e.g. "from options_iteration.options_dict import OptionsDictException".
