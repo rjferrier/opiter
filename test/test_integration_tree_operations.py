@@ -125,6 +125,18 @@ class TestNodeOperations(NodeAndArrayOperationsTestFixture):
         self.node.update(self.od)
         node_od = self.node.collapse()[0]
         self.assertEqual(node_od['foo'], 'bar')
+
+    def test_update_with_options_dict_from_other_node(self):
+        other_od = self.other_node.collapse()[0]
+        self.node.update(other_od)
+        node_od = self.node.collapse()[0]
+        self.assertEqual(node_od.str(), 'A_B')
+
+    def test_update_with_options_dict_from_array(self):
+        other_od = self.array.collapse()[0]
+        self.node.update(other_od)
+        node_od = self.node.collapse()[0]
+        self.assertEqual(node_od.str(), 'A_0')
         
 
         
@@ -196,9 +208,23 @@ class TestArrayOperations(NodeAndArrayOperationsTestFixture):
 
     def test_update_with_options_dict(self):
         self.array.update(self.od)
-        array_ods = self.array.collapse()[0]
+        array_ods = self.array.collapse()
         for od in array_ods:
             self.assertEqual(od['foo'], 'bar')
+
+    def test_update_with_options_dict_from_node(self):
+        node_od = self.node.collapse()[0]
+        self.array.update(node_od)
+        array_ods = self.array.collapse()
+        self.assertEqual([od.str() for od in array_ods],
+                         ['A_0', 'B_0', 'C_0'])
+
+    def test_update_with_options_dict_from_other_array(self):
+        other_od = self.other_array.collapse()[1]
+        self.array.update(other_od)
+        array_ods = self.array.collapse()
+        self.assertEqual([od.str() for od in array_ods],
+                         ['A_1', 'B_1', 'C_1'])
 
         
 class TestTreeOperations(NodeAndArrayOperationsTestFixture):
@@ -277,9 +303,23 @@ class TestTreeOperations(NodeAndArrayOperationsTestFixture):
 
     def test_update_with_options_dict(self):
         self.tree.update(self.od)
-        tree_ods = self.tree.collapse()[0]
+        tree_ods = self.tree.collapse()
         for od in tree_ods:
             self.assertEqual(od['foo'], 'bar')
+
+    def test_update_with_options_dict_from_node(self):
+        node_od = self.node.collapse()[0]
+        self.tree.update(node_od)
+        tree_ods = self.tree.collapse()
+        self.assertEqual([od.str() for od in tree_ods],
+                         ['A_0_i', 'A_1_i', 'A_2_i'])
+
+    def test_update_with_options_dict_from_array(self):
+        array_od = self.array.collapse()[1]
+        self.tree.update(array_od)
+        tree_ods = self.tree.collapse()
+        self.assertEqual([od.str() for od in tree_ods],
+                         ['A_0_ii', 'A_1_ii', 'A_2_ii'])
 
             
 if __name__ == '__main__':

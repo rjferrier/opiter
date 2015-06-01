@@ -64,7 +64,7 @@ class TestOptionsDictAfterTreeCollapse(unittest.TestCase):
                     OptionsArray('1', ['a', 'b']) * \
                     OptionsArray('2', ['a', 'b', 'c'])
         
-    def test_str_tree(self):
+    def test_str(self):
         ods = self.tree.collapse()
         expected = """
 0: a

@@ -170,13 +170,18 @@ class OptionsNode(OptionsTreeElement):
         else:
             acceptor = node_copy
         return acceptor, []
+
                 
     def update(self, entries):
         """
-        Updates the dictionaries with entries.
+        Updates the leaf dictionaries with entries.
         """
-        self.options_dict.update(entries)
-        
+        if self.child:
+            self.child.update(entries)
+        else:
+            self.options_dict.update(entries)
+
+    
     def update_info(self, node_info=None):
         """
         Updates the nodes with node information.  If the argument is
@@ -188,6 +193,7 @@ class OptionsNode(OptionsTreeElement):
             node_info = self.create_info()
         # delegate
         self.options_dict.set_node_info(node_info)
+
         
     def __eq__(self, other):
         result = isinstance(other, OptionsNode)
@@ -351,7 +357,7 @@ class OptionsArray(OptionsTreeElement):
         
     def update(self, entries):
         """
-        Updates the dictionaries with entries.
+        Updates the leaf dictionaries with entries.
         """
         for el in self:
             el.update(entries)
