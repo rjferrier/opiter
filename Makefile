@@ -4,9 +4,14 @@
 
 default: test
 
+all: clean test with_os_test
+
 clean:
 	rm *.pyc -f
 	rm *~ -f
 
 t%: clean
+	cd test && $(MAKE) $@
+
+w%: clean
 	cd test && $(MAKE) $@

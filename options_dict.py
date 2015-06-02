@@ -306,7 +306,7 @@ class OptionsDict(dict):
                 format(collection_name))
         
         
-    def expand_template(self, buffer_string, loops=1):
+    def expand_template_string(self, buffer_string, loops=1):
         """
         In buffer_string, replaces substrings prefixed '$' with
         corresponding values in the OptionsDict.  More than one loop
@@ -316,6 +316,19 @@ class OptionsDict(dict):
             buffer_string = Template(buffer_string)
             buffer_string = buffer_string.safe_substitute(self)
         return buffer_string
+        
+        
+    def expand_template_file(self, source_filename, target_filename, 
+                             loops=1):
+        """
+        As expand_template_string, but does the reading and writing of
+        files for you.
+        """
+        with open(source_filename, 'r') as src:
+            buf = src.read()
+            buf = self.expand_template_string(buf, loops)
+        with open(target_filename, 'w') as tgt:
+            tgt.write(buf)
 
 
     def donate_copy(self, acceptor):

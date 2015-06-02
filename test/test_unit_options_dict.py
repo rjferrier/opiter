@@ -2,6 +2,7 @@ import sys
 sys.path.append('..')
 
 import unittest
+import os
 from unit_options_dict import UnitOptionsDict
 from options_dict import OptionsDictException, NodeInfoException
 
@@ -160,12 +161,12 @@ class TestOptionsDictTemplateExpansion(unittest.TestCase):
         template = "$fluid has a melting point of $melting_point"+\
                    " degrees C."
         expected = "water has a melting point of 0 degrees C."
-        self.assertEqual(self.od.expand_template(template), expected)
+        self.assertEqual(self.od.expand_template_string(template), expected)
 
     def test_expand_string_missing_entry(self):
         template = "$fluid has a density of $density kg/m^3."
         expected = "water has a density of $density kg/m^3."
-        self.assertEqual(self.od.expand_template(template), expected)
+        self.assertEqual(self.od.expand_template_string(template), expected)
 
 
     def test_expand_nested(self):
@@ -174,12 +175,12 @@ class TestOptionsDictTemplateExpansion(unittest.TestCase):
         
         self.od['change'] = 'melting'
         expected = "water has a melting point of 0 degrees C."
-        self.assertEqual(self.od.expand_template(template, loops=2),
+        self.assertEqual(self.od.expand_template_string(template, loops=2),
                          expected)
         
         self.od['change'] = 'boiling'
         expected = "water has a boiling point of 100 degrees C."
-        self.assertEqual(self.od.expand_template(template, loops=2),
+        self.assertEqual(self.od.expand_template_string(template, loops=2),
                          expected)
 
         
@@ -190,8 +191,29 @@ class TestOptionsDictTemplateExpansion(unittest.TestCase):
         self.od['change'] = 'melting'
         expected = "water has a melting point of ${melting_point}"+\
                    " degrees C."
-        self.assertEqual(self.od.expand_template(template),
+        self.assertEqual(self.od.expand_template_string(template),
                          expected)
+
+        
+    # def test_expand_file(self):
+    #     """
+    #     This unit test involves file creation and destruction and will
+    #     remain commented out until I can mock those operations.
+    #     """
+
+    #     src_filename = 'sample_template.txt'
+    #     tgt_filename = 'DELETE_ME.txt'
+        
+    #     # expand template, read the resulting file, clean up
+    #     self.od.expand_template_file(src_filename, tgt_filename)
+    #     with open(tgt_filename, 'r') as f:
+    #         result = f.readline()
+    #     os.remove(tgt_filename)
+
+    #     # check result (note the newline)
+    #     expected = "water has a melting point of 0 degrees C.\n"
+    #     self.assertEqual(result, expected)
+
         
     
 if __name__ == '__main__':
