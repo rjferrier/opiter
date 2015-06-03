@@ -431,6 +431,26 @@ class Lookup:
         return dictionary[self.key]
 
 
+class Str:
+    """
+    Provides a function object that calls the str() method when passed
+    an OptionsDict.  Optional arguments can be given upon
+    initialisation.  See OptionsDict.str for further information.
+    """
+    def __init__(self, only=[], exclude=[], absolute={}, relative={}, 
+                 formatter=None):
+        self.only = only
+        self.exclude = exclude
+        self.absolute = absolute
+        self.relative = relative
+        self.formatter = formatter
+
+    def __call__(self, options_dict):
+        return options_dict.str(
+            only=self.only, exclude=self.exclude, absolute=self.absolute,
+            relative=self.relative, formatter=self.formatter)
+
+
 def freeze(options_dicts):
     """
     Freezes the given OptionsDicts.  See OptionsDict.freeze for

@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from __init__ import OptionsNode, OptionsArray, OptionsDict, Lookup
+from __init__ import OptionsNode, OptionsArray, OptionsDict, Lookup, Str
 import multiprocessing
 
 # setup
@@ -36,9 +36,7 @@ p = multiprocessing.Pool(4)
 Reynolds_numbers = p.map(calculate_Re, options_tree.collapse())
 
 # for completeness...
-def label(opt):
-  return opt.str()
-for descr, Re in zip(map(label, options_tree.collapse()), Reynolds_numbers):
+for descr, Re in zip(map(Str(), options_tree.collapse()), Reynolds_numbers):
     print 'ID = {}, Reynolds number = {:.2e}'.format(opt.str(), Re)
     
 
@@ -58,5 +56,5 @@ p = multiprocessing.Pool(4)
 Reynolds_numbers = p.map(Lookup('Reynolds_number'), options_tree.collapse())
 
 # for completeness...
-for descr, Re in zip(map(label, options_tree.collapse()), Reynolds_numbers):
+for descr, Re in zip(map(Str(), options_tree.collapse()), Reynolds_numbers):
     print 'ID = {}, Reynolds number = {:.2e}'.format(descr, Re)

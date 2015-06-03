@@ -11,9 +11,6 @@ def pool():
 def distance_func(opt):
     return opt['speed'] * opt['travel_time']
 
-def stringify(opt):
-    return str(opt)
-
     
 class TestOptionsDictCartesianProductParallelIteration(
         TestOptionsDictCartesianProductIteration):
@@ -45,12 +42,11 @@ class TestOptionsDictTreeParallelIteration(
         TestOptionsDictTreeIteration):
             
     def test_mapping_and_name_check(self):
-        resulting_names = pool().map(stringify, freeze(self.options_dicts))
+        resulting_names = pool().map(Str(), freeze(self.options_dicts))
         self.check_names(resulting_names)
             
     def test_mapping_and_lookup(self):
-        resulting_times = pool().map(Lookup('cost'),
-                                     freeze(self.options_dicts))
+        resulting_times = pool().map(Lookup('cost'), freeze(self.options_dicts))
         self.check_times(resulting_times)
 
             

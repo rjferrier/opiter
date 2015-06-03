@@ -1,6 +1,7 @@
 from base import INodeInfo
 from options_dict import OptionsDict
 
+
 class UnitNodeInfo(INodeInfo):
     """
     Throwaway NodeInfo implementation for unit testing purposes.

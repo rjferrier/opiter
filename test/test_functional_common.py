@@ -8,7 +8,7 @@ sys.path.append('..')
 
 import unittest
 from tree_elements import OptionsNode, OptionsArray
-from options_dict import OptionsDict, Lookup, freeze
+from options_dict import OptionsDict, Lookup, Str, freeze
 
     
 class TestOptionsDictCartesianProductIteration(unittest.TestCase):

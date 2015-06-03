@@ -153,17 +153,6 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         self.od.freeze()
         self.od['velocity'] = 0.04
         self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
-
-    def test_freeze_list(self):
-        """
-        Same as test_freeze, but I use the options_dict module's freeze
-        function to work on a list.
-        """
-        self.od['velocity'] = 0.02
-        self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
-        ods = freeze([self.od] * 3)
-        ods[2]['velocity'] = 0.04
-        self.assertAlmostEqual(ods[2]['Reynolds_number'], 2000.)
         
 
 class TestOptionsDictTemplateExpansion(unittest.TestCase):
