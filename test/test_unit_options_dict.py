@@ -4,7 +4,7 @@ sys.path.append('..')
 import unittest
 import os
 from unit_options_dict import UnitOptionsDict
-from options_dict import OptionsDictException, NodeInfoException
+from options_dict import freeze, OptionsDictException, NodeInfoException
 
 
 class TestOptionsDictCreation(unittest.TestCase):
@@ -39,13 +39,6 @@ class TestOptionsDictBasics(unittest.TestCase):
         "I create an anonymous OptionsDict."
         self.od = UnitOptionsDict(entries={'foo': 'bar'})
         
-    def test_str(self):
-        """
-        Because there is no node information, str() should return an empty
-        string.
-        """
-        self.assertEqual(str(self.od), '')
-
     def test_equal(self):
         self.assertEqual(self.od, UnitOptionsDict({'foo': 'bar'}))
 
@@ -148,6 +141,29 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         dd['velocity'] = 0.02
         self.assertAlmostEqual(dd['Reynolds_number'], 2000.)
         self.assertAlmostEqual(self.od['Reynolds_number'], 0.)
+
+    def test_freeze(self):
+        """
+        I set velocity, which should in turn set the Reynolds_number.
+        However, after I freeze the dictionary, redefining velocity
+        should not redefine the Reynolds number.
+        """
+        self.od['velocity'] = 0.02
+        self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
+        self.od.freeze()
+        self.od['velocity'] = 0.04
+        self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
+
+    def test_freeze_list(self):
+        """
+        Same as test_freeze, but I use the options_dict module's freeze
+        function to work on a list.
+        """
+        self.od['velocity'] = 0.02
+        self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
+        ods = freeze([self.od] * 3)
+        ods[2]['velocity'] = 0.04
+        self.assertAlmostEqual(ods[2]['Reynolds_number'], 2000.)
         
 
 class TestOptionsDictTemplateExpansion(unittest.TestCase):
@@ -193,26 +209,6 @@ class TestOptionsDictTemplateExpansion(unittest.TestCase):
                    " degrees C."
         self.assertEqual(self.od.expand_template_string(template),
                          expected)
-
-        
-    # def test_expand_file(self):
-    #     """
-    #     This unit test involves file creation and destruction and will
-    #     remain commented out until I can mock those operations.
-    #     """
-
-    #     src_filename = 'sample_template.txt'
-    #     tgt_filename = 'DELETE_ME.txt'
-        
-    #     # expand template, read the resulting file, clean up
-    #     self.od.expand_template_file(src_filename, tgt_filename)
-    #     with open(tgt_filename, 'r') as f:
-    #         result = f.readline()
-    #     os.remove(tgt_filename)
-
-    #     # check result (note the newline)
-    #     expected = "water has a melting point of 0 degrees C.\n"
-    #     self.assertEqual(result, expected)
 
         
     

@@ -1,7 +1,7 @@
 # Options Iteration
 
 The classes in this package can be used to assemble and iterate over
-combinations of options.  A set of options is represented by a
+combinations of options.  Each set of options is represented by a
 dictionary that the client can define with variable values and access
 for the purpose of template expansion, input to a binary,
 postprocessing, etc.  The `OptionsNode` class wraps such a dictionary
@@ -35,12 +35,15 @@ options_tree = fluids * pipe_dias * velocities
 ```
 
 An options tree may be collapsed to form a single list of options
-dictionaries.  Each `OptionsDict` merges a combination of options
-which can be accessed through the usual dictionary syntax.  There is
-also a `str()` method which can be used to identify the combination.
+dictionaries.  Each of these `OptionsDict`s merges a combination of
+options which can be accessed through the usual dictionary syntax.
+There is also a `str()` method which can be used to identify the
+combination.
   
 ```python
-for opt in options_tree.collapse():
+options_dicts = options_tree.collapse()
+
+for opt in options_dicts:
     kinematic_visc = opt['dynamic_viscosity'] / opt['density']
     Re = opt['velocity'] * opt['pipe_diameter'] / kinematic_visc
     print 'ID = {}, Reynolds number = {:.2e}'.format(opt.str(), Re)
@@ -48,8 +51,8 @@ for opt in options_tree.collapse():
   
 A serial `for` loop is not the only means of performing a batch of
 operations.  The operations can be encoded as a function taking a
-single dictionary argument.  This can be passed to a parallel map
-function.
+single dictionary argument.  This can be passed to a multiprocessing
+map function.
   
 ```python
 def calculate_Re(opt):
@@ -57,7 +60,7 @@ def calculate_Re(opt):
   return opt['velocity'] * opt['pipe_diameter'] / kinematic_visc
 
 p = multiprocessing.Pool(4)
-Reynolds_numbers = p.map(calculate_Re, options_tree.collapse())
+Reynolds_numbers = p.map(calculate_Re, options_dicts)
 ```
 
 In practice, the client may have to deal with many dependent variables
@@ -66,20 +69,21 @@ that would clutter the function body.  For this reason, an
 dict.  Entries can be defined as dynamic, updating automatically
 according to the values of others.  Such dynamic entries might be
 added locally, or in a separate dictionary which is then applied
-globally.
-  
+globally.  A caveat is that, if they are defined using non-global
+functions such as lambdas, dynamic entries have to be converted back
+to static values before multiprocessing.  This is because Python's
+`pickle` module has trouble serialising these types of functions.  The
+`freeze` function is provided for converting dynamic entries.
+
 ```python
-def kinematic_viscosity(opt):
-    return opt['dynamic_viscosity'] / opt['density']
-fluids = OptionsArray('fluid', [water, ethanol], 
-                      common_entries=[kinematic_viscosity])
+fluids.update({
+    'kinematic_visc': lambda opt: opt['dynamic_viscosity'] / opt['density']})
+
 options_tree = fluids * pipe_dias * velocities
+options_tree.update({
+    'Reynolds_number': lambda opt: opt['velocity'] * opt['pipe_diameter'] / 
+    opt['kinematic_visc']})
 
-def Reynolds_number(opt):
-    return opt['velocity'] * opt['pipe_diameter'] / opt['kinematic_viscosity']
-options_tree.update(OptionsDict([Reynolds_number]))
-
-p = multiprocessing.Pool(4)
-Reynolds_numbers = p.map(Lookup('Reynolds_number'), options_tree.collapse())
+options_dicts = options_tree.collapse()
+Reynolds_numbers = p.map(Lookup('Reynolds_number'), freeze(options_dicts))
 ```
-

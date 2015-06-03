@@ -7,10 +7,17 @@ from node_info import SimpleFormatter, TreeFormatter
 from tree_elements import OptionsNode, OptionsArray
 
 
-class TestOptionsDictFactoryMethods(unittest.TestCase):
+class TestOptionsDictBasics(unittest.TestCase):
 
     def setUp(self):
         self.od = OptionsDict({})
+        
+    def test_str(self):
+        """
+        Because there is no node information, str() should return an empty
+        string.
+        """
+        self.assertEqual(str(self.od), '')
     
     def test_create_node_info_formatter_simple(self):
         self.assertIsInstance(

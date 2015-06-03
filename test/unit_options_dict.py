@@ -28,3 +28,6 @@ class UnitOptionsDict(OptionsDict):
 
     def create_node_info_formatter(self, which=None):
         return lambda node_info, absolute, relative: ''
+        
+    def str(self, absolute=None, relative=None, collection_separator=None):
+        return dict.__str__(self)

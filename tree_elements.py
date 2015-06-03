@@ -6,6 +6,7 @@ from options_dict import OptionsDict
 from node_info import OrphanNodeInfo, ArrayNodeInfo
 
 
+
 class OptionsNodeException(OptionsBaseException):
     pass
 
@@ -119,7 +120,9 @@ class OptionsNode(OptionsTreeElement):
         except AttributeError:
             # this is a leaf, so just return the current options
             # dictionary as a one-element list
-            return [self.options_dict.copy()]
+            result = [self.options_dict.copy()]
+
+        return result
 
             
     def multiply_attach(self, tree):

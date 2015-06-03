@@ -8,6 +8,7 @@ from node_info import OrphanNodeInfo, ArrayNodeInfo, SimpleFormatter, \
     TreeFormatter, NodeInfoException
 
 
+
 class OptionsDictException(OptionsBaseException):
     pass
 
@@ -189,6 +190,19 @@ class OptionsDict(dict):
         else:
             # argument is presumably a list of dynamic entries
             self._update_from_dynamic_entries(entries)
+
+
+    def freeze(self):
+        """
+        Converts all dynamic entries to static ones.  This may be
+        necessary before multiprocessing, because Python's native
+        pickle module has trouble serialising any lambdas (anonymous
+        functions) residing in the dict.
+        """
+        for k in self.keys():
+            self[k] = self[k]
+        # return self so as to be inlineable
+        return self
 
             
     def str(self, only=[], exclude=[], absolute={}, relative={}, 
@@ -377,7 +391,10 @@ class OptionsDict(dict):
         return not self==other
     
     def __getitem__(self, key):
-        value = dict.__getitem__(self, key)
+        try:
+            value = dict.__getitem__(self, key)
+        except:
+            raise
         # recurse until the return value is no longer a function
         if isinstance(value, FunctionType):
             # dynamic entry
@@ -412,3 +429,13 @@ class Lookup:
 
     def __call__(self, dictionary):
         return dictionary[self.key]
+
+
+def freeze(options_dicts):
+    """
+    Freezes the given OptionsDicts.  See OptionsDict.freeze for
+    further information.
+    """
+    for od in options_dicts:
+        od.freeze()
+    return options_dicts

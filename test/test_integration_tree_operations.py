@@ -5,7 +5,13 @@ import unittest
 from copy import deepcopy
 
 from tree_elements import OptionsArray, OptionsNode
-from options_dict import OptionsDict
+from options_dict import OptionsDict, Lookup, freeze
+from multiprocessing import Pool
+from pickle import PicklingError
+
+
+def pool():
+    return Pool(2)
 
 
 class NodeAndArrayOperationsTestFixture(unittest.TestCase):
@@ -55,6 +61,16 @@ class NodeAndArrayOperationsTestFixture(unittest.TestCase):
         else:
             self.assertEqual(left_operand_init, left_operand)
         self.assertEqual(right_operand_init, right_operand)
+
+
+    @staticmethod
+    def add_dynamic_entry(tree_element):
+        """
+        Implements a dynamic entry which returns the product of 'letter'
+        and 'number' entries, treating A, B, C as 1, 2, 3.
+        """
+        tree_element.update({'product': lambda opt: \
+                             (1 + 'ABC'.index(opt['letter'])) * opt['number']})
 
 
 class TestNodeOperations(NodeAndArrayOperationsTestFixture):
@@ -137,7 +153,13 @@ class TestNodeOperations(NodeAndArrayOperationsTestFixture):
         self.node.update(other_od)
         node_od = self.node.collapse()[0]
         self.assertEqual(node_od.str(), 'A_0')
-        
+
+    def test_collapse_mp_safe(self):
+        self.node.update({'letter': 'A', 'number': 2})
+        self.add_dynamic_entry(self.node)
+        ods = freeze(self.node.collapse())
+        results = pool().map(Lookup('product'), ods)
+        self.assertEqual(results, [2])
 
         
 class TestArrayOperations(NodeAndArrayOperationsTestFixture):
@@ -226,12 +248,24 @@ class TestArrayOperations(NodeAndArrayOperationsTestFixture):
         self.assertEqual([od.str() for od in array_ods],
                          ['A_1', 'B_1', 'C_1'])
 
+    def test_collapse_and_freeze(self):
+        self.array.update({'number': 2})
+        self.add_dynamic_entry(self.array)
+        ods = freeze(self.array.collapse())
+        results = pool().map(Lookup('product'), ods)
+        expected = [2, 4, 6]
+        self.assertEqual(results, expected)
+
         
 class TestTreeOperations(NodeAndArrayOperationsTestFixture):
 
     def setUp(self):
-        self.tree = OptionsArray('letter', ['A']) * \
-                    OptionsArray('number', range(3))
+        letters = OptionsArray('letter', ['A'])
+        numbers = OptionsArray('number', range(3))
+        # putting dynamic entries on the leaves is the most rigorous
+        # way of testing them after a tree collapse
+        self.add_dynamic_entry(numbers)
+        self.tree = letters * numbers
         self.node = OptionsNode('i')
         self.array = OptionsArray('subnumber', ['i', 'ii', 'iii'])
         self.node_list = [OptionsNode(name) for name in ['i', 'ii', 'iii']]
@@ -320,6 +354,12 @@ class TestTreeOperations(NodeAndArrayOperationsTestFixture):
         tree_ods = self.tree.collapse()
         self.assertEqual([od.str() for od in tree_ods],
                          ['A_0_ii', 'A_1_ii', 'A_2_ii'])
+
+    def test_collapse_and_freeze(self):
+        ods = freeze(self.tree.collapse())
+        results = pool().map(Lookup('product'), ods)
+        expected = [0, 1, 2]
+        self.assertEqual(results, expected)
 
             
 if __name__ == '__main__':

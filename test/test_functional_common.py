@@ -8,22 +8,9 @@ sys.path.append('..')
 
 import unittest
 from tree_elements import OptionsNode, OptionsArray
-from options_dict import OptionsDict, Lookup
+from options_dict import OptionsDict, Lookup, freeze
 
-# functions to be multiprocessed must be defined outside the unit
-# testing framework (i.e. here), otherwise there will be pickling
-# errors.
-
-def distance(opt):
-    return opt['speed'] * opt['travel_time']
-
-def label(opt):
-    return str(opt)
-
-def cost(opt):
-    return opt['res']**opt['dim']
-
-
+    
 class TestOptionsDictCartesianProductIteration(unittest.TestCase):
     
     def setUp(self):
@@ -31,8 +18,9 @@ class TestOptionsDictCartesianProductIteration(unittest.TestCase):
         I create two OptionsDict arrays, one for 'speed' and one
         for 'travel time'.
         """
-        self.speed = OptionsArray('speed', [30, 40, 60])
-        self.time  = OptionsArray('travel_time', [0.5, 1])
+        speed = OptionsArray('speed', [30, 40, 60])
+        time  = OptionsArray('travel_time', [0.5, 1])
+        self.tree = speed * time
         self.expected_distances = [15, 30, 20, 40, 30, 60]
 
         
@@ -58,7 +46,10 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
         res1d = OptionsArray('res', [10, 20, 40, 80])
         res2d = OptionsArray('res', [10, 20, 40])
         res3d = OptionsArray('res', [10, 20])
-        self.tree = OptionsNode('sim', [cost]) + dims + (res1d, res2d, res3d)
+        root = OptionsNode('sim', {
+            'cost': lambda opt: opt['res']**opt['dim']})
+        self.tree = root + dims + (res1d, res2d, res3d)
+        self.options_dicts = self.tree.collapse()
 
     def check_names(self, resulting_names):
         "Helper for name_check tests."

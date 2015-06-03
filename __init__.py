@@ -1,6 +1,6 @@
 # provide the main classes directly so that the client can do "from
 # options_iteration import OptionsDict", etc.
-from options_dict import OptionsDict, CallableEntry, Lookup
+from options_dict import OptionsDict, CallableEntry, Lookup, freeze
 from tree_elements import OptionsNode, OptionsArray
 from node_info import SimpleFormatter, TreeFormatter
 
