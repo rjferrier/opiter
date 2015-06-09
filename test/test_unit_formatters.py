@@ -21,11 +21,11 @@ class FakeNodeInfo:
         self.node_index = node_index
 
     @classmethod
-    def combo(Self, node_names, anon=None):
+    def combo(Self, node_names, anon=[]):
         result = []
         for i, node_name in enumerate(node_names):
             node_index = Self.ref_nodes.index(node_name)
-            if i == anon:
+            if i in anon:
                 node_name = None
             result.append(Self(i, node_name, node_index))
         return result
@@ -52,8 +52,12 @@ class TestSimpleFormatter(unittest.TestCase):
         self.assertEqual(self.formatter(self.node_info), 'a_b_c')
 
     def test_simple_formatter_with_anonymous_middle_node(self):
-        self.node_info = FakeNodeInfo.combo('abc', anon=1)
+        self.node_info = FakeNodeInfo.combo('abc', anon=[1])
         self.assertEqual(self.formatter(self.node_info), 'a_c')
+
+    def test_simple_formatter_with_anonymous_first_two_nodes(self):
+        self.node_info = FakeNodeInfo.combo('abc', anon=[0, 1])
+        self.assertEqual(self.formatter(self.node_info), 'c')
 
     def test_simple_formatter_with_custom_separator(self):
         self.node_info = FakeNodeInfo.combo('abc')
@@ -63,12 +67,20 @@ class TestSimpleFormatter(unittest.TestCase):
 
 class TestTreeFormatter(unittest.TestCase):
 
-    def make_tree(self, node_combos, anon=None, formatter=TreeFormatter()):
+    def make_tree(self, node_combos, anon=[], formatter=TreeFormatter()):
         result = ''
         for c in node_combos:
             branch = formatter(FakeNodeInfo.combo(c, anon))
             if branch:
                 result += '\n' + branch
+        return result
+
+    def make_indents(self, node_combos, anon=[], formatter=TreeFormatter()):
+        result = ''
+        for c in node_combos:
+            indent = formatter(FakeNodeInfo.combo(c, anon), only_indent=True)
+            if indent:
+                result += '\n' + indent
         return result
         
 
@@ -182,7 +194,7 @@ class TestTreeFormatterWithThreeLevels(TestTreeFormatter):
     2: a
     2: b
     2: c"""
-        self.assertEqual(self.make_tree(self.node_combos, anon=0), expected)
+        self.assertEqual(self.make_tree(self.node_combos, anon=[0]), expected)
 
 
     def test_tree_formatter_all_with_anonymous_intermediate_node(self):
@@ -194,7 +206,7 @@ class TestTreeFormatterWithThreeLevels(TestTreeFormatter):
     2: a
     2: b
     2: c"""
-        self.assertEqual(self.make_tree(self.node_combos, anon=1),
+        self.assertEqual(self.make_tree(self.node_combos, anon=[1]),
                          expected)
 
         
@@ -203,9 +215,18 @@ class TestTreeFormatterWithThreeLevels(TestTreeFormatter):
 0: a
     1: a
     1: b"""
-        self.assertEqual(self.make_tree(self.node_combos, anon=2),
+        self.assertEqual(self.make_tree(self.node_combos, anon=[2]),
                          expected)
+        
+        
+    def test_tree_formatter_indent(self):
+        """
+        Indent so I can print stuff between the leaves.
+        """
+        expected = ('\n' + ' '*12) * 6
+        self.assertEqual(self.make_indents(self.node_combos), expected)
 
+        
         
 class TestTreeFormatterWithFourLevels(TestTreeFormatter):
 
@@ -238,7 +259,7 @@ class TestTreeFormatterWithFourLevels(TestTreeFormatter):
         3: a
     2: b
         3: a"""
-        results = self.make_tree(self.node_combos, anon=1)
+        results = self.make_tree(self.node_combos, anon=[1])
         self.assertEqual(results, expected)
         
         
@@ -251,8 +272,16 @@ class TestTreeFormatterWithFourLevels(TestTreeFormatter):
     1: b
         3: a
         3: a"""
-        results = self.make_tree(self.node_combos, anon=2)
+        results = self.make_tree(self.node_combos, anon=[2])
         self.assertEqual(results, expected)
+        
+        
+    def test_tree_formatter_indent(self):
+        """
+        Indent so I can print stuff between the leaves.
+        """
+        expected = ('\n' + ' '*16) * 4
+        self.assertEqual(self.make_indents(self.node_combos), expected)
 
         
 class TestEmptyNodeInfo(unittest.TestCase):

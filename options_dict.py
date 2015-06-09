@@ -206,7 +206,7 @@ class OptionsDict(dict):
 
             
     def str(self, only=[], exclude=[], absolute={}, relative={}, 
-            formatter=None):
+            formatter=None, only_indent=False):
         """
         Returns a string identifier, providing more control than the
         str() idiom through optional arguments.
@@ -257,7 +257,8 @@ class OptionsDict(dict):
             formatter = self.create_node_info_formatter(formatter)
         # pass the filtered list to the formatter object
         return formatter(filtered_node_info, 
-                         absolute=absolute, relative=relative)
+                         absolute=absolute, relative=relative,
+                         only_indent=only_indent)
 
         
     def create_node_info_formatter(self, which=None):
@@ -274,6 +275,13 @@ class OptionsDict(dict):
             return TreeFormatter()
         else:
             raise OptionsDictException("'{}' not recognised.".format(which))
+
+            
+    def indent(self, only=[], exclude=[], absolute={}, relative={}, 
+            formatter='tree'):
+        return self.str(only=only, exclude=exclude, absolute=absolute,
+                        relative=relative, formatter=formatter,
+                        only_indent=True)
             
         
     def get_node_info(self, collection_name=None):

@@ -202,7 +202,10 @@ class SimpleFormatter:
         self.node_separator = node_separator
         self.collection_separator = collection_separator
 
-    def __call__(self, node_info_list, absolute={}, relative={}):
+    def __call__(self, node_info_list, absolute={}, relative={}, 
+                 only_indent=False):
+        if only_indent:
+            return ''
         substrings = []
         for ni in node_info_list:
             substr = ''
@@ -235,7 +238,8 @@ class TreeFormatter:
         self.indent_string = indent_string
         self.collection_separator = collection_separator
  
-    def __call__(self, node_info_list, absolute={}, relative={}):
+    def __call__(self, node_info_list, absolute={}, relative={}, 
+                 only_indent=False):
         branch = ''
         indent = ''
         for level, ni in enumerate(node_info_list):
@@ -262,4 +266,7 @@ class TreeFormatter:
             branch += indent + substr
             indent += self.indent_string
 
-        return branch
+        if only_indent:
+            return indent
+        else:
+            return branch

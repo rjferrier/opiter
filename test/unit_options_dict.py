@@ -12,7 +12,8 @@ class UnitNodeInfo(INodeInfo):
     def belongs_to_any(self, collection_names):
         return False
         
-    def str(self, absolute=None, relative=None, collection_separator=None):
+    def str(self, absolute=None, relative=None, collection_separator=None,
+            only_indent=False):
         return self.name
 
 
@@ -30,5 +31,5 @@ class UnitOptionsDict(OptionsDict):
     def create_node_info_formatter(self, which=None):
         return lambda node_info, absolute, relative: ''
         
-    def str(self, absolute=None, relative=None, collection_separator=None):
-        return dict.__str__(self)
+    # def str(self, absolute=None, relative=None, collection_separator=None):
+    #     return dict.__str__(self)

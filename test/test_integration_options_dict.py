@@ -71,7 +71,7 @@ class TestOptionsDictAfterTreeCollapse(unittest.TestCase):
                     OptionsArray('1', ['a', 'b']) * \
                     OptionsArray('2', ['a', 'b', 'c'])
         
-    def test_str(self):
+    def test_str_tree(self):
         ods = self.tree.collapse()
         expected = """
 0: a
@@ -85,6 +85,14 @@ class TestOptionsDictAfterTreeCollapse(unittest.TestCase):
         2: c"""
         result = ''.join(['\n' + od.str(formatter='tree') for od in ods])
         self.assertEqual(result, expected)
+
+        
+    def test_indent(self):
+        ods = self.tree.collapse()
+        expected = ('\n' + ' '*12)*6
+        result = ''.join(['\n' + od.indent() for od in ods])
+        self.assertEqual(result, expected)
+
         
         
 class TestCallableEntry(unittest.TestCase):
