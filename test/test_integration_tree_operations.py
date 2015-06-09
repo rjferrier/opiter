@@ -256,12 +256,39 @@ class TestArrayOperations(NodeAndArrayOperationsTestFixture):
         expected = [2, 4, 6]
         self.assertEqual(results, expected)
 
+
+class TestArraySetItemOperations(TestArrayOperations):
+    """
+    Let's not linger on these.  If we get what we expect for one or
+    two operators, for both single item and slice accessors, then
+    OptionsArray.__setitem__ is doing its job.
+    """
+    def test_item_incremental_addition_with_node(self):
+        self.check_array_or_node_operation(
+            self.array[1], self.node, self.plus, ['B_0'],
+            is_incremental=True)
+        
+    def test_slice_incremental_addition_with_node(self):
+        self.check_array_or_node_operation(
+            self.array[1:], self.node, self.plus, ['B_0', 'C'],
+            is_incremental=True)
+
+    def test_item_incremental_multiplication_with_node(self):
+        self.check_array_or_node_operation(
+            self.array[1], self.node, self.times, ['B_0'],
+            is_incremental=True)
+        
+    def test_slice_incremental_multiplication_with_node(self):
+        self.check_array_or_node_operation(
+            self.array[1:], self.node, self.times, ['B_0', 'C_0'],
+            is_incremental=True)
+
         
 class TestTreeOperations(NodeAndArrayOperationsTestFixture):
 
     def setUp(self):
-        letters = OptionsArray('letter', ['A'])
-        numbers = OptionsArray('number', range(3))
+        letters = OptionsArray('letter', ['A', 'B'])
+        numbers = OptionsArray('number', range(2))
         # putting dynamic entries on the leaves is the most rigorous
         # way of testing them after a tree collapse
         self.add_dynamic_entry(numbers)
@@ -279,34 +306,34 @@ class TestTreeOperations(NodeAndArrayOperationsTestFixture):
 
     def test_addition_with_node(self):
         self.check_array_or_node_operation(
-            self.tree, self.node, self.plus, 
-            ['A_0_i', 'A_1', 'A_2'])
+            self.tree, self.node, self.plus,
+            ['A_0_i', 'A_1', 'B_0', 'B_1'])
 
     def test_incremental_addition_with_node(self):
         self.check_array_or_node_operation(
-            self.tree, self.node, self.plus_equals, 
-            ['A_0_i', 'A_1', 'A_2'], is_incremental=True)
+            self.tree, self.node, self.plus_equals,
+            ['A_0_i', 'A_1', 'B_0', 'B_1'], is_incremental=True)
 
     def test_multiplication_with_node(self):
         self.check_array_or_node_operation(
             self.tree, self.node, self.times,
-            ['A_0_i', 'A_1_i', 'A_2_i'])
+            ['A_0_i', 'A_1_i', 'B_0_i', 'B_1_i'])
 
     def test_incremental_multiplication_with_node(self):
         self.check_array_or_node_operation(
             self.tree, self.node, self.times_equals,
-            ['A_0_i', 'A_1_i', 'A_2_i'],
+            ['A_0_i', 'A_1_i', 'B_0_i', 'B_1_i'],
             is_incremental=True)
 
     def test_addition_with_array(self):
         self.check_array_or_node_operation(
             self.tree, self.array, self.plus,
-            ['A_0_i', 'A_1_ii', 'A_2_iii'])
+            ['A_0_i', 'A_1_ii', 'B_0_iii', 'B_1'])
 
     def test_incremental_addition_with_array(self):
         self.check_array_or_node_operation(
             self.tree, self.array, self.plus_equals,
-            ['A_0_i', 'A_1_ii', 'A_2_iii'],
+            ['A_0_i', 'A_1_ii', 'B_0_iii', 'B_1'],
             is_incremental=True)
 
     def test_multiplication_with_array(self):
@@ -314,25 +341,27 @@ class TestTreeOperations(NodeAndArrayOperationsTestFixture):
             self.tree, self.array, self.times,
             ['A_0_i', 'A_0_ii', 'A_0_iii',
              'A_1_i', 'A_1_ii', 'A_1_iii',
-             'A_2_i', 'A_2_ii', 'A_2_iii'])
+             'B_0_i', 'B_0_ii', 'B_0_iii',
+             'B_1_i', 'B_1_ii', 'B_1_iii'])
 
     def test_incremental_multiplication_with_array(self):
         self.check_array_or_node_operation(
             self.tree, self.array, self.times_equals,
             ['A_0_i', 'A_0_ii', 'A_0_iii',
              'A_1_i', 'A_1_ii', 'A_1_iii',
-             'A_2_i', 'A_2_ii', 'A_2_iii'],
+             'B_0_i', 'B_0_ii', 'B_0_iii',
+             'B_1_i', 'B_1_ii', 'B_1_iii'],
             is_incremental=True)
 
     def test_addition_with_list(self):
         self.check_array_or_node_operation(
             self.tree, self.node_list, self.plus,
-            ['A_0_i', 'A_1_ii', 'A_2_iii'])
+            ['A_0_i', 'A_1_ii', 'B_0_iii', 'B_1'])
 
     def test_incremental_addition_with_list(self):
         self.check_array_or_node_operation(
             self.tree, self.node_list, self.plus_equals,
-            ['A_0_i', 'A_1_ii', 'A_2_iii'],
+            ['A_0_i', 'A_1_ii', 'B_0_iii', 'B_1'],
             is_incremental=True)
 
     def test_update_with_options_dict(self):
@@ -346,20 +375,43 @@ class TestTreeOperations(NodeAndArrayOperationsTestFixture):
         self.tree.update(node_od)
         tree_ods = self.tree.collapse()
         self.assertEqual([od.str() for od in tree_ods],
-                         ['A_0_i', 'A_1_i', 'A_2_i'])
+                         ['A_0_i', 'A_1_i', 'B_0_i', 'B_1_i'])
 
     def test_update_with_options_dict_from_array(self):
         array_od = self.array.collapse()[1]
         self.tree.update(array_od)
         tree_ods = self.tree.collapse()
         self.assertEqual([od.str() for od in tree_ods],
-                         ['A_0_ii', 'A_1_ii', 'A_2_ii'])
+                         ['A_0_ii', 'A_1_ii', 'B_0_ii', 'B_1_ii'])
 
     def test_collapse_and_freeze(self):
         ods = freeze(self.tree.collapse())
         results = pool().map(Lookup('product'), ods)
-        expected = [0, 1, 2]
+        expected = [0, 1, 0, 2]
         self.assertEqual(results, expected)
+
+
+class TestTreeSetItemOperations(TestTreeOperations):
+    def test_item_incremental_addition_with_node(self):
+        self.check_array_or_node_operation(
+            self.tree[1], self.node, self.plus, ['B_0_i', 'B_1'],
+            is_incremental=True)
+        
+    def test_slice_incremental_addition_with_node(self):
+        self.check_array_or_node_operation(
+            self.tree[1:], self.node, self.plus, ['B_0_i', 'B_1'],
+            is_incremental=True)
+
+    def test_item_incremental_multiplication_with_node(self):
+        self.check_array_or_node_operation(
+            self.tree[1], self.node, self.times, ['B_0_i', 'B_1_i'],
+            is_incremental=True)
+        
+    def test_slice_incremental_multiplication_with_node(self):
+        self.check_array_or_node_operation(
+            self.tree[1:], self.node, self.times, ['B_0_i', 'B_1_i'],
+            is_incremental=True)
+
 
             
 if __name__ == '__main__':

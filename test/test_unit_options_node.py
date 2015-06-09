@@ -57,7 +57,7 @@ class TestOptionsNodeBasics(unittest.TestCase):
         self.assertFalse(other is self.node)
 
     def test_str(self):
-        self.assertEqual(str(self.node), 'foo:qux')
+        self.assertEqual(str(self.node), 'foo')
 
     def test_donate_copy(self):
         node_init = self.node.copy()
