@@ -103,7 +103,6 @@ class OptionsNode(OptionsTreeElement):
         result of a merge from the root, through the branch nodes, to
         the corresponding leaf.
         """
-        # TODO: consider reworking this function as a generator.
         try:
             # recurse 
             result = []
