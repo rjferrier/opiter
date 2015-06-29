@@ -47,18 +47,28 @@ class OptionsNode(OptionsTreeElement):
     Contains an options dictionary and optionally a child
     OptionsTreeElement, hence forming a tree structure.
     """
-    def __init__(self, name, entries={}, child=None):
+    def __init__(self, name_or_class, entries={}, child=None):
+        try:
+            # if name_or_class is a class, use it to extract a name
+            # and create the options dictionary
+            self.name = name_or_class.__name__
+            self.options_dict = self.create_options_dict(name_or_class)
+            
+        except AttributeError:
+            # otherwise, type-check name_or_class and set name
+            if name_or_class is None:
+                name_or_class = ''
+            elif not isinstance(name_or_class, str):
+                raise OptionsNodeException(
+                    "name_or_class argument must be a string or a named "+\
+                    "class (or None)" + str(name_or_class))
+            self.name = name_or_class
 
-        # check and set name argument
-        if name is None:
-            name = ''
-        elif not isinstance(name, str):
-            raise OptionsNodeException(
-                "name argument must be a string (or None)")
-        self.name = name
-
-        # set attributes
-        self.options_dict = self.create_options_dict(entries)
+            # set attributes.  Note that the entries argument may
+            # still be a class, in which case its attributes and
+            # methods will be converted to entries even if its name is
+            # ignored.
+            self.options_dict = self.create_options_dict(entries)
 
         # check child argument
         if child is not None and not isinstance(child, OptionsTreeElement):
@@ -270,33 +280,38 @@ class OptionsArray(OptionsTreeElement):
                 "because it\n is not obvious how to name it or what to "+\
                 "enter under the array key.\n Please construct an "+\
                 "OptionsNode explicitly.")
+            
+        # If the thing is already an OptionsNode, simply copy it
+        if isinstance(thing, OptionsNode):
+            node = thing.copy()
+            return node
 
-        elif isinstance(thing, OptionsNode):
-            # If the thing is already an OptionsNode, simply copy it
-            return thing.copy()
+        # If the thing is a named class, use it to instantiate a new
+        # OptionsNode
+        if hasattr(thing, '__name__'):
+            return self.create_options_node(thing)
 
-        else:
-            # otherwise, instantiate a new OptionsNode with the
-            # original thing stored under array_name.  Determine the
-            # node name.
+        # otherwise, instantiate a new OptionsNode with the original
+        # thing stored under array_name.  Determine the node name.
+        try:
+            node_name = self.name_format(thing)
+        except TypeError:
             try:
-                node_name = self.name_format(thing)
-            except TypeError:
-                try:
-                    node_name = self.name_format.format(thing)
-                except AttributeError:
-                    raise OptionsArrayException(
-                        "name_format must be a callable or a format string.")
-
-            return self.create_options_node(node_name, {self.name: thing})
+                node_name = self.name_format.format(thing)
+            except AttributeError:
+                raise OptionsArrayException(
+                    "name_format must be a callable or a format string.")
+        node = self.create_options_node(node_name)
+        node.update({self.name: thing})
+        return node
         
         
-    def create_options_node(self, node_name, entries):
+    def create_options_node(self, name_or_class):
         """
         Overrideable factory method, used by
         OptionsArray.create_options_node_general.
         """
-        return OptionsNode(node_name, entries)
+        return OptionsNode(name_or_class)
 
         
     def copy(self):

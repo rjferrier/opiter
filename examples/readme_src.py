@@ -6,18 +6,20 @@ import multiprocessing
 
 # setup
 
+pipe_dias  = OptionsArray('pipe_diameter', [0.10, 0.15])
+velocities = OptionsArray('velocity', [0.01, 0.02, 0.04])
+options_tree = pipe_dias * velocities
+
 water = OptionsNode('water', {
     'density'           : 1.00e3,
     'dynamic_viscosity' : 0.89e-3})
 
-ethanol = OptionsNode('ethanol', {
-    'density'           : 0.79e3,
-    'dynamic_viscosity' : 1.09e-3})
+class ethanol:
+    density = 0.79e3
+    dynamic_viscosity = 1.09e-3
 
-fluids     = OptionsArray('fluid', [water, ethanol])
-pipe_dias  = OptionsArray('pipe_diameter', [0.10, 0.15])
-velocities = OptionsArray('velocity', [0.01, 0.02, 0.04])
-options_tree = fluids * pipe_dias * velocities
+fluids = OptionsArray('fluid', [water, ethanol])
+options_tree *= fluids
 
 print "\nUsing serial loop:\n"
 
@@ -37,7 +39,7 @@ Reynolds_numbers = p.map(calculate_Re, options_tree.collapse())
 
 # for completeness...
 for descr, Re in zip(map(Str(), options_tree.collapse()), Reynolds_numbers):
-    print 'ID = {}, Reynolds number = {:.2e}'.format(opt.str(), Re)
+    print 'ID = {}, Reynolds number = {:.2e}'.format(descr, Re)
     
 
 print "\nUsing dynamic entries:\n"
@@ -46,7 +48,7 @@ def kinematic_viscosity(opt):
     return opt['dynamic_viscosity'] / opt['density']
 fluids = OptionsArray('fluid', [water, ethanol], 
                       common_entries=[kinematic_viscosity])
-options_tree = fluids * pipe_dias * velocities
+options_tree = pipe_dias * velocities * fluids
 
 def Reynolds_number(opt):
     return opt['velocity'] * opt['pipe_diameter'] / opt['kinematic_viscosity']

@@ -17,20 +17,32 @@ class TestOptionsDictCreation(unittest.TestCase):
 
     def test_create_from_dynamic_entries(self):
         """
-        When I create an OptionsDict from a list of functions, there
+        When I create an OptionsDict from an iterable of functions, there
         is no error.
         """
         def foo(opt):
             return 'bar'
         UnitOptionsDict([foo])
+        UnitOptionsDict((foo,))
+        UnitOptionsDict({foo})
 
-    def test_create_from_non_dict(self):
+    def test_create_from_class(self):
         """
-        When I create an OptionsDict using something other than a dict
-        or a list of functions, an error should be raised.
+        When I create an OptionsDict from a class, there is no error.
+        """
+        class basis:
+            foo = 'bar'
+            def baz(self): return 0
+        UnitOptionsDict(basis)
+
+    def test_create_from_other(self):
+        """
+        When I create an OptionsDict using something other than a dict,
+        a list of functions or a class, an error should be raised.
         """
         create_od = lambda: UnitOptionsDict('foo')
         self.assertRaises(OptionsDictException, create_od)
+        
 
 
 class TestOptionsDictBasics(unittest.TestCase):
@@ -41,7 +53,7 @@ class TestOptionsDictBasics(unittest.TestCase):
         
     def test_equal(self):
         self.assertEqual(self.od, UnitOptionsDict({'foo': 'bar'}))
-
+                
     def test_unequal(self):
         self.assertNotEqual(self.od, UnitOptionsDict({'baz': 'bar'}))
 
@@ -55,6 +67,17 @@ class TestOptionsDictBasics(unittest.TestCase):
         self.assertIsNotNone(ni)
         od.set_node_info(ni)
         self.assertEqual(ni, od.get_node_info())
+
+    def test_compare_with_options_dict_from_class(self):
+        """
+        This can be done as long as there aren't any dynamic entries.
+        Dynamic entries are created from functions, and functions
+        created in different contexts aren't equal.
+        """
+        class basis:
+            foo = 'bar'
+        od_from_class = UnitOptionsDict(basis)
+        self.assertEqual(self.od, od_from_class)
         
     def test_copy(self):
         other = self.od.copy()
@@ -67,7 +90,6 @@ class TestOptionsDictBasics(unittest.TestCase):
         other.update(UnitOptionsDict({'foo': 'baz'}))
         self.assertNotEqual(other, self.od)
 
-        
         
 class TestOptionsDictDynamicEntries(unittest.TestCase):
     
@@ -85,7 +107,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
             return d['velocity'] * d['pipe_diameter'] / \
                 d['kinematic_viscosity']
         self.od.update([Reynolds_number])
-
+        
     def test_missing_information_raises_error(self):
         """
         I try and obtain Reynolds_number before velocity is defined.  A
@@ -153,7 +175,32 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         self.od.freeze()
         self.od['velocity'] = 0.04
         self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
-        
+
+
+class TestOptionsDictFromClassDynamicEntries(unittest.TestCase):
+    """
+    I repeat the setup and a key test in TestOptionsDictDynamicEntries,
+    but I use a class with attributes and methods to construct the
+    OptionsDict.  Ideally an equality check would be used to check the
+    state of this OptionsDict, but functions and hence dynamic entries
+    created in different contexts are never equal.
+    """
+    
+    def setUp(self):
+        class basis:
+            kinematic_viscosity = 1.e-6
+            pipe_diameter = 0.1
+            def Reynolds_number(self):
+                return self['velocity'] * self['pipe_diameter'] / \
+                    self['kinematic_viscosity']
+        self.od = UnitOptionsDict(basis)
+            
+    def test_dynamic_entry(self):
+        self.od['velocity'] = 0.02
+        self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
+        self.od['pipe_diameter'] = 0.15
+        self.assertAlmostEqual(self.od['Reynolds_number'], 3000.)
+
 
 class TestOptionsDictTemplateExpansion(unittest.TestCase):
 

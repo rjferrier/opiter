@@ -65,5 +65,25 @@ class TestOrphanNodeAfterCollapse(unittest.TestCase):
         self.assertEqual(ni.str(), 'A')
 
 
+class TestOrphanNodeFromClassAfterCollapse(unittest.TestCase):
+    """
+    Repeat the setup and key tests from TestOrphanNodeAfterCollapse,
+    this time creating the node from a class.
+    """
+
+    def setUp(self):
+        class A:
+            foo = 'bar'
+        node = OptionsNode(A)
+        self.od = node.collapse()[0]
+
+    def test_contents(self):
+        self.assertEqual(self.od['foo'], 'bar')
+
+    def test_node_info_name(self):
+        ni = self.od.get_node_info()
+        self.assertEqual(ni.str(), 'A')
+
+
 if __name__ == '__main__':
     unittest.main()

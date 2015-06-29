@@ -64,23 +64,33 @@ class TestOptionsArrayBasics(unittest.TestCase):
 
     def setUp(self):
         """
-        I create an OptionsArray from a list of assorted objects, one of
-        which is an OptionsNode.
+        I create an OptionsArray from a list of assorted objects, two of
+        which are OptionsNodes - one created from a string and dict,
+        the other from a class.
         """
         node = OptionsNode('some_dict', {'foo': 'bar'})
-        self.values = ['A', 2, 3.14, node]
+        class another_dict:
+            qux = 2
+        another_node = OptionsNode(another_dict)
+        self.values = ['A', 3.14, node, another_node]
         self.array = OptionsArray('random', self.values)
-        self.expected_names = ['A', '2', '3.14', 'some_dict']
+        self.expected_names = ['A', '3.14', 'some_dict', 'another_dict']
 
     def test_create_options_dict(self):
-        node = self.array.create_options_node('baz', {})
+        node = self.array.create_options_node('baz')
         self.assertIsInstance(node, OptionsNode)
         self.assertEqual(str(node), 'baz')
 
     def test_create_node_info(self):
-        ni = self.array.create_node_info(2)
+        ni = self.array.create_node_info(1)
         self.assertIsInstance(ni, ArrayNodeInfo)
         self.assertEqual(ni.str(collection_separator=':'), 'random:3.14')
+
+    def test_copy(self):
+        other = self.array.copy()
+        # test for equivalence and non-identity
+        self.assertEqual(other, self.array)
+        self.assertFalse(other is self.array)
 
     def test_element_types(self):
         for el in self.array:
@@ -98,12 +108,13 @@ class TestOptionsArrayBasics(unittest.TestCase):
         """
         Getting the options dictionaries and querying 'random' should
         return the various values; alternatively, the OptionsNode
-        dictionary we started with should now be queryable.  All
-        dictionaries should have the common entry.
+        dictionaries we started with should now be queryable.
         """
         for i, el in enumerate(self.array.collapse()):
-            if i==3:
+            if i==2:
                 self.assertEqual(el['foo'], 'bar')
+            elif i==3:
+                self.assertEqual(el['qux'], 2)
             else:
                 self.assertEqual(el['random'], self.values[i])
 

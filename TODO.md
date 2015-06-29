@@ -1,11 +1,12 @@
 - [ ] OptionsTreeElement behaviour
   - [ ] Consider reworking `collapse` as a generator
   - [ ] OptionsArray
-    - [ ] `__getitem__` by index, as by slice, should not modify node info
-    - [ ] Instead, `popitem` should be implemented and modify node info 
+    - [ ] Review behaviour of `__getitem__` in the context of tree operations.
+          Should passing an index modify the returned node info?
+    - [ ] Handle node keys as well as indices in `__getitem__`
   
 - [ ] Syntactic sugar
-  - [ ] Create `OptionsNode` from class (and integrate with `OptionsArray`)
+  - [x] Create `OptionsNode` from class (and integrate with `OptionsArray`)
   - [ ] Update `OptionsDict` entries by variable list
   - [ ] Get and set items using dot-style notation
     - [ ] Warn when new names conflict with original namespace

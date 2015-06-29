@@ -7,7 +7,6 @@ from copy import deepcopy
 from tree_elements import OptionsArray, OptionsNode
 from options_dict import OptionsDict, Lookup, freeze
 from multiprocessing import Pool
-from pickle import PicklingError
 
 
 def pool():

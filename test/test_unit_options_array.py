@@ -12,8 +12,10 @@ class TestOptionsArrayCreation(unittest.TestCase):
         """
         I should be able to create an array from assorted objects.
         """
-        some_node = UnitOptionsNode('some_dict', {'foo': 'bar'})
-        UnitOptionsArray( 'random', ['A', 2, 3.14, some_node])
+        some_node = UnitOptionsNode('some_node', {'foo': 'bar'})
+        class another_node_basis:
+            qux = 1
+        UnitOptionsArray('random', ['A', 3.14, some_node, another_node_basis])
 
         
     def test_create_with_unwrapped_dictionary(self):
@@ -64,10 +66,13 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
     def setUp(self):
         """
         I create an OptionsArray from a list of differently-typed values,
-        one of which is already an OptionsNode.
+        one of which is an OptionsNode and another is a class which
+        can be used to form the basis of an OptionsNode.
         """
-        node = UnitOptionsNode('some_dict', {'foo': 'bar'})
-        self.values = ['A', 2, 3.14, node]
+        node = UnitOptionsNode('some_node', {'foo': 'bar'})
+        class another_node:
+            qux = 1
+        self.values = ['A', 3.14, node, another_node]
         self.array = UnitOptionsArray('random', self.values)
 
     def test_equal(self):
@@ -86,22 +91,20 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
 
     def test_iteration(self):
         for el, v in zip(self.array, self.values):
-            self.assertEqual(str(el), str(v))
-
-    def test_copy(self):
-        other = self.array.copy()
-        # test for equivalence and non-identity
-        self.assertEqual(other, self.array)
-        self.assertFalse(other is self.array)
+            try:
+                v_str = v.__name__
+            except AttributeError:
+                v_str = str(v)
+            self.assertEqual(str(el), v_str)
 
     def test_getitem_from_index_and_check_value(self):
-        node = self.array[2]
+        node = self.array[1]
         self.assertEqual(str(node), '3.14')
 
     def test_getitem_from_slice_and_check_values(self):
         subarray = self.array[1:4:2]
-        self.assertEqual(str(subarray[0]), '2')
-        self.assertEqual(str(subarray[1]), 'some_dict')
+        self.assertEqual(str(subarray[0]), '3.14')
+        self.assertEqual(str(subarray[1]), 'another_node')
         self.assertEqual(len(subarray), 2)
 
     def test_setitem_from_index_and_check_value(self):
@@ -123,13 +126,17 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
 
     def test_pop_and_check_values(self):
         node = self.array.pop()
-        self.assertEqual(str(node), 'some_dict')
-        self.assertEqual(str(self.array[-1]), '3.14')
+        self.assertEqual(str(node), 'another_node')
+        self.assertEqual(str(self.array[-1]), 'some_node')
         self.assertEqual(len(self.array), 3)
 
     def test_collapse(self):
         for el, v in zip(self.array, self.values):
-            self.assertEqual(str(el), str(v))
+            try:
+                v_str = v.__name__
+            except AttributeError:
+                v_str = str(v)
+            self.assertEqual(str(el), v_str)
 
     def test_donate_copy(self):
         array_init = self.array.copy()

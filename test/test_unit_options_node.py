@@ -23,6 +23,18 @@ class TestOptionsNodeCreation(unittest.TestCase):
         """
         create_node = lambda: UnitOptionsNode('foo', child='bar')
         self.assertRaises(OptionsNodeException, create_node)
+
+    def test_create_node_from_non_class(self):
+        """
+        When I create a node using class method from_node and passing in
+        something other than a class, an error should be raised.
+        """
+        class some_node:
+            foo = 'bar'
+        # some_node() instantiates an object from the class - this
+        # should fail as such object won't have a name.
+        create_node = lambda: UnitOptionsNode(some_node())
+        self.assertRaises(OptionsNodeException, create_node)
         
         
 class TestOptionsNodeBasics(unittest.TestCase):
@@ -65,7 +77,21 @@ class TestOptionsNodeBasics(unittest.TestCase):
         acceptor, remainder = self.node.donate_copy(acceptor)
         self.assertEqual(acceptor.child, node_init)
         self.assertEqual(len(remainder), 0)        
-    
+
+    def test_compare_with_node_from_class(self):
+        """
+        This can be done as long as there aren't any dynamic entries.
+        Dynamic entries are created from functions, and functions
+        created in different contexts aren't equal.
+        """
+        class foo:
+            bar = 1
+        class qux: 
+            pass
+        node_from_class = UnitOptionsNode(foo, child=UnitOptionsNode(qux))
+        self.assertEqual(node_from_class, self.node)
+
+        
 if __name__ == '__main__':
     unittest.main()
         

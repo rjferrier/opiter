@@ -56,9 +56,18 @@ class OptionsDict(dict):
         # before it exists.
         self.node_info = []
         self.update(entries)
+        
 
     @classmethod
     def another(Class, entries={}):
+        return Class(entries)
+
+    @classmethod
+    def from_class(Class, basis):
+        # ignore magic/hidden attributes, which are prefixed with a
+        # double underscore
+        entries  = {k: basis.__dict__[k] \
+                    for k in basis.__dict__.keys() if '__' not in k}
         return Class(entries)
 
     @classmethod
@@ -182,15 +191,24 @@ class OptionsDict(dict):
         As with conventional dicts, updates entries with the key-value
         pairs given in the entries argument.  Alternatively, a list of
         functions may be supplied which will go on to become dynamic
-        entries.
+        entries, or a class may be supplied whose attributes and
+        methods will go on to become conventional and dynamic entries,
+        respectively.
         """
-        if isinstance(entries, dict):
-            # argument is a dictionary, so updating is straightforward
-            self._update_from_dict(entries)
-        else:
-            # argument is presumably a list of dynamic entries
-            self._update_from_dynamic_entries(entries)
+        default_err = OptionsDictException(
+            "argument must be a dict, an iterable of dynamic entries \n"+\
+            "(i.e. functions), or a class with attributes and/or methods.")
+        for strategy in [self._update_from_dict,
+                         self._update_from_dynamic_entries,
+                         self._update_from_class]:
+            try:
+                strategy(entries, default_err)
+                return
+            except:
+                pass
 
+        raise default_err
+            
 
     def freeze(self):
         """
@@ -358,8 +376,7 @@ class OptionsDict(dict):
         acceptor.update(self)
         return acceptor, []
 
-
-    def _update_from_dict(self, other):
+    def _update_from_dict(self, other, default_error):
         # update OptionsDict attributes
         if isinstance(other, OptionsDict):
             self.node_info += other.node_info
@@ -367,17 +384,21 @@ class OptionsDict(dict):
         # now pass to superclass
         dict.update(self, other)
 
-    def _update_from_dynamic_entries(self, functions):
-        err = OptionsDictException("entries must be a dict or a sequence "+\
-                                   "of dynamic entries (i.e.functions).")
-        try:
-            for func in functions:
-                if not isinstance(func, FunctionType):
-                    raise err
-                varnames = func.func_code.co_varnames
-                self[func.__name__] = func
-        except TypeError:
-            raise err
+    def _update_from_dynamic_entries(self, functions, default_error):
+        for func in functions:
+            if not isinstance(func, FunctionType):
+                raise error
+            varnames = func.func_code.co_varnames
+            self[func.__name__] = func
+
+    def _update_from_class(self, basis_class, default_error):
+        # ignore magic/hidden attributes, which are prefixed with a
+        # double underscore
+        entries  = {k: basis_class.__dict__[k] \
+                    for k in basis_class.__dict__.keys() if '__' not in k}
+        # can now call update again
+        self.update(entries)
+        
             
     def __str__(self):
         return self.str()
