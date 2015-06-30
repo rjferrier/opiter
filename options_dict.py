@@ -31,8 +31,8 @@ class OptionsDict(dict):
         - Any name registered in the mutable_attributes class variable
           escapes item setting so that the associated attribute can be
           manipulated as usual.
-        - Setting an item with the same name as an attribute is
-          disallowed.
+        - Setting an item with a name registered in protected_attributes,
+          or with a leading underscore, is disallowed.
 
         As an added convenience, the OptionsDict can be constructed or
         updated from a class whose attributes represent the new
@@ -77,7 +77,7 @@ class OptionsDict(dict):
 
     # mutable attributes should be prefixed with underscores so that
     # the client does not confuse them with dictionary items.
-    mutable_attributes = ['node_info']
+    mutable_attributes = ['_node_info']
     protected_attributes = [
         'another', 'donate_copy', 'indent', 'create_array_node_info',
         'create_node_info_formatter', 'create_orphan_node_info',
@@ -94,7 +94,7 @@ class OptionsDict(dict):
         # the node_info list first.  This is necessary to prevent
         # dynamic entries from possibly referencing the component
         # before it exists.
-        self.node_info = []
+        self._node_info = []
         self.update(entries)
 
     @classmethod
@@ -127,7 +127,7 @@ class OptionsDict(dict):
                 "name argument must be a string (or None).")
         # instantiate object and set the first node information
         obj = Class(entries)
-        obj.node_info.append(obj.create_orphan_node_info(name))
+        obj._node_info.append(obj.create_orphan_node_info(name))
         return obj
 
         
@@ -207,7 +207,7 @@ class OptionsDict(dict):
 
     def copy(self):
         obj = self.another(dict.copy(self))
-        obj.node_info = [ni.copy() for ni in self.node_info]
+        obj._node_info = [ni.copy() for ni in self._node_info]
         return obj
 
         
@@ -297,7 +297,7 @@ class OptionsDict(dict):
 
         # filter the nodes to represent
         filtered_node_info = []
-        for ni in self.node_info:
+        for ni in self._node_info:
             # filter nodes according to corresponding collection names
             # given in the optional args
             if only:
@@ -350,12 +350,12 @@ class OptionsDict(dict):
         """
         if collection_name is None:
             try:
-                return self.node_info[0]
+                return self._node_info[0]
             except IndexError:
                 raise NodeInfoException(
                     "there aren't any node_info objects")
         else:
-            for ni in self.node_info:
+            for ni in self._node_info:
                 if ni.belongs_to(collection_name):
                     return ni
             raise NodeInfoException(
@@ -371,13 +371,13 @@ class OptionsDict(dict):
         """
         if collection_name is None:
             try:
-                self.node_info[0] = new_node_info
+                self._node_info[0] = new_node_info
             except IndexError:
-                self.node_info.append(new_node_info)
+                self._node_info.append(new_node_info)
         else:
-            for i, ni in enumerate(self.node_info):
+            for i, ni in enumerate(self._node_info):
                 if ni.belongs_to(collection_name):
-                    self.node_info[i] = new_node_info
+                    self._node_info[i] = new_node_info
                     return
             raise NodeInfoException(
                 "couldn't find any node information corresponding to '{}'".\
@@ -416,8 +416,8 @@ class OptionsDict(dict):
     def _update_from_dict(self, other, default_error):
         # update OptionsDict attributes
         if isinstance(other, OptionsDict):
-            self.node_info += other.node_info
-            # if len(self.node_info) > 1: raise Exception
+            self._node_info += other._node_info
+            # if len(self._node_info) > 1: raise Exception
         # now check item names and pass to superclass
         for k in other.keys():
             self._check_new_item_name(k)
@@ -440,18 +440,24 @@ class OptionsDict(dict):
         self.update(entries)
 
     def _check_new_item_name(self, name):
-        if name in self.protected_attributes:
+        if name[0] == '_':
+            raise OptionsDictException(
+                "Prefixing an item with an underscore is not allowed "+\
+                "because it \nmight clash with a hidden attribute.  If you "+\
+                "want to set this attribute,\n you will need to register "+\
+                "the name in mutable_attributes.")
+        elif name in self.protected_attributes:
             raise OptionsDictException(
                 "Setting an item called '{}' is not allowed because it "+\
                 "would clash \nwith an attribute of the same name.  If you "+\
-                "want to set the attribute,\n you will need to register "+\
+                "want to set this attribute,\n you will need to register "+\
                 "the name in mutable_attributes.")
             
     def __str__(self):
         return self.str()
 
     def __repr__(self):
-        return dict.__repr__(self) + repr(self.node_info)
+        return dict.__repr__(self) + repr(self._node_info)
 
     def __iter__(self):
         yield self
@@ -472,7 +478,7 @@ class OptionsDict(dict):
     def __eq__(self, other):
         result = isinstance(other, OptionsDict)
         if result:
-            result *= self.node_info == other.node_info
+            result *= self._node_info == other._node_info
             result *= dict.__eq__(self, other)
         return result
 

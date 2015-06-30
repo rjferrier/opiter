@@ -51,6 +51,14 @@ class TestOptionsDictCreation(unittest.TestCase):
         create_od = lambda: UnitOptionsDict({'str': 'hello'})
         self.assertRaises(OptionsDictException, create_od)
 
+    def test_create_with_underscore_prefixed_item_name(self):
+        """
+        When I create an OptionsDict and one of my entries has the same
+        name as a preexisting attribute, an error should be raised.
+        """
+        create_od = lambda: UnitOptionsDict({'_foo': 'bar'})
+        self.assertRaises(OptionsDictException, create_od)
+
 
 class TestOptionsDictBasics(unittest.TestCase):
     
