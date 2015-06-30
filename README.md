@@ -21,14 +21,14 @@ options_tree = pipe_dias * velocities
 ```
 
 We might also want to do this for fluids with different properties.
-The properties may be represented by a dictionary which is named and
-wrapped by an `OptionsNode`, or for syntactic convenience they may be
+The properties may be represented by a dictionary which is wrapped by
+a named `OptionsNode`, or for syntactic convenience they may be
 represented by a class.
 
 ```python
-water = OptionsNode('water', {
-    'density'           : 1.00e3,
-    'dynamic_viscosity' : 0.89e-3})
+class water:
+    density = 1.00e3
+    dynamic_viscosity = 0.89e-3
 
 class ethanol:
     density = 0.79e3
@@ -47,9 +47,9 @@ which can be used to identify the combination.
 options_dicts = options_tree.collapse()
 
 for opt in options_dicts:
-    kinematic_visc = opt['dynamic_viscosity'] / opt['density']
-    Re = opt['velocity'] * opt['pipe_diameter'] / kinematic_visc
-    print 'ID = {}, Reynolds number = {:.2e}'.format(opt.str(), Re)
+    kinematic_visc = opt.dynamic_viscosity / opt.density
+    Re = opt.velocity * opt.pipe_diameter / kinematic_visc
+    print '{:20s}: Reynolds number = {:.2e}'.format(opt.str(), Re)
 ```
   
 A serial `for` loop is not the only means of performing a batch of
@@ -59,8 +59,8 @@ map function.
   
 ```python
 def calculate_Re(opt):
-  kinematic_visc = opt['dynamic_viscosity'] / opt['density']
-  return opt['velocity'] * opt['pipe_diameter'] / kinematic_visc
+  kinematic_visc = opt.dynamic_viscosity / opt.density
+  return opt.velocity * opt.pipe_diameter / kinematic_visc
 
 p = multiprocessing.Pool(4)
 Reynolds_numbers = p.map(calculate_Re, options_dicts)
@@ -80,12 +80,12 @@ to static values before multiprocessing.  This is because Python's
 
 ```python
 fluids.update({
-    'kinematic_visc': lambda opt: opt['dynamic_viscosity'] / opt['density']})
+    'kinematic_visc': lambda opt: opt.dynamic_viscosity / opt.density})
 
-options_tree = fluids * pipe_dias * velocities
+options_tree = pipe_dias * velocities * fluids
 options_tree.update({
-    'Reynolds_number': lambda opt: opt['velocity'] * opt['pipe_diameter'] / 
-    opt['kinematic_visc']})
+    'Reynolds_number': lambda opt: opt.velocity * opt.pipe_diameter / 
+    opt.kinematic_visc})
 
 options_dicts = options_tree.collapse()
 Reynolds_numbers = p.map(Lookup('Reynolds_number'), freeze(options_dicts))
