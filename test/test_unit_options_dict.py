@@ -209,15 +209,21 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
 
 
 class TestOptionsDictFromClassDynamicEntries(unittest.TestCase):
-    """
-    I repeat the setup and a key test in TestOptionsDictDynamicEntries,
-    but I use a class with attributes and methods to construct the
-    OptionsDict.  Ideally an equality check would be used to check the
-    state of this OptionsDict, but functions and hence dynamic entries
-    created in different contexts are never equal.
-    """
-    
-    def setUp(self):
+
+    def check_dynamic_entries(self):
+        self.od['velocity'] = 0.02
+        self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
+        self.od['pipe_diameter'] = 0.15
+        self.assertAlmostEqual(self.od['Reynolds_number'], 3000.)
+        
+    def test_dynamic_entry_from_simple_class(self):
+        """
+        I repeat the setup and a key test in TestOptionsDictDynamicEntries,
+        but I use a class with attributes and methods to construct the
+        OptionsDict.  Ideally an equality check would be used to check the
+        state of this OptionsDict, but functions and hence dynamic entries
+        created in different contexts are never equal.
+        """
         class basis:
             kinematic_viscosity = 1.e-6
             pipe_diameter = 0.1
@@ -225,13 +231,58 @@ class TestOptionsDictFromClassDynamicEntries(unittest.TestCase):
                 return self['velocity'] * self['pipe_diameter'] / \
                     self['kinematic_viscosity']
         self.od = UnitOptionsDict(basis)
-            
-    def test_dynamic_entry(self):
-        self.od['velocity'] = 0.02
-        self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
-        self.od['pipe_diameter'] = 0.15
-        self.assertAlmostEqual(self.od['Reynolds_number'], 3000.)
+        self.check_dynamic_entries()
 
+    def test_dynamic_entry_from_inheritance(self):
+        """
+        This time the dynamic entry is inherited from a base class.
+        """
+        class parent_basis:
+            def Reynolds_number(self):
+                return self['velocity'] * self['pipe_diameter'] / \
+                    self['kinematic_viscosity']
+        class child_basis(parent_basis):
+            kinematic_viscosity = 1.e-6
+            pipe_diameter = 0.1
+        self.od = UnitOptionsDict(child_basis)
+        self.check_dynamic_entries()
+
+    def test_dynamic_entry_from_multiple_inheritance(self):
+        """
+        This time the dynamic entry is inherited from one of two parallel
+        base classes.
+        """
+        class parent_basis_1:
+            def Reynolds_number(self):
+                raise AssertionError(
+                    "class parent_basis_1 should be overridden by "+\
+                    "parent_basis_2")
+        class parent_basis_2:
+            def Reynolds_number(self):
+                return self['velocity'] * self['pipe_diameter'] / \
+                    self['kinematic_viscosity']
+        class child_basis(parent_basis_1, parent_basis_2):
+            kinematic_viscosity = 1.e-6
+            pipe_diameter = 0.1
+        self.od = UnitOptionsDict(child_basis)
+        self.check_dynamic_entries()
+
+    def test_dynamic_entry_from_extended_inheritance(self):
+        """
+        This time the entries are spread over an extended inheritance
+        hierarchy.
+        """
+        class grandparent_basis:
+            kinematic_viscosity = 1.e-6
+        class parent_basis(grandparent_basis):
+            def Reynolds_number(self):
+                return self['velocity'] * self['pipe_diameter'] / \
+                    self['kinematic_viscosity']
+        class child_basis(parent_basis):
+            pipe_diameter = 0.1
+        self.od = UnitOptionsDict(child_basis)
+        self.check_dynamic_entries()
+            
 
 class TestOptionsDictTemplateExpansion(unittest.TestCase):
 

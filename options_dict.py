@@ -243,10 +243,10 @@ class OptionsDict(dict):
             try:
                 strategy(entries, default_err)
                 return
-            except:
+            except (AttributeError, TypeError):
+                # tolerate certain exceptions by moving onto the next
+                # update strategy
                 pass
-
-        raise default_err
             
 
     def freeze(self):
@@ -426,16 +426,22 @@ class OptionsDict(dict):
     def _update_from_dynamic_entries(self, functions, default_error):
         for func in functions:
             if not isinstance(func, FunctionType):
-                raise error
+                raise default_error
             varnames = func.func_code.co_varnames
             self._check_new_item_name(func.__name__)
             self[func.__name__] = func
 
     def _update_from_class(self, basis_class, default_error):
-        # ignore magic/hidden attributes, which are prefixed with a
-        # double underscore
-        entries  = {k: basis_class.__dict__[k] \
-                    for k in basis_class.__dict__.keys() if '__' not in k}
+        # recurse through the basis_class' superclasses first
+        if basis_class.__bases__:
+            for b in basis_class.__bases__:
+                self._update_from_class(b, default_error)
+
+        # ignore magic/hidden attributes, which are prefixed with
+        # a double underscore
+        entries = {k: basis_class.__dict__[k] \
+                   for k in basis_class.__dict__.keys() \
+                   if '__' not in k}
         # can now call update again
         self.update(entries)
 

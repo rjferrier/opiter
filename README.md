@@ -70,23 +70,53 @@ In practice, the client may have to deal with many dependent variables
 that would clutter the function body.  For this reason, an
 `OptionsDict` has some extra functionality compared to a conventional
 dict.  Entries can be defined as dynamic, updating automatically
-according to the values of others.  Such dynamic entries might be
-added locally, or in a separate dictionary which is then applied
-globally.  A caveat is that, if they are defined using non-global
-functions such as lambdas, dynamic entries have to be converted back
-to static values before multiprocessing.  This is because Python's
-`pickle` module has trouble serialising these types of functions.  The
-`freeze` function is provided for converting dynamic entries.
+according to the values of others.  Such dynamic entries may be
+defined by (possibly inherited) methods in the classes used to
+construct the options...
 
 ```python
-fluids.update({
-    'kinematic_visc': lambda opt: opt.dynamic_viscosity / opt.density})
+class fluid:
+    def kinematic_viscosity(self):
+        return self.dynamic_viscosity / self.density
 
+class water(fluid):
+    density = 1.00e3
+    dynamic_viscosity = 0.89e-3
+
+class ethanol(fluid):
+    density = 0.79e3
+    dynamic_viscosity = 1.09e-3
+
+fluids = OptionsArray('fluid', [water, ethanol])
 options_tree = pipe_dias * velocities * fluids
-options_tree.update({
-    'Reynolds_number': lambda opt: opt.velocity * opt.pipe_diameter / 
-    opt.kinematic_visc})
+```
 
+...or they may be defined by lambdas or free functions.  The options
+tree structure has an update method for broadcasting new entries to
+all of its nodes.
+
+```python
+options_tree.update({
+    'Reynolds_number': lambda opt: opt.velocity * opt.pipe_diameter /
+    opt.kinematic_viscosity})
+
+def observation(opt):
+    if opt.Reynolds_number < 2100.:
+        return 'laminar'
+    elif opt.Reynolds_number < 4000.:
+        return 'transitional'
+    else:
+        return 'turbulent'
+options_tree.update([observation])
+```
+ 
+A caveat is that, if they are defined using non-global functions such
+as lambdas, dynamic entries have to be converted back to static values
+before multiprocessing.  This is because Python's `pickle` module has
+trouble serialising these types of functions.  The `freeze` function
+is provided for converting dynamic entries.
+
+```python
 options_dicts = options_tree.collapse()
 Reynolds_numbers = p.map(Lookup('Reynolds_number'), freeze(options_dicts))
 ```

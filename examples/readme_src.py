@@ -47,17 +47,37 @@ for descr, Re in zip(map(Str(), options_tree.collapse()), Reynolds_numbers):
 
 print "\nUsing dynamic entries:\n"
 
-fluids.update({
-    'kinematic_visc': lambda opt: opt.dynamic_viscosity / opt.density})
+class fluid:
+    def kinematic_viscosity(self):
+        return self.dynamic_viscosity / self.density
+class water(fluid):
+    density = 1.00e3
+    dynamic_viscosity = 0.89e-3
+class ethanol(fluid):
+    density = 0.79e3
+    dynamic_viscosity = 1.09e-3
 
+fluids = OptionsArray('fluid', [water, ethanol])
 options_tree = pipe_dias * velocities * fluids
+
 options_tree.update({
-    'Reynolds_number': lambda opt: opt.velocity * opt.pipe_diameter / 
-    opt.kinematic_visc})
+    'Reynolds_number': lambda opt: opt.velocity * opt.pipe_diameter /
+    opt.kinematic_viscosity})
+
+def observation(opt):
+    if opt.Reynolds_number < 2100.:
+        return 'laminar'
+    elif opt.Reynolds_number < 4000.:
+        return 'transitional'
+    else:
+        return 'turbulent'
+options_tree.update([observation])
 
 options_dicts = options_tree.collapse()
 Reynolds_numbers = p.map(Lookup('Reynolds_number'), freeze(options_dicts))
 
 # for completeness...
-for descr, Re in zip(map(Str(), options_tree.collapse()), Reynolds_numbers):
-    print '{:20s}: Reynolds number = {:.2e}'.format(descr, Re)
+observations = p.map(Lookup('observation'), freeze(options_dicts))
+for descr, Re, obs in \
+    zip(map(Str(), options_tree.collapse()), Reynolds_numbers, observations):
+    print '{:20s}: Reynolds number = {:.2e}, {}'.format(descr, Re, obs)
