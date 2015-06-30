@@ -78,6 +78,11 @@ class OptionsDict(dict):
     # mutable attributes should be prefixed with underscores so that
     # the client does not confuse them with dictionary items.
     mutable_attributes = ['node_info']
+    protected_attributes = [
+        'another', 'donate_copy', 'indent', 'create_array_node_info',
+        'create_node_info_formatter', 'create_orphan_node_info',
+        'copy', 'expand_template_file', 'get_node_info', 'freeze',
+        'from_class', 'set_node_info', 'str', 'update']
     
     def __init__(self, entries={}):
         """
@@ -435,7 +440,7 @@ class OptionsDict(dict):
         self.update(entries)
 
     def _check_new_item_name(self, name):
-        if name in dir(self) + self.__dict__.keys():
+        if name in self.protected_attributes:
             raise OptionsDictException(
                 "Setting an item called '{}' is not allowed because it "+\
                 "would clash \nwith an attribute of the same name.  If you "+\
