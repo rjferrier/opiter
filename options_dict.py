@@ -17,8 +17,49 @@ class OptionsDict(dict):
     """
     An OptionsDict inherits from a conventional dict, but it has a few
     enhancements:
+    
+    (1) In a similar way to Django and Jinja2, entries can be set and
+        accessed using attribute setter/getter (dot) syntax.  
+        For example, as an alternative to
+            opt['foo'] = 'bar'
+            print opt['foo']
+        we may write
+            opt.foo = 'bar'
+            print opt.foo
 
-    (1) An OptionsDict can be given 'node information' which lends the
+        To prevent clashes with the existing attribute namespace,
+        - Any name registered in the mutable_attributes class variable
+          escapes item setting so that the associated attribute can be
+          manipulated as usual.
+        - Setting an item with the same name as an attribute is
+          disallowed.
+
+        As an added convenience, the OptionsDict can be constructed or
+        updated from a class whose attributes represent the new
+        entries.  Any class methods will go on to become dynamic
+        entries (see next note).
+            class basis:
+                foo = 'bar'
+                def baz(self):
+                    return self.foo
+            opt.update(basis)
+        
+    (2) Values can be runtime-dependent upon the state of other values
+        in the dictionary.  Each of these special values is specified
+        by a function accepting a single dictionary argument (i.e. the
+        OptionsDict itself).  The argument is used to look things up
+        dynamically.  An OptionsDict can be constructed or updated
+        with a list of functions instead of the usual key-value pairs,
+        in which case the functions' names become the keys.
+
+        N.B.  If dynamic entries are created using more exotic
+        constructs such lambdas or closures, it will be necessary to
+        call OptionsDict.freeze() before using the multiprocessing
+        module, because it seems that such constructs cause pickling
+        problems.  freeze() gets around the problems by converting the
+        dynamic entries back to static ones.
+
+    (3) An OptionsDict can be given 'node information' which lends the
         OptionsDict a name and describes its position in a tree.  This
         node information accumulates when OptionsDicts are merged via
         the update() method, and can be used to form a string
@@ -29,26 +70,20 @@ class OptionsDict(dict):
         identifier and inferring the identifiers of other
         combinations.
 
-    (2) Values can be runtime-dependent upon the state of other values
-        in the dictionary.  Each of these special values is specified
-        by a function accepting a single dictionary argument (i.e. the
-        OptionsDict itself).  The dictionary argument is used to look
-        things up dynamically.  An OptionsDict can be constructed or
-        updated with a list of functions instead of the usual
-        key-value pairs, in which case the functions' names become the
-        keys.
-
-        N.B.  If using the multiprocessing module, it is important
-        that dynamic entries are created using defs rather than
-        lambdas.  It seems that lambdas cause pickling problems, and
-        there is currently no way to protect against them.
-
-    (3) An OptionsDict can expand strings as templates.
+    (4) An OptionsDict can expand strings as simple templates.  (For
+        more complex templates, it is recommended that the OptionsDict
+        be passed to a template engine such as Jinja2.)
     """
+
+    # mutable attributes should be prefixed with underscores so that
+    # the client does not confuse them with dictionary items.
+    mutable_attributes = ['node_info']
     
     def __init__(self, entries={}):
         """
-        Returns an OptionsDict with no node information.
+        Returns an OptionsDict with no node information.  The entries
+        argument can be more than just key-value pairs; see the update
+        method for more information.
         """
         # With just an entries argument, treat as a simple dict.  Set
         # the node_info list first.  This is necessary to prevent
@@ -56,7 +91,6 @@ class OptionsDict(dict):
         # before it exists.
         self.node_info = []
         self.update(entries)
-        
 
     @classmethod
     def another(Class, entries={}):
@@ -322,7 +356,6 @@ class OptionsDict(dict):
             raise NodeInfoException(
                 "couldn't find any node information corresponding to '{}'".\
                 format(collection_name))
-
         
     def set_node_info(self, new_node_info, collection_name=None):
         """
@@ -344,7 +377,6 @@ class OptionsDict(dict):
             raise NodeInfoException(
                 "couldn't find any node information corresponding to '{}'".\
                 format(collection_name))
-        
         
     def expand_template_string(self, buffer_string, loops=1):
         """
@@ -381,7 +413,9 @@ class OptionsDict(dict):
         if isinstance(other, OptionsDict):
             self.node_info += other.node_info
             # if len(self.node_info) > 1: raise Exception
-        # now pass to superclass
+        # now check item names and pass to superclass
+        for k in other.keys():
+            self._check_new_item_name(k)
         dict.update(self, other)
 
     def _update_from_dynamic_entries(self, functions, default_error):
@@ -389,6 +423,7 @@ class OptionsDict(dict):
             if not isinstance(func, FunctionType):
                 raise error
             varnames = func.func_code.co_varnames
+            self._check_new_item_name(func.__name__)
             self[func.__name__] = func
 
     def _update_from_class(self, basis_class, default_error):
@@ -398,7 +433,14 @@ class OptionsDict(dict):
                     for k in basis_class.__dict__.keys() if '__' not in k}
         # can now call update again
         self.update(entries)
-        
+
+    def _check_new_item_name(self, name):
+        if name in dir(self) + self.__dict__.keys():
+            raise OptionsDictException(
+                "Setting an item called '{}' is not allowed because it "+\
+                "would clash \nwith an attribute of the same name.  If you "+\
+                "want to set the attribute,\n you will need to register "+\
+                "the name in mutable_attributes.")
             
     def __str__(self):
         return self.str()
@@ -408,6 +450,19 @@ class OptionsDict(dict):
 
     def __iter__(self):
         yield self
+
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError("'{}'".format(name))
+
+    def __setattr__(self, name, value):
+        if name in self.mutable_attributes:
+            self.__dict__[name] = value
+        else:
+            self._check_new_item_name(name)
+            self[name] = value
         
     def __eq__(self, other):
         result = isinstance(other, OptionsDict)

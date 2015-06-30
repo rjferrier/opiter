@@ -5,11 +5,10 @@
           Should passing an index modify the returned node info?
     - [ ] Handle node keys as well as indices in `__getitem__`
   
-- [ ] Syntactic sugar
+- [x] Syntactic sugar
   - [x] Create `OptionsNode` from class (and integrate with `OptionsArray`)
-  - [ ] Update `OptionsDict` entries by variable list
-  - [ ] Get and set items using dot-style notation
-    - [ ] Warn when new names conflict with original namespace
+  - [x] Get and set items using dot-style notation
+    - [x] Warn when new names conflict with original namespace
 
 - [ ] Tidy up
   - [ ] Review/update docstrings

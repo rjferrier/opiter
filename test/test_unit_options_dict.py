@@ -5,7 +5,7 @@ import unittest
 import os
 from unit_options_dict import UnitOptionsDict
 from options_dict import freeze, OptionsDictException, NodeInfoException
-
+from types import MethodType
 
 class TestOptionsDictCreation(unittest.TestCase):
 
@@ -42,7 +42,14 @@ class TestOptionsDictCreation(unittest.TestCase):
         """
         create_od = lambda: UnitOptionsDict('foo')
         self.assertRaises(OptionsDictException, create_od)
-        
+
+    def test_create_with_attribute_name_clash(self):
+        """
+        When I create an OptionsDict and one of my entries has the same
+        name as a preexisting attribute, an error should be raised.
+        """
+        create_od = lambda: UnitOptionsDict({'str': 'hello'})
+        self.assertRaises(OptionsDictException, create_od)
 
 
 class TestOptionsDictBasics(unittest.TestCase):
@@ -59,6 +66,22 @@ class TestOptionsDictBasics(unittest.TestCase):
 
     def test_node_info_empty(self):
         self.assertRaises(NodeInfoException, lambda: self.od.get_node_info())
+
+    def test_setitem_dot_syntax(self):
+        self.od.baz = 'qux'
+        self.assertEqual(self.od['baz'], 'qux')
+        
+    def test_getitem_dot_syntax(self):
+        self.assertEqual(self.od.foo, 'bar')
+
+    def test_setitem_dot_syntax_clashes_with_attribute(self):
+        def setter():
+            self.od.str = 'qux'
+        self.assertRaises(OptionsDictException, setter)
+        
+    def test_getitem_dot_syntax_clashes_with_attribute(self):
+        self.od['str'] = 'baz'
+        self.assertIsInstance(self.od.str, MethodType)
     
     def test_set_and_get_node_info(self):
         od = UnitOptionsDict({'foo': 'bar'})
