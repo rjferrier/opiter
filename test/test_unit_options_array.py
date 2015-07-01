@@ -101,6 +101,10 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         node = self.array[1]
         self.assertEqual(str(node), '3.14')
 
+    def test_getitem_from_name_and_check_value(self):
+        node = self.array['3.14']
+        self.assertEqual(str(node), '3.14')
+
     def test_getitem_from_slice_and_check_values(self):
         subarray = self.array[1:4:2]
         self.assertEqual(str(subarray[0]), '3.14')

@@ -416,16 +416,24 @@ class OptionsArray(OptionsTreeElement):
                 result *= node == other
         return result
 
-    def __getitem__(self, index_or_slice):
-        if isinstance(index_or_slice, slice):
-            # multiple OptionsNodes; return a new OptionsArray
-            return self.another(
-                self.name, islice(
-                    self.nodes, *index_or_slice.indices(len(self.nodes))))
-        else:
-            # return single OptionsNode.  Note that, unlike a slice,
-            # this neither returns a copy nor modifies the node info.
-            return self.nodes[index_or_slice]
+
+    def __getitem__(self, index_or_name_or_slice):
+        try:
+            # treat argument as a slice
+            indices = index_or_name_or_slice.indices(len(self.nodes))
+            return self.another(self.name, islice(self.nodes, *indices))
+        except AttributeError:
+            pass
+
+        try:
+            # treat argument as a name
+            index = [str(n) for n in self.nodes].index(index_or_name_or_slice)
+        except ValueError:
+            # default to an index
+            index = index_or_name_or_slice
+
+        return self.nodes[index]
+
 
     def __setitem__(self, index_or_slice, value_or_values):
         # convert to nodes

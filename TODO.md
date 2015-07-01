@@ -3,7 +3,7 @@
   - [ ] OptionsArray
     - [ ] Review behaviour of `__getitem__` in the context of tree operations.
           Should passing an index modify the returned node info?
-    - [ ] Handle node keys as well as indices in `__getitem__`
+    - [x] Handle node keys as well as indices in `__getitem__`
   
 - [x] Syntactic sugar
   - [x] Create `OptionsNode` from class (and integrate with `OptionsArray`)
@@ -14,6 +14,7 @@
 - [ ] Tidy up
   - [ ] Review/update docstrings
   - [ ] Rename copy methods as `__deepcopy__` or remove them altogether
+  - [ ] Replace isinstance tests with try-except blocks
   - [ ] Consider deprecating/removing
     - [ ] `expand_template_file`
     - [ ] `tools.py`, `OptionsDict.array`, `OptionsDict.node`
