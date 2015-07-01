@@ -557,6 +557,7 @@ def freeze(options_dicts):
     Freezes the given OptionsDicts.  See OptionsDict.freeze for
     further information.
     """
-    for od in options_dicts:
+    result = deepcopy(options_dicts)
+    for od in result:
         od.freeze()
-    return options_dicts
+    return result

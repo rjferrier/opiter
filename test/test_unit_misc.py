@@ -6,7 +6,7 @@ from options_dict import Lookup, Str, freeze
 
 
 class TestOptionsDictHelpers(unittest.TestCase):
-        
+    
     def test_lookup_functor(self):
         objs = [{'foo': 'bar'}] * 3
         results = map(Lookup('foo'), objs)
@@ -23,20 +23,27 @@ class TestOptionsDictHelpers(unittest.TestCase):
         results = map(functor, objs)
         self.assertEqual(results, ['abcde'] * 3)
 
-    def test_freeze(self):
+    def setUp_freeze_test(self):
         class Freezable:
             def __init__(self):
                 self.frozen = False
             def freeze(self):
                 self.frozen = True
-                
-        objs = [Freezable()] * 3
-        before = [obj.frozen for obj in objs]
+        self.objs = [Freezable()] * 3
+        before = [obj.frozen for obj in self.objs]
         self.assertEqual(before, [False] * 3)
-
-        objs = freeze(objs)
-        after = [obj.frozen for obj in freeze(objs)]
+        
+    def test_freeze(self):
+        self.setUp_freeze_test()
+        frozen_objs = freeze(self.objs)
+        after = [obj.frozen for obj in frozen_objs]
         self.assertEqual(after, [True] * 3)
+
+    def test_freeze_does_not_mutate_argument(self):
+        self.setUp_freeze_test()
+        freeze(self.objs)
+        after = [obj.frozen for obj in self.objs]
+        self.assertEqual(after, [False] * 3)
 
         
 if __name__ == '__main__':
