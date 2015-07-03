@@ -10,6 +10,8 @@ import sys
 import numpy
 import glob
 
+from options_iteration import OptionsArray, OptionsNode, OptionsDictException
+
 try:
     import jinja2
     HAVE_JINJA2 = True
@@ -72,7 +74,8 @@ class Failure(State, Exception):
 def check_file_exists(input_filename):
     if input_filename:
         if not os.path.isfile(input_filename):
-            raise Failure(input_filename + " not found")
+            raise Failure(input_filename
+    + " not found")
 
 class ChDir:
     "Context manager that temporarily changes working directory"
@@ -273,3 +276,56 @@ class RunBinary(ParallelFunctor):
                 options, [operation], prerequisite_filenames,
                 target_name=target_name)
         
+
+            
+## ALTERNATIVE CONSTRUCTORS
+
+class OptionsArrayFactory:
+    """
+    Provides an OptionsArray constructor with an alternative system
+    for naming the nodes.  For example, where
+
+       OptionsArray('array1', [class1, class2])
+       OptionsArray('array2', range(3))
+
+    produces nodes named ['class1', 'class2'] and ['0', '1', '2'],
+
+       factory = OptionsArrayFactory()
+       factory('array1', [class1, class2])
+       factory('array2', range(3))
+
+    produces nodes named ['A00', 'A01'] and ['B00', 'B01', 'B02'].
+    """
+    def __init__(self, array_index_formatter=None, node_index_formatter=None):
+        self.array_index = 0
+        if not array_index_formatter:
+            self.array_index_formatter = self.default_array_index_formatter
+        if not node_index_formatter:
+            self.node_index_formatter = self.default_node_index_formatter
+
+    @staticmethod
+    def default_array_index_formatter(i):
+        "Converts 0, 1, 2,... to A, B, C,... "
+        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i]
+
+    @staticmethod
+    def default_node_index_formatter(i):
+        "Converts 0, 1, 2,... to 00, 01, 02,... "
+        return '{:02d}'.format(i)
+        
+    def __call__(self, array_name, elements):
+        nodes = []
+        for node_index, el in enumerate(elements):
+            node_name = self.array_index_formatter(self.array_index) +\
+                        self.node_index_formatter(node_index)
+            try:
+                # el is a class that represents some entries
+                new_node = OptionsNode(node_name, el)
+            except OptionsDictException:
+                # el is a value that will be stored under array_name
+                new_node = OptionsNode(node_name, {array_name: el})
+            nodes.append(new_node)
+
+        # bump the array counter for next time
+        self.array_index += 1
+        return OptionsArray(array_name, nodes)
