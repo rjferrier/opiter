@@ -247,7 +247,10 @@ class OptionsDict(dict):
                 # tolerate certain exceptions by moving onto the next
                 # update strategy
                 pass
-            
+
+        # if we've looped through all the strategies and come to the end, 
+        # the argument was incompatible
+        raise default_err
 
     def freeze(self):
         """

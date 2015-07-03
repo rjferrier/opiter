@@ -40,8 +40,9 @@ class TestOptionsDictCreation(unittest.TestCase):
         When I create an OptionsDict using something other than a dict,
         a list of functions or a class, an error should be raised.
         """
-        create_od = lambda: UnitOptionsDict('foo')
-        self.assertRaises(OptionsDictException, create_od)
+        for thing in ['foo', 3, 3.14]:
+            create_od = lambda: UnitOptionsDict(thing)
+            self.assertRaises(OptionsDictException, create_od)
 
     def test_create_with_attribute_name_clash(self):
         """
