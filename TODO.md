@@ -18,6 +18,9 @@
   - [ ] Consider deprecating/removing
     - [ ] `expand_template_file`
     - [ ] `tools.py`, `OptionsDict.array`, `OptionsDict.node`
+  - [ ] Push smart initialisation of OptionsArray nodes into the OptionsNode
+        constructor, so that we don't have to duplicate this when writing 
+        alternative OptionsArray factories
 
 - [ ] Tests/Examples
   - [ ] Update advanced functional tests to use tree formatting
