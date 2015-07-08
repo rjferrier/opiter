@@ -10,7 +10,11 @@ import sys
 import numpy
 import glob
 
-from options_iteration import OptionsArray, OptionsNode, OptionsDictException
+from options_iteration import OptionsArray, OptionsNode
+
+# TODO: make OptionsNode constructor more intelligent (see TODO.md) so
+# we can phase this line out
+from options_iteration.options_dict import OptionsDictException
 
 try:
     import jinja2
