@@ -149,6 +149,9 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         self.assertEqual(acceptor.child, array_init[0])
         self.assertEqual(len(remainder), 3)
 
+    def test_count_leaves(self):
+        self.assertEqual(self.array.count_leaves(), 4)        
+
     
 if __name__ == '__main__':
     unittest.main()

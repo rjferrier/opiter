@@ -388,6 +388,9 @@ class TestTreeOperations(NodeAndArrayOperationsTestFixture):
         expected = [0, 1, 0, 2]
         self.assertEqual(results, expected)
 
+    def test_count_leaves(self):
+        self.assertEqual(self.tree.count_leaves(), 4)
+
     # now test set-item operations
             
     def test_item_incremental_addition_with_node(self):

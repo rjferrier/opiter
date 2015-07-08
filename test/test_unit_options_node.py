@@ -78,6 +78,9 @@ class TestOptionsNodeBasics(unittest.TestCase):
         self.assertEqual(acceptor.child, node_init)
         self.assertEqual(len(remainder), 0)        
 
+    def test_count_leaves(self):
+        self.assertEqual(self.node.count_leaves(), 1)        
+
     def test_compare_with_node_from_class(self):
         """
         This can be done as long as there aren't any dynamic entries.

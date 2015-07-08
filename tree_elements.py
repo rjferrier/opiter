@@ -47,7 +47,8 @@ class OptionsNode(OptionsTreeElement):
     Contains an options dictionary and optionally a child
     OptionsTreeElement, hence forming a tree structure.
     """
-    def __init__(self, name_or_class, entries={}, child=None):
+    def __init__(self, name_or_class, entries={}, child=None,
+                 array_name=None):
         try:
             # if name_or_class is a class, use it to extract a name
             # and create the options dictionary
@@ -181,6 +182,13 @@ class OptionsNode(OptionsTreeElement):
         else:
             acceptor = node_copy
         return acceptor, []
+
+        
+    def count_leaves(self):
+        if self.child:
+            return self.child.count_leaves()
+        else:
+            return 1
 
                 
     def update(self, entries):
@@ -363,6 +371,10 @@ class OptionsArray(OptionsTreeElement):
         else:
             acceptor = node_copy
         return acceptor, self[1:]
+
+
+    def count_leaves(self):
+        return sum([el.count_leaves() for el in self.nodes])
 
         
     def update(self, entries):
