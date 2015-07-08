@@ -255,13 +255,12 @@ class TestArrayOperations(NodeAndArrayOperationsTestFixture):
         expected = [2, 4, 6]
         self.assertEqual(results, expected)
 
+        
+    # now test set-item operations.  Let's not linger on these.  If we
+    # get what we expect for one or two operators, for both single
+    # item and slice accessors, then OptionsArray.__setitem__ is doing
+    # its job.
 
-class TestArraySetItemOperations(TestArrayOperations):
-    """
-    Let's not linger on these.  If we get what we expect for one or
-    two operators, for both single item and slice accessors, then
-    OptionsArray.__setitem__ is doing its job.
-    """
     def test_item_incremental_addition_with_node(self):
         self.check_array_or_node_operation(
             self.array[1], self.node, self.plus, ['B_0'],
@@ -389,8 +388,8 @@ class TestTreeOperations(NodeAndArrayOperationsTestFixture):
         expected = [0, 1, 0, 2]
         self.assertEqual(results, expected)
 
-
-class TestTreeSetItemOperations(TestTreeOperations):
+    # now test set-item operations
+            
     def test_item_incremental_addition_with_node(self):
         self.check_array_or_node_operation(
             self.tree[1], self.node, self.plus, ['B_0_i', 'B_1'],
