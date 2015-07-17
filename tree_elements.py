@@ -1,9 +1,9 @@
 from itertools import islice
+from operator import mul
 
 from base import nonmutable, OptionsBaseException
 from options_dict import OptionsDict
 from node_info import OrphanNodeInfo, ArrayNodeInfo
-
 
 
 class OptionsNodeException(OptionsBaseException):
@@ -30,15 +30,22 @@ class OptionsTreeElement:
         self.multiply_attach(other)
 
     @nonmutable
+    def __rmul__(self, other):
+        # this conditional stops us trying to multiply with 1 during a
+        # product() call
+        if isinstance(other, OptionsTreeElement):
+            self.multiply_attach(other)
+
+    @nonmutable
     def __add__(self, other):
         self.attach(other)
 
     @nonmutable
     def __radd__(self, other):
-        try:
+        # this conditional stops us trying to add to 0 during a
+        # product() call
+        if isinstance(other, OptionsTreeElement):
             self.attach(other)
-        except TypeError:
-            pass
 
     def __imul__(self, other):
         self.multiply_attach(other)
@@ -150,7 +157,6 @@ class OptionsNode(OptionsTreeElement):
             # recurse
             self.child.multiply_attach(tree)
         except AttributeError:
-            # can no longer recurse, so this is a leaf
             self.child = tree.copy()
 
             
@@ -469,3 +475,7 @@ class OptionsArray(OptionsTreeElement):
         
     def __str__(self):
         return str(self.name)
+
+    
+def product(iterable):
+    return reduce(mul, iterable, 1)

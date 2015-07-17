@@ -4,7 +4,7 @@ sys.path.append('..')
 import unittest
 from copy import deepcopy
 
-from tree_elements import OptionsArray, OptionsNode
+from tree_elements import OptionsArray, OptionsNode, product
 from options_dict import OptionsDict, Lookup, freeze
 from multiprocessing import Pool
 
@@ -167,10 +167,10 @@ A
             *self.get_multiplication_with_node_expectations(),
             is_incremental=True)
         
-    # def test_product_with_node(self):
-    #     self.check_array_or_node_reduction_operation(
-    #         [self.node, self.other_node], self.product,
-    #         *self.get_multiplication_with_node_expectations())
+    def test_product_with_node(self):
+        self.check_array_or_node_reduction_operation(
+            [self.node, self.other_node], self.product,
+            *self.get_multiplication_with_node_expectations())
 
 
     def get_addition_with_array_expectations(self):
@@ -223,10 +223,10 @@ A
             *self.get_multiplication_with_array_expectations(),
             is_incremental=True)
         
-    # def test_product_with_array(self):
-    #     self.check_array_or_node_reduction_operation(
-    #         [self.node, self.array], self.product,
-    #         *self.get_multiplication_with_array_expectations())
+    def test_product_with_array(self):
+        self.check_array_or_node_reduction_operation(
+            [self.node, self.array], self.product,
+            *self.get_multiplication_with_array_expectations())
         
         
     def get_addition_with_list_expectations(self):
@@ -342,10 +342,10 @@ letter: C
             *self.get_multiplication_with_node_expectations(),
             is_incremental=True)
         
-    # def test_product_with_node(self):
-    #     self.check_array_or_node_reduction_operation(
-    #         [self.array, self.node], self.product,
-    #         *self.get_multiplication_with_node_expectations())
+    def test_product_with_node(self):
+        self.check_array_or_node_reduction_operation(
+            [self.array, self.node], self.product,
+            *self.get_multiplication_with_node_expectations())
 
         
     def get_addition_with_array_expectations(self):
@@ -406,10 +406,10 @@ letter: C
             *self.get_multiplication_with_array_expectations(),
             is_incremental=True)
         
-    # def test_product_with_array(self):
-    #     self.check_array_or_node_reduction_operation(
-    #         [self.array, self.other_array], self.product,
-    #         *self.get_multiplication_with_array_expectations())
+    def test_product_with_array(self):
+        self.check_array_or_node_reduction_operation(
+            [self.array, self.other_array], self.product,
+            *self.get_multiplication_with_array_expectations())
 
         
     def get_addition_with_list_expectations(self):
@@ -594,10 +594,10 @@ letter: B
             *self.get_multiplication_with_node_expectations(),
             is_incremental=True)
         
-    # def test_product_with_node(self):
-    #     self.check_array_or_node_reduction_operation(
-    #         [self.tree, self.node], self.product,
-    #         *self.get_multiplication_with_node_expectations())
+    def test_product_with_node(self):
+        self.check_array_or_node_reduction_operation(
+            [self.tree, self.node], self.product,
+            *self.get_multiplication_with_node_expectations())
 
         
     def get_addition_with_array_expectations(self):
@@ -668,10 +668,10 @@ letter: B
             *self.get_multiplication_with_array_expectations(),
             is_incremental=True)
         
-    # def test_product_with_array(self):
-    #     self.check_array_or_node_reduction_operation(
-    #         [self.tree, self.array], self.product,
-    #         *self.get_multiplication_with_array_expectations())
+    def test_product_with_array(self):
+        self.check_array_or_node_reduction_operation(
+            [self.tree, self.array], self.product,
+            *self.get_multiplication_with_array_expectations())
 
         
     def get_addition_with_list_expectations(self):
