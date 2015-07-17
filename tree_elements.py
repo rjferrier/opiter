@@ -33,6 +33,13 @@ class OptionsTreeElement:
     def __add__(self, other):
         self.attach(other)
 
+    @nonmutable
+    def __radd__(self, other):
+        try:
+            self.attach(other)
+        except TypeError:
+            pass
+
     def __imul__(self, other):
         self.multiply_attach(other)
         return self
