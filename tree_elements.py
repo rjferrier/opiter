@@ -363,13 +363,16 @@ class OptionsArray(OptionsTreeElement):
 
 
     def donate_copy(self, acceptor):
-        # emulate a popleft()
-        node_copy = self[0].copy()
-        node_copy.update_info()
+        # It is nice to preserve array information, so grab a
+        # one-element slice rather than a node.  The slice preserves
+        # the OptionsArray type.
+        one_node_array = self[0:1]
+        one_node_array.update_node_info()
         if acceptor:
-            acceptor.attach(node_copy)
+            acceptor.attach(one_node_array)
         else:
-            acceptor = node_copy
+            acceptor = one_node_array
+        # also return (a copy of) the depleted array
         return acceptor, self[1:]
 
 
