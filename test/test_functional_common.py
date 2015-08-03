@@ -3,9 +3,6 @@ Base module for test_functional_serial_iteration and
 test_functional_parallel_iteration.
 """
 
-import sys
-sys.path.append('..')
-
 import unittest
 from tree_elements import OptionsNode, OptionsArray
 from options_dict import OptionsDict, Lookup, Str, freeze

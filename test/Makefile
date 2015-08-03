@@ -4,7 +4,7 @@ define run
 @echo ' Running $1*.py'
 @printf '%70s\n' | tr ' ' =
 @echo
-python -m unittest discover -p '$1*.py'
+$(PYTHON) -m unittest discover -p '$1*.py'
 @printf '%70s\n' | tr ' ' =
 @echo
 endef

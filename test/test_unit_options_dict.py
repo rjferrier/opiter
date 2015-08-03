@@ -1,6 +1,3 @@
-import sys
-sys.path.append('..')
-
 import unittest
 import os
 from unit_options_dict import UnitOptionsDict

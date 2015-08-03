@@ -1,6 +1,3 @@
-import sys
-sys.path.append('..')
-
 import unittest
 from unit_tree_elements import UnitOptionsArray, UnitOptionsNode
 from tree_elements import OptionsArrayException

@@ -1,6 +1,3 @@
-import sys
-sys.path.append('..')
-
 import unittest
 from copy import deepcopy
 

@@ -1,6 +1,3 @@
-import sys
-sys.path.append('..')
-
 import unittest
 from options_dict import OptionsDict, CallableEntry, OptionsDictException
 from node_info import SimpleFormatter, TreeFormatter

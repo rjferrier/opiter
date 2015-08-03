@@ -1,6 +1,3 @@
-import sys
-sys.path.append('..')
-
 from test_functional_common import *
 import unittest
 

@@ -3,9 +3,6 @@ These unit tests involves file creation and destruction and are
 segregated from the default tests for safety.
 """
 
-import sys
-sys.path.append('..')
-
 import os
 import unittest
 from unit_options_dict import UnitOptionsDict
