@@ -6,113 +6,123 @@ from options_dict import OptionsDict, Lookup, freeze
 from multiprocessing import Pool
 
 
+# ---------------------------------------------------------------------
+# helper functions
+
 def pool():
     return Pool(2)
 
+def add_dynamic_entry(tree_element):
+    """
+    Implements a dynamic entry which returns the product of 'letter'
+    and 'number' entries, treating A, B, C as 1, 2, 3.
+    """
+    tree_element.update({'product': lambda opt: \
+                         (1 + 'ABC'.index(opt['letter'])) * opt['number']})
 
-class NodeAndArrayOperationsTestFixture(unittest.TestCase):
-    """Provides common test functions."""
+# ---------------------------------------------------------------------
+# helper classes
 
-    @staticmethod
-    def plus(left_operand, right_operand):
-        return left_operand + right_operand
+class Operation:
+    def check(self, test_case, expected_names, expected_tree_string):
+        # perform operation (delegate to subclass) 
+        self()
 
-    @staticmethod
-    def times(left_operand, right_operand):
-        return left_operand * right_operand
-
-    @staticmethod
-    def plus_equals(left_operand, right_operand):
-        left_operand += right_operand
-        return left_operand
-
-    @staticmethod
-    def times_equals(left_operand, right_operand):
-        left_operand *= right_operand
-        return left_operand
-
-    @staticmethod
-    def sum(operands):
-        return sum(operands)
-
-    @staticmethod
-    def product(operands):
-        return product(operands)
-    
-    def check_array_or_node_operation_result(
-            self, result, expected_names, expected_tree_string,
-            is_incremental=False):
-        # flatten the result so we can inspect it
-        ods = result.collapse()
-        self.assertEqual(len(ods), len(expected_names))
-        self.assertEqual([str(od) for od in ods], expected_names)
+        # flatten and inspect the result
+        ods = self.result.collapse()
+        test_case.assertEqual([str(od) for od in ods], expected_names)
         if expected_tree_string:
-            self.assertEqual(self.make_tree_str(ods), expected_tree_string)
+            test_case.assertEqual(self.make_tree_str(ods),
+                                       expected_tree_string)
 
-            
-    def check_array_or_node_binary_operation(
-            self, left_operand, right_operand, operator, expected_names,
-            expected_tree_string=None, is_incremental=False):
-        
-        # save the states of the operands so we can check mutation
-        left_operand_init = deepcopy(left_operand)
-        right_operand_init = deepcopy(right_operand)
-        
-        # perform operation
-        if is_incremental:
-            left_operand = operator(left_operand, right_operand)
-            result = left_operand
-        else:
-            result = operator(left_operand, right_operand)
-
-        # check result
-        self.check_array_or_node_operation_result(
-            result, expected_names, expected_tree_string)
-
-        # check the states of the operands
-        if is_incremental:
-            self.assertNotEqual(left_operand_init, left_operand)
-        else:
-            self.assertEqual(left_operand_init, left_operand)
-        self.assertEqual(right_operand_init, right_operand)
-
-
-    def check_array_or_node_reduction_operation(
-            self, operands, operator, expected_names,
-            expected_tree_string=None, is_incremental=False):
-        
-        # save the states of the operands so we can check mutation
-        operands_init = deepcopy(operands)
-        
-        # perform operation and check result
-        result = operator(operands)
-        self.check_array_or_node_operation_result(
-            result, expected_names, expected_tree_string)
-
-        # check the states of the operands
-        self.assertEqual(operands_init, operands)
+        # check the states of the operands (delegate to middle class)
+        self.check_operand_states(test_case)
         
         
     @staticmethod
     def make_tree_str(options_dicts):
-        result = ''
+        result_str = ''
         for od in options_dicts:
             branch = od.str(formatter='tree')
             if branch:
-                result += '\n' + branch
-        return result
+                result_str += '\n' + branch
+        return result_str
+    
 
-    @staticmethod
-    def add_dynamic_entry(tree_element):
-        """
-        Implements a dynamic entry which returns the product of 'letter'
-        and 'number' entries, treating A, B, C as 1, 2, 3.
-        """
-        tree_element.update({'product': lambda opt: \
-                             (1 + 'ABC'.index(opt['letter'])) * opt['number']})
+# ---------------------------------------------------------------------
 
+class BinaryOp(Operation):
+    def __init__(self, left_operand, right_operand,
+                 left_subscript=None, right_subscript=None):
+        self.left_operand = left_operand
+        self.right_operand = right_operand
+        self.left_operand_init = deepcopy(left_operand)
+        self.right_operand_init = deepcopy(right_operand)
 
-class TestNodeOperations(NodeAndArrayOperationsTestFixture):
+    def check_operand_states(self, test_case):
+        test_case.assertEqual(self.left_operand, self.left_operand_init)
+        test_case.assertEqual(self.right_operand, self.right_operand_init)
+    
+class Plus(BinaryOp):
+    def __call__(self):
+        self.result = self.left_operand + self.right_operand
+        
+class Times(BinaryOp):
+    def __call__(self):
+        self.result = self.left_operand * self.right_operand
+
+# ---------------------------------------------------------------------
+        
+class IncrementalOp(Operation):
+    def __init__(self, left_operand, right_operand, subscript=None):
+        self.result = left_operand
+        self.right_operand = right_operand
+        self.result_init = deepcopy(left_operand)
+        self.right_operand_init = deepcopy(right_operand)
+        self.subscript = subscript
+
+    def check_operand_states(self, test_case):
+        test_case.assertNotEqual(self.result, self.result_init)
+        test_case.assertEqual(self.right_operand, self.right_operand_init)
+        
+class PlusEquals(IncrementalOp):
+    def __call__(self):
+        if self.subscript:
+            self.result[self.subscript] += self.right_operand
+        else:
+            self.result += self.right_operand
+            
+class TimesEquals(IncrementalOp):
+    def __call__(self):
+        if self.subscript:
+            self.result[self.subscript] *= self.right_operand
+        else:
+            self.result *= self.right_operand
+
+# ---------------------------------------------------------------------
+        
+class Reduction(Operation):
+    def __init__(self, operands):
+        self.operands = operands
+        self.operands_init = deepcopy(operands)
+
+    def check_operand_states(self, test_case):
+        for op, op_init in zip(self.operands, self.operands_init):
+            test_case.assertEqual(op, op_init)
+
+class Sum(Reduction):
+    def __call__(self):
+        self.result = sum(self.operands)
+        
+class Product(Reduction):
+    def __call__(self):
+        self.result = product(self.operands)
+
+        
+# ---------------------------------------------------------------------
+# test cases
+
+class TestNodeOperations(unittest.TestCase):
 
     def setUp(self):
         self.node = OptionsNode('A')
@@ -122,55 +132,47 @@ class TestNodeOperations(NodeAndArrayOperationsTestFixture):
         self.od = OptionsDict({'foo': 'bar'})
 
         
-    def get_addition_with_node_expectations(self):
+    def help_test_addition_with_node(self, operation):
         expected_names = ['A_B']
         expected_tree_str = """
 A
     B"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
         
     def test_addition_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.node, self.other_node, self.plus,
-            *self.get_addition_with_node_expectations())
+        self.help_test_addition_with_node(
+            Plus(self.node, self.other_node))
         
     def test_incremental_addition_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.node, self.other_node, self.plus,
-            *self.get_addition_with_node_expectations(),
-            is_incremental=True)
+        self.help_test_addition_with_node(
+            PlusEquals(self.node, self.other_node))
         
     def test_sum_with_node(self):
-        self.check_array_or_node_reduction_operation(
-            [self.node, self.other_node], self.sum,
-            *self.get_addition_with_node_expectations())
+        self.help_test_addition_with_node(
+            Sum((self.node, self.other_node)))
 
         
-    def get_multiplication_with_node_expectations(self):
+    def help_test_multiplication_with_node(self, operation):
         expected_names = ['A_B']
         expected_tree_str = """
 A
     B"""
-        return expected_names, expected_tree_str
-            
+        operation.check(self, expected_names, expected_tree_str)
+
     def test_multiplication_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.node, self.other_node, self.times,
-            *self.get_multiplication_with_node_expectations())
-            
+        self.help_test_multiplication_with_node(
+            TimesEquals(self.node, self.other_node))
+        
     def test_incremental_multiplication_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.node, self.other_node, self.times, 
-            *self.get_multiplication_with_node_expectations(),
-            is_incremental=True)
+        self.help_test_multiplication_with_node(
+            TimesEquals(self.node, self.other_node))
         
     def test_product_with_node(self):
-        self.check_array_or_node_reduction_operation(
-            [self.node, self.other_node], self.product,
-            *self.get_multiplication_with_node_expectations())
+        self.help_test_multiplication_with_node(
+            Product((self.node, self.other_node)))
 
 
-    def get_addition_with_array_expectations(self):
+    def help_test_addition_with_array(self, operation):
         """
         Adding many nodes on the right (R) to a single node on the left
         (L) should work, but the surplus right hand nodes will get
@@ -181,52 +183,45 @@ A
         expected_tree_str = """
 A
     number: 0"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
         
     def test_addition_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.node, self.array, self.plus,
-            *self.get_addition_with_array_expectations())
+        self.help_test_addition_with_array(
+            Plus(self.node, self.array))
         
     def test_incremental_addition_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.node, self.array, self.plus,
-            *self.get_addition_with_array_expectations(),
-            is_incremental=True)
+        self.help_test_addition_with_array(
+            PlusEquals(self.node, self.array))
         
     def test_sum_with_array(self):
-        self.check_array_or_node_reduction_operation(
-            [self.node, self.array], self.sum,
-            *self.get_addition_with_array_expectations())
+        self.help_test_addition_with_array(
+            Sum((self.node, self.array)))
 
         
-    def get_multiplication_with_array_expectations(self):
+    def help_test_multiplication_with_array(self, operation):
         expected_names = ['A_0', 'A_1', 'A_2']
         expected_tree_str = """
 A
     number: 0
     number: 1
     number: 2"""
-        return expected_names, expected_tree_str
-    
+        operation.check(self, expected_names, expected_tree_str)
+
+        
     def test_multiplication_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.node, self.array, self.times,
-            *self.get_multiplication_with_array_expectations())
+        self.help_test_multiplication_with_array(
+            TimesEquals(self.node, self.array))
         
     def test_incremental_multiplication_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.node, self.array, self.times, 
-            *self.get_multiplication_with_array_expectations(),
-            is_incremental=True)
+        self.help_test_multiplication_with_array(
+            TimesEquals(self.node, self.array))
         
     def test_product_with_array(self):
-        self.check_array_or_node_reduction_operation(
-            [self.node, self.array], self.product,
-            *self.get_multiplication_with_array_expectations())
+        self.help_test_multiplication_with_array(
+            Product((self.node, self.array)))
         
         
-    def get_addition_with_list_expectations(self):
+    def help_test_addition_with_list(self, operation):
         """
         As with TestNodeOperationsWithArray.test_addition, but here the
         first array in the list gets added to the node on the left
@@ -237,23 +232,19 @@ A
         expected_tree_str = """
 A
     0"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
 
     def test_addition_with_list(self):
-        self.check_array_or_node_binary_operation(
-            self.node, self.node_list, self.plus,
-            *self.get_addition_with_list_expectations())
+        self.help_test_addition_with_list(
+            Plus(self.node, self.node_list))
 
     def test_incremental_addition_with_list(self):
-        self.check_array_or_node_binary_operation(
-            self.node, self.node_list, self.plus,
-            *self.get_addition_with_list_expectations(),
-            is_incremental=True)
+        self.help_test_addition_with_list(
+            PlusEquals(self.node, self.node_list))
         
     def test_sum_with_list(self):
-        self.check_array_or_node_reduction_operation(
-            [self.node, self.node_list], self.sum,
-            *self.get_addition_with_list_expectations())
+        self.help_test_addition_with_list(
+            Sum([self.node, self.node_list]))
 
         
     def test_update_with_options_dict(self):
@@ -275,13 +266,13 @@ A
 
     def test_collapse_mp_safe(self):
         self.node.update({'letter': 'A', 'number': 2})
-        self.add_dynamic_entry(self.node)
+        add_dynamic_entry(self.node)
         ods = freeze(self.node.collapse())
         results = pool().map(Lookup('product'), ods)
         self.assertEqual(results, [2])
 
         
-class TestArrayOperations(NodeAndArrayOperationsTestFixture):
+class TestArrayOperations(unittest.TestCase):
 
     def setUp(self):
         self.array = OptionsArray('letter', ['A', 'B', 'C'])
@@ -291,33 +282,29 @@ class TestArrayOperations(NodeAndArrayOperationsTestFixture):
         self.od = OptionsDict({'foo': 'bar'})
 
         
-    def get_addition_with_node_expectations(self):
+    def help_test_addition_with_node(self, operation):
         expected_names = ['A_0', 'B', 'C']
         expected_tree_str = """
 letter: A
     0
 letter: B
 letter: C"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
         
     def test_addition_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.array, self.node, self.plus,
-            *self.get_addition_with_node_expectations())
+        self.help_test_addition_with_node(
+            Plus(self.array, self.node))
         
     def test_incremental_addition_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.array, self.node, self.plus,
-            *self.get_addition_with_node_expectations(),
-            is_incremental=True)
+        self.help_test_addition_with_node(
+            PlusEquals(self.array, self.node))
         
     def test_sum_with_node(self):
-        self.check_array_or_node_reduction_operation(
-            [self.array, self.node], self.sum,
-            *self.get_addition_with_node_expectations())
+        self.help_test_addition_with_node(
+            Sum([self.array, self.node]))
 
         
-    def get_multiplication_with_node_expectations(self):
+    def help_test_multiplication_with_node(self, operation):
         expected_names = ['A_0', 'B_0', 'C_0']
         expected_tree_str = """
 letter: A
@@ -326,26 +313,22 @@ letter: B
     0
 letter: C
     0"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
 
     def test_multiplication_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.array, self.node, self.times,
-            *self.get_multiplication_with_node_expectations())
+        self.help_test_multiplication_with_node(
+            Times(self.array, self.node))
 
     def test_incremental_multiplication_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.array, self.node, self.times,
-            *self.get_multiplication_with_node_expectations(),
-            is_incremental=True)
+        self.help_test_multiplication_with_node(
+            TimesEquals(self.array, self.node))
         
     def test_product_with_node(self):
-        self.check_array_or_node_reduction_operation(
-            [self.array, self.node], self.product,
-            *self.get_multiplication_with_node_expectations())
+        self.help_test_multiplication_with_node(
+            Product([self.array, self.node]))
 
         
-    def get_addition_with_array_expectations(self):
+    def help_test_addition_with_array(self, operation):
         expected_names = ['A_0', 'B_1', 'C_2']
         expected_tree_str = """
 letter: A
@@ -354,26 +337,22 @@ letter: B
     number: 1
 letter: C
     number: 2"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
         
     def test_addition_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.array, self.other_array, self.plus,
-            *self.get_addition_with_array_expectations())
+        self.help_test_addition_with_array(
+            Plus(self.array, self.other_array))
         
     def test_incremental_addition_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.array, self.other_array, self.plus,
-            *self.get_addition_with_array_expectations(),
-            is_incremental=True)
+        self.help_test_addition_with_array(
+            PlusEquals(self.array, self.other_array))
         
     def test_sum_with_array(self):
-        self.check_array_or_node_reduction_operation(
-            [self.array, self.other_array], self.sum,
-            *self.get_addition_with_array_expectations())
+        self.help_test_addition_with_array(
+            Sum([self.array, self.other_array]))
 
         
-    def get_multiplication_with_array_expectations(self):
+    def help_test_multiplication_with_array(self, operation):
         expected_names = ['A_0', 'A_1', 'A_2',
                           'B_0', 'B_1', 'B_2',
                           'C_0', 'C_1', 'C_2']
@@ -390,26 +369,22 @@ letter: C
     number: 0
     number: 1
     number: 2"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
 
     def test_multiplication_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.array, self.other_array, self.times,
-            *self.get_multiplication_with_array_expectations())
+        self.help_test_multiplication_with_array(
+            Times(self.array, self.other_array))
 
     def test_incremental_multiplication_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.array, self.other_array, self.times,
-            *self.get_multiplication_with_array_expectations(),
-            is_incremental=True)
+        self.help_test_multiplication_with_array(
+            TimesEquals(self.array, self.other_array))
         
     def test_product_with_array(self):
-        self.check_array_or_node_reduction_operation(
-            [self.array, self.other_array], self.product,
-            *self.get_multiplication_with_array_expectations())
+        self.help_test_multiplication_with_array(
+            Product([self.array, self.other_array]))
 
         
-    def get_addition_with_list_expectations(self):
+    def help_test_addition_with_list(self, operation):
         expected_names = ['A_0', 'B_1', 'C_2']
         expected_tree_str = """
 letter: A
@@ -418,23 +393,19 @@ letter: B
     1
 letter: C
     2"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
         
     def test_addition_with_list(self):
-        self.check_array_or_node_binary_operation(
-            self.array, self.node_list, self.plus,
-            *self.get_addition_with_list_expectations())
+        self.help_test_addition_with_list(
+            Plus(self.array, self.node_list))
         
     def test_incremental_addition_with_list(self):
-        self.check_array_or_node_binary_operation(
-            self.array, self.node_list, self.plus,
-            *self.get_addition_with_list_expectations(),
-            is_incremental=True)
+        self.help_test_addition_with_list(
+            PlusEquals(self.array, self.node_list))
         
     def test_sum_with_list(self):
-        self.check_array_or_node_reduction_operation(
-            [self.array, self.node_list], self.sum,
-            *self.get_addition_with_list_expectations())
+        self.help_test_addition_with_list(
+            Sum([self.array, self.node_list]))
 
         
     def test_update_with_options_dict(self):
@@ -459,7 +430,7 @@ letter: C
 
     def test_collapse_and_freeze(self):
         self.array.update({'number': 2})
-        self.add_dynamic_entry(self.array)
+        add_dynamic_entry(self.array)
         ods = freeze(self.array.collapse())
         results = pool().map(Lookup('product'), ods)
         expected = [2, 4, 6]
@@ -472,71 +443,66 @@ letter: C
     # its job.
 
     def test_item_incremental_addition_with_node(self):
-        expected_names = ['B_0']
+        expected_names = ['A', 'B_0', 'C']
         expected_tree_str = """
-letter: B
-    0"""
-        # use a slice to preserve array information
-        self.check_array_or_node_binary_operation(
-            self.array[1:2], self.node, self.plus, expected_names,
-            expected_tree_str, is_incremental=True)
-
-        
-    def test_slice_incremental_addition_with_node(self):
-        expected_names = ['B_0', 'C']
-        expected_tree_str = """
+letter: A
 letter: B
     0
 letter: C"""
-        self.check_array_or_node_binary_operation(
-            self.array[1:], self.node, self.plus, expected_names,
-            expected_tree_str, is_incremental=True)
+        op = PlusEquals(self.array, self.node, subscript=1)
+        op.check(self, expected_names, expected_tree_str)
+        
+    def test_slice_incremental_addition_with_node(self):
+        expected_names = ['A', 'B_0', 'C']
+        expected_tree_str = """
+letter: A
+letter: B
+    0
+letter: C"""
+        op = PlusEquals(self.array, self.node, subscript=slice(1, 3))
+        op.check(self, expected_names, expected_tree_str)
 
         
     def test_item_incremental_multiplication_with_node(self):
-        expected_names = ['B_0']
+        expected_names = ['A', 'B_0', 'C']
         expected_tree_str = """
+letter: A
 letter: B
-    0"""
-        self.check_array_or_node_binary_operation(
-            self.array[1:2], self.node, self.times, expected_names,
-            expected_tree_str, is_incremental=True)
+    0
+letter: C"""
+        op = TimesEquals(self.array, self.node, subscript=1)
+        op.check(self, expected_names, expected_tree_str)
 
         
     def test_slice_incremental_multiplication_with_node(self):
-        expected_names = ['B_0', 'C_0']
+        expected_names = ['A', 'B_0', 'C_0']
         expected_tree_str = """
+letter: A
 letter: B
     0
 letter: C
     0"""
-        self.check_array_or_node_binary_operation(
-            self.array[1:], self.node, self.times, expected_names,
-            expected_tree_str, is_incremental=True)
+        op = TimesEquals(self.array, self.node, subscript=slice(1, 3))
+        op.check(self, expected_names, expected_tree_str)
+
 
         
-class TestTreeOperations(NodeAndArrayOperationsTestFixture):
+class TestTreeOperations(unittest.TestCase):
 
     def setUp(self):
         letters = OptionsArray('letter', ['A', 'B'])
         numbers = OptionsArray('number', range(2))
         # putting dynamic entries on the leaves is the most rigorous
         # way of testing them after a tree collapse
-        self.add_dynamic_entry(numbers)
+        add_dynamic_entry(numbers)
         self.tree = letters * numbers
         self.node = OptionsNode('i')
         self.array = OptionsArray('subnumber', ['i', 'ii', 'iii'])
         self.node_list = [OptionsNode(name) for name in ['i', 'ii', 'iii']]
         self.od = OptionsDict({'foo': 'bar'})
 
-    def test_copy(self):
-        other = self.tree.copy()
-        # test for equivalence and non-identity
-        self.assertEqual(other, self.tree)
-        self.assertFalse(other is self.tree)
-
         
-    def get_addition_with_node_expectations(self):
+    def help_test_addition_with_node(self, operation):
         expected_names = ['A_0_i', 'A_1', 'B_0', 'B_1']
         expected_tree_str = """
 letter: A
@@ -546,26 +512,22 @@ letter: A
 letter: B
     number: 0
     number: 1"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
         
     def test_addition_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.tree, self.node, self.plus,
-            *self.get_addition_with_node_expectations())
+        self.help_test_addition_with_node(
+            Plus(self.tree, self.node))
         
     def test_incremental_addition_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.tree, self.node, self.plus,
-            *self.get_addition_with_node_expectations(),
-            is_incremental=True)
+        self.help_test_addition_with_node(
+            PlusEquals(self.tree, self.node))
         
     def test_sum_with_node(self):
-        self.check_array_or_node_reduction_operation(
-            [self.tree, self.node], self.sum,
-            *self.get_addition_with_node_expectations())
+        self.help_test_addition_with_node(
+            Sum([self.tree, self.node]))
 
         
-    def get_multiplication_with_node_expectations(self):
+    def help_test_multiplication_with_node(self, operation):
         expected_names = ['A_0_i', 'A_1_i', 'B_0_i', 'B_1_i']
         expected_tree_str = """
 letter: A
@@ -578,26 +540,22 @@ letter: B
         i
     number: 1
         i"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
         
     def test_multiplication_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.tree, self.node, self.times,
-            *self.get_multiplication_with_node_expectations())
+        self.help_test_multiplication_with_node(
+            Times(self.tree, self.node))
         
     def test_incremental_multiplication_with_node(self):
-        self.check_array_or_node_binary_operation(
-            self.tree, self.node, self.times,
-            *self.get_multiplication_with_node_expectations(),
-            is_incremental=True)
+        self.help_test_multiplication_with_node(
+            TimesEquals(self.tree, self.node))
         
     def test_product_with_node(self):
-        self.check_array_or_node_reduction_operation(
-            [self.tree, self.node], self.product,
-            *self.get_multiplication_with_node_expectations())
+        self.help_test_multiplication_with_node(
+            Product([self.tree, self.node]))
 
         
-    def get_addition_with_array_expectations(self):
+    def help_test_addition_with_array(self, operation):
         expected_names = ['A_0_i', 'A_1_ii', 'B_0_iii', 'B_1']
         expected_tree_str = """
 letter: A
@@ -609,26 +567,22 @@ letter: B
     number: 0
         subnumber: iii
     number: 1"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
 
     def test_addition_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.tree, self.array, self.plus,
-            *self.get_addition_with_array_expectations())
+        self.help_test_addition_with_array(
+            Plus(self.tree, self.array))
 
     def test_incremental_addition_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.tree, self.array, self.plus,
-            *self.get_addition_with_array_expectations(),
-            is_incremental=True)
+        self.help_test_addition_with_array(
+            PlusEquals(self.tree, self.array))
         
     def test_sum_with_array(self):
-        self.check_array_or_node_reduction_operation(
-            [self.tree, self.array], self.sum,
-            *self.get_addition_with_array_expectations())
+        self.help_test_addition_with_array(
+            Sum([self.tree, self.array]))
 
         
-    def get_multiplication_with_array_expectations(self):
+    def help_test_multiplication_with_array(self, operation):
         expected_names = ['A_0_i', 'A_0_ii', 'A_0_iii',
                           'A_1_i', 'A_1_ii', 'A_1_iii',
                           'B_0_i', 'B_0_ii', 'B_0_iii',
@@ -652,26 +606,22 @@ letter: B
         subnumber: i
         subnumber: ii
         subnumber: iii"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
         
     def test_multiplication_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.tree, self.array, self.times,
-            *self.get_multiplication_with_array_expectations())
+        self.help_test_multiplication_with_array(
+            Times(self.tree, self.array))
 
     def test_incremental_multiplication_with_array(self):
-        self.check_array_or_node_binary_operation(
-            self.tree, self.array, self.times,
-            *self.get_multiplication_with_array_expectations(),
-            is_incremental=True)
+        self.help_test_multiplication_with_array(
+            TimesEquals(self.tree, self.array))
         
     def test_product_with_array(self):
-        self.check_array_or_node_reduction_operation(
-            [self.tree, self.array], self.product,
-            *self.get_multiplication_with_array_expectations())
+        self.help_test_multiplication_with_array(
+            Product([self.tree, self.array]))
 
         
-    def get_addition_with_list_expectations(self):
+    def help_test_addition_with_list(self, operation):
         expected_names = ['A_0_i', 'A_1_ii', 'B_0_iii', 'B_1']
         expected_tree_str = """
 letter: A
@@ -683,23 +633,19 @@ letter: B
     number: 0
         iii
     number: 1"""
-        return expected_names, expected_tree_str
+        operation.check(self, expected_names, expected_tree_str)
         
     def test_addition_with_list(self):
-        self.check_array_or_node_binary_operation(
-            self.tree, self.node_list, self.plus,
-            *self.get_addition_with_list_expectations())
+        self.help_test_addition_with_list(
+            Plus(self.tree, self.node_list))
 
     def test_incremental_addition_with_list(self):
-        self.check_array_or_node_binary_operation(
-            self.tree, self.node_list, self.plus,
-            *self.get_addition_with_list_expectations(),
-            is_incremental=True)
+        self.help_test_addition_with_list(
+            PlusEquals(self.tree, self.node_list))
         
     def test_sum_with_list(self):
-        self.check_array_or_node_reduction_operation(
-            [self.tree, self.node_list], self.sum,
-            *self.get_addition_with_list_expectations())
+        self.help_test_addition_with_list(
+            Sum([self.tree, self.node_list]))
 
         
     def test_update_with_options_dict(self):
@@ -731,56 +677,65 @@ letter: B
     def test_count_leaves(self):
         self.assertEqual(self.tree.count_leaves(), 4)
 
+
     # now test set-item operations
             
     def test_item_incremental_addition_with_node(self):
-        expected_names = ['B_0_i', 'B_1']
+        expected_names = ['A_0', 'A_1', 'B_0_i', 'B_1']
         expected_tree_str = """
+letter: A
+    number: 0
+    number: 1
 letter: B
     number: 0
         i
     number: 1"""
-        self.check_array_or_node_binary_operation(
-            self.tree[1:2], self.node, self.plus, expected_names,
-            expected_tree_str, is_incremental=True)
+        op = PlusEquals(self.tree, self.node, subscript=1)
+        op.check(self, expected_names, expected_tree_str)
 
         
     def test_slice_incremental_addition_with_node(self):
-        expected_names = ['B_0_i', 'B_1']
+        expected_names = ['A_0', 'A_1', 'B_0_i', 'B_1']
         expected_tree_str = """
+letter: A
+    number: 0
+    number: 1
 letter: B
     number: 0
         i
     number: 1"""
-        self.check_array_or_node_binary_operation(
-            self.tree[1:], self.node, self.plus, expected_names,
-            expected_tree_str, is_incremental=True)
+        op = PlusEquals(self.tree, self.node, subscript=slice(1, 2))
+        op.check(self, expected_names, expected_tree_str)
 
         
     def test_item_incremental_multiplication_with_node(self):
-        expected_names = ['B_0_i', 'B_1_i']
+        expected_names = ['A_0', 'A_1', 'B_0_i', 'B_1_i']
         expected_tree_str = """
+letter: A
+    number: 0
+    number: 1
 letter: B
     number: 0
         i
     number: 1
         i"""
-        self.check_array_or_node_binary_operation(
-            self.tree[1:2], self.node, self.times, expected_names,
-            expected_tree_str, is_incremental=True)
+        op = TimesEquals(self.tree, self.node, subscript=1)
+        op.check(self, expected_names, expected_tree_str)
 
         
     def test_slice_incremental_multiplication_with_node(self):
-        expected_names = ['B_0_i', 'B_1_i']
+        expected_names = ['A_0', 'A_1', 'B_0_i', 'B_1_i']
         expected_tree_str = """
+letter: A
+    number: 0
+    number: 1
 letter: B
     number: 0
         i
     number: 1
         i"""
-        self.check_array_or_node_binary_operation(
-            self.tree[1:], self.node, self.times, expected_names,
-            expected_tree_str, is_incremental=True)
+        op = TimesEquals(self.tree, self.node, subscript=slice(1, 2))
+        op.check(self, expected_names, expected_tree_str)
 
 
             
