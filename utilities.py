@@ -21,17 +21,21 @@ except:
 
 ## TOP LEVEL FUNCTIONS 
 
-def smap(description, functor, options_tree):
+def smap(functor, options_tree, message=None):
     "Serial processing"
     functor.check_processing(False)
     options_dicts = options_tree.collapse()
-    functor.setup(options_dicts[0])
-    print '\n' + description
+    functor.preamble(options_dicts[0])
+    if message:
+        print '\n' + message
+    else:
+        print
     map(functor, options_dicts)
-    functor.teardown(options_dicts[-1])
+    functor.postamble(options_dicts[-1])
     
 
-def pmap(description, functor, options_tree, nprocs_max=None, in_reverse=False):
+def pmap(functor, options_tree, message=None, nprocs_max=None,
+         in_reverse=False):
     "Parallel processing"
     functor.check_processing(True)
     options_dicts = options_tree.collapse()
@@ -40,12 +44,15 @@ def pmap(description, functor, options_tree, nprocs_max=None, in_reverse=False):
         opt.freeze()
     if in_reverse:
         options_dicts.reverse()
-    functor.setup(options_dicts[0])
+    functor.preamble(options_dicts[0])
     p = multiprocessing.Pool(nprocs)
-    print '\n{} with {} processor(s)'.format(description, nprocs)
+    if message:
+        print '\n{} with {} processor(s)'.format(message, nprocs)
+    else:
+        print '\nWith {} processor(s)'.format(nprocs)
     p.map(functor, options_dicts)
     p.close()
-    functor.teardown(options_dicts[-1])
+    functor.postamble(options_dicts[-1])
 
 
 ## HELPERS
@@ -95,11 +102,11 @@ class Functor:
     Do not subclass me; subclass SerialFunctor or ParallelFunctor
     instead.
     """
-    def setup(self, options):
+    def preamble(self, options):
         "Code to be executed before iteration"
         pass
     
-    def teardown(self, options):
+    def postamble(self, options):
         "Code to be executed after iteration"
         pass
         
@@ -137,10 +144,14 @@ class SerialFunctor(Functor):
         msg = str(state)
         if options:
             if msg and '\n' not in msg:
-                if state.successful:
-                    sep = ' -> '
-                else:
-                    sep = ' -- '
+                # assume successful unless proven otherwise
+                sep = ' -> '
+                try:
+                    if not state.successful:
+                        # failure
+                        sep = ' -- '
+                except AttributeError:
+                    pass
             else:
                 sep = ''
                 msg = msg.replace('\n', '\n' + options.indent())
@@ -166,10 +177,14 @@ class ParallelFunctor(Functor):
 
     def print_end(self, state, options=None, target=sys.stdout):
         msg = str(state)
-        if state.successful:
-            intro = 'finished '
-        else:
-            intro = ''
+        # assume successful unless proven otherwise
+        intro = 'finished '
+        try:
+            if not state.successful:
+                # failure
+                intro = ''
+        except AttributeError:
+            pass
         if msg:
             target.write(" "*8 + intro + msg + '\n')
 
@@ -206,7 +221,6 @@ class Jinja2Rendering:
         "Creates and return a closure that can be executed with no args"
 
         def operation():
-            print os.getcwd()
             env = jinja2.Environment(
                 loader=jinja2.FileSystemLoader(source_dir),
                 **self.configuration)
@@ -222,55 +236,80 @@ class Jinja2Rendering:
 class ExpandTemplate(SerialFunctor):
     def __init__(self, source_filename_key, target_filename_key,
                  rendering_strategy=SimpleRendering(),
-                 source_dir='.', target_dir='.'):
+                 source_dir_key=None, target_dir_key=None):
         self.source_filename_key = source_filename_key
         self.target_filename_key = target_filename_key
         self.rendering_strategy = rendering_strategy
-        self.source_dir = source_dir
-        self.target_dir = target_dir
+        self.source_dir_key = source_dir_key
+        self.target_dir_key = target_dir_key
 
     def __call__(self, options):
         source_filename = options[self.source_filename_key]
         target_filename = options[self.target_filename_key]
+
+        if self.source_dir_key:
+            source_dir = options[self.source_dir_key]
+        else:
+            source_dir = '.'
+
+        if self.target_dir_key:
+            target_dir = options[self.target_dir_key]
+        else:
+            target_dir = '.'
+            
         operation = self.rendering_strategy.get_operation(
             options, source_filename, target_filename,
-            self.source_dir, self.target_dir)
+            source_dir, target_dir)
 
         self.boilerplate(
             options, [operation], [source_filename],
             target_name=target_filename)
 
 
-class RunBinary(ParallelFunctor):
+class RunProgram(ParallelFunctor):
     def __init__(self, command_line_arguments_key,
-                 prerequisite_filenames_key, target_name_key,
-                 working_dir='.', error_filename_key=None):
+                 prerequisite_filenames_key, target_name_key=None,
+                 working_dir_key=None, error_filename_key=None):
         self.command_line_arguments_key = command_line_arguments_key
         self.prerequisite_filenames_key = prerequisite_filenames_key
         self.target_name_key = target_name_key
-        # WARNING: working_dir doesn't seem to be respected.  To be
-        # investigated.
-        self.working_dir = working_dir
+        self.working_dir_key = working_dir_key
         self.error_filename_key = error_filename_key
     
     def __call__(self, options):
         subp_args = options[self.command_line_arguments_key]
         prerequisite_filenames = options[self.prerequisite_filenames_key]
-        target_name = options[self.target_name_key]
         
+        if self.target_name_key:
+            target_name = options[self.target_name_key]
+        else:
+            target_name = ' '.join(subp_args)
+            
         if self.error_filename_key:
             error_filename = options[self.error_filename_key]
-        else:
+        elif self.target_name_key:
             error_filename = target_name + '.err'
+        else:
+            error_filename = None
 
-        with ChDir(self.working_dir):
+        # WARNING: working_dir doesn't seem to be respected.  To be
+        # investigated.
+        if self.working_dir_key:
+            working_dir = options[self.working_dir_key]
+        else:
+            working_dir = None
+
+        with ChDir(working_dir):
             def operation():
-                try:
-                    with open(error_filename, 'w') as err_file:
-                        subprocess.check_output(subp_args, stderr=err_file)
-                except subprocess.CalledProcessError as e:
-                    raise Failure('FAILURE: see ' + error_filename)
-                os.remove(error_filename)
+                if error_filename:
+                    try:
+                        with open(error_filename, 'w') as err_file:
+                            subprocess.check_output(subp_args, stderr=err_file)
+                    except subprocess.CalledProcessError as e:
+                        raise Failure('FAILURE: see ' + error_filename)
+                    os.remove(error_filename)
+                else:
+                    subprocess.check_output(subp_args)
         
             self.boilerplate(
                 options, [operation], prerequisite_filenames,
@@ -324,3 +363,4 @@ class OptionsArrayFactory:
         # bump the array counter for next time
         self.array_index += 1
         return OptionsArray(array_name, nodes)
+    
