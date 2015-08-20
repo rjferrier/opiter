@@ -20,33 +20,35 @@ def add_dynamic_entry(tree_element):
     tree_element.update({'product': lambda opt: \
                          (1 + 'ABC'.index(opt['letter'])) * opt['number']})
 
+        
+def make_tree_str(options_dicts):
+    result_str = ''
+    for od in options_dicts:
+        branch = od.str(formatter='tree')
+        if branch:
+            result_str += '\n' + branch
+    return result_str
+
+
+def check_result(test_case, result, expected_names, expected_tree_string):
+    # flatten the result for inspection
+    ods = result.collapse()
+    test_case.assertEqual([str(od) for od in ods], expected_names)
+    if expected_tree_string:
+        test_case.assertEqual(make_tree_str(ods), expected_tree_string)
+
+    
 # ---------------------------------------------------------------------
 # helper classes
 
 class Operation:
     def check(self, test_case, expected_names, expected_tree_string):
-        # perform operation (delegate to subclass) 
+        # perform operation
         self()
-
-        # flatten and inspect the result
-        ods = self.result.collapse()
-        test_case.assertEqual([str(od) for od in ods], expected_names)
-        if expected_tree_string:
-            test_case.assertEqual(self.make_tree_str(ods),
-                                       expected_tree_string)
-
-        # check the states of the operands (delegate to middle class)
+        # check the result contents and states of the operands
+        check_result(test_case, self.result,
+                     expected_names, expected_tree_string)            
         self.check_operand_states(test_case)
-        
-        
-    @staticmethod
-    def make_tree_str(options_dicts):
-        result_str = ''
-        for od in options_dicts:
-            branch = od.str(formatter='tree')
-            if branch:
-                result_str += '\n' + branch
-        return result_str
     
 
 # ---------------------------------------------------------------------
@@ -486,6 +488,7 @@ letter: C
         op.check(self, expected_names, expected_tree_str)
 
 
+
         
 class TestTreeOperations(unittest.TestCase):
 
@@ -500,7 +503,27 @@ class TestTreeOperations(unittest.TestCase):
         self.array = OptionsArray('subnumber', ['i', 'ii', 'iii'])
         self.node_list = [OptionsNode(name) for name in ['i', 'ii', 'iii']]
         self.od = OptionsDict({'foo': 'bar'})
+        
+    # get-item operations have been tested elsewhere on simple arrays,
+    # but not on trees.  Test them here.
+            
+    def test_get_item_from_index(self):
+        expected_names = ['B_0', 'B_1']
+        expected_tree_str = """
+letter: B
+    number: 0
+    number: 1"""
+        check_result(self, self.tree[1], expected_names, expected_tree_str)
+            
+    def test_get_item_from_slice(self):
+        expected_names = ['B_0', 'B_1']
+        expected_tree_str = """
+letter: B
+    number: 0
+    number: 1"""
+        check_result(self, self.tree[1:2], expected_names, expected_tree_str)
 
+    # return to testing the usual binary operations
         
     def help_test_addition_with_node(self, operation):
         expected_names = ['A_0_i', 'A_1', 'B_0', 'B_1']

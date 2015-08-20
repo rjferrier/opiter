@@ -12,10 +12,6 @@ import glob
 
 from options_iteration import OptionsArray, OptionsNode
 
-# TODO: make OptionsNode constructor more intelligent (see TODO.md) so
-# we can phase this line out
-from options_iteration.options_dict import OptionsDictException
-
 try:
     import jinja2
     HAVE_JINJA2 = True
@@ -322,13 +318,8 @@ class OptionsArrayFactory:
         for node_index, el in enumerate(elements):
             node_name = self.array_index_formatter(self.array_index) +\
                         self.node_index_formatter(node_index)
-            try:
-                # el is a class that represents some entries
-                new_node = OptionsNode(node_name, el)
-            except OptionsDictException:
-                # el is a value that will be stored under array_name
-                new_node = OptionsNode(node_name, {array_name: el})
-            nodes.append(new_node)
+            nodes.append(
+                OptionsNode(node_name, el, array_name=array_name))
 
         # bump the array counter for next time
         self.array_index += 1

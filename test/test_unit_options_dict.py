@@ -108,16 +108,16 @@ class TestOptionsDictBasics(unittest.TestCase):
         od_from_class = UnitOptionsDict(basis)
         self.assertEqual(self.od, od_from_class)
         
-    def test_copy(self):
-        other = self.od.copy()
-        # test for equivalence and non-identity
-        self.assertEqual(other, self.od)
-        self.assertFalse(other is self.od)
-        # test that entries have been copied and not simply linked (we
-        # do not guarantee that their components have been
-        # deep-copied, however)
-        other.update(UnitOptionsDict({'foo': 'baz'}))
-        self.assertNotEqual(other, self.od)
+    # def test_copy(self):
+    #     other = self.od.copy()
+    #     # test for equivalence and non-identity
+    #     self.assertEqual(other, self.od)
+    #     self.assertFalse(other is self.od)
+    #     # test that entries have been copied and not simply linked (we
+    #     # do not guarantee that their components have been
+    #     # deep-copied, however)
+    #     other.update(UnitOptionsDict({'foo': 'baz'}))
+    #     self.assertNotEqual(other, self.od)
 
         
 class TestOptionsDictDynamicEntries(unittest.TestCase):

@@ -17,15 +17,6 @@ class TestOptionsArrayCreation(unittest.TestCase):
         for od in ods:
             self.assertEqual(od['foo'], 'bar') 
 
-    def test_create_with_bad_common_entries(self):
-        """
-        I create an OptionsArray 'A' using three integers and
-        something that is not a dictionary for the common_entries
-        argument.  An error should be raised.
-        """
-        create_array = lambda: OptionsArray('A', range(3), 'foo')
-        self.assertRaises(OptionsDictException, create_array)
-
     def test_format_names_with_string(self):
         """
         I create an OptionsDict array 'A' using integers 2, 5, 10.
@@ -73,21 +64,31 @@ class TestOptionsArrayBasics(unittest.TestCase):
         self.array = OptionsArray('random', self.values)
         self.expected_names = ['A', '3.14', 'some_dict', 'another_dict']
 
-    def test_create_options_dict(self):
+    def test_create_options_node(self):
         node = self.array.create_options_node('baz')
         self.assertIsInstance(node, OptionsNode)
         self.assertEqual(str(node), 'baz')
+
+    def test_create_options_node_from_node_and_name_format(self):
+        src = OptionsNode('baz')
+        fmt = lambda x: '<'+x+'>'
+        node = self.array.create_options_node(src, name_format=fmt)
+        self.assertIsInstance(node, OptionsNode)
+        self.assertEqual(str(node), '<baz>')
+        self.assertEqual(dict(node.collapse()[0]), {'random': 'baz'})
+
+    def test_create_options_node_from_node_and_entries(self):
+        src = OptionsNode('baz', {'a': 0})
+        node = self.array.create_options_node(src, {'b': 1})
+        self.assertIsInstance(node, OptionsNode)
+        self.assertEqual(str(node), 'baz')
+        self.assertEqual(dict(node.collapse()[0]),
+                         {'a': 0, 'b': 1, 'random': 'baz'})
 
     def test_create_node_info(self):
         ni = self.array.create_node_info(1)
         self.assertIsInstance(ni, ArrayNodeInfo)
         self.assertEqual(ni.str(collection_separator=':'), 'random:3.14')
-
-    def test_copy(self):
-        other = self.array.copy()
-        # test for equivalence and non-identity
-        self.assertEqual(other, self.array)
-        self.assertFalse(other is self.array)
 
     def test_element_types(self):
         for el in self.array:

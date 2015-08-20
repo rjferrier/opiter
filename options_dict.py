@@ -81,8 +81,8 @@ class OptionsDict(dict):
     protected_attributes = [
         'another', 'donate_copy', 'indent', 'create_array_node_info',
         'create_node_info_formatter', 'create_orphan_node_info',
-        'copy', 'expand_template_file', 'get_node_info', 'freeze',
-        'from_class', 'set_node_info', 'str', 'update']
+        'expand_template_file', 'expand_template_string', 'get_node_info',
+        'freeze', 'from_class', 'set_node_info', 'str', 'update']
     
     def __init__(self, entries={}):
         """
@@ -172,7 +172,7 @@ class OptionsDict(dict):
                 # If the element is already an OptionsDict object,
                 # copy it and add a special entry using array_name.
                 # Keep track of the node name.
-                od = el.copy()
+                od = deepcopy(el)
                 node_name = str(el)
                 od.update({array_name: node_name})
             else:
@@ -206,6 +206,8 @@ class OptionsDict(dict):
 
 
     def copy(self):
+        warn("\nThis is a deprecated method.  Consider using "+\
+             "copy.deepcopy \ninstead.")
         obj = self.another(dict.copy(self))
         obj._node_info = [ni.copy() for ni in self._node_info]
         return obj
@@ -235,8 +237,8 @@ class OptionsDict(dict):
         respectively.
         """
         default_err = OptionsDictException(
-            "argument must be a dict, an iterable of dynamic entries \n"+\
-            "(i.e. functions), or a class with attributes and/or methods.")
+            "\nArgument must be a dict, an iterable of dynamic entries "+\
+            "(i.e. functions),\nor a class with attributes and/or methods.")
         for strategy in [self._update_from_dict,
                          self._update_from_dynamic_entries,
                          self._update_from_class]:
@@ -252,6 +254,7 @@ class OptionsDict(dict):
         # the argument was incompatible
         raise default_err
 
+    
     def freeze(self):
         """
         Converts all dynamic entries to static ones.  This may be
@@ -315,11 +318,12 @@ class OptionsDict(dict):
         # create a formatter object if necessary
         if isinstance(formatter, str) or not formatter:
             formatter = self.create_node_info_formatter(formatter)
+            
         # pass the filtered list to the formatter object
         return formatter(filtered_node_info, 
                          absolute=absolute, relative=relative,
                          only_indent=only_indent)
-
+    
         
     def create_node_info_formatter(self, which=None):
         """
@@ -330,11 +334,12 @@ class OptionsDict(dict):
         if not which:
             which = 'simple'
         if which == 'simple':
-            return SimpleFormatter()
+            formatter = SimpleFormatter()
         elif which == 'tree':
-            return TreeFormatter()
+            formatter = TreeFormatter()
         else:
             raise OptionsDictException("'{}' not recognised.".format(which))
+        return formatter
 
             
     def indent(self, only=[], exclude=[], absolute={}, relative={}, 
@@ -451,13 +456,13 @@ class OptionsDict(dict):
     def _check_new_item_name(self, name):
         if name[0] == '_':
             raise OptionsDictException(
-                "Prefixing an item with an underscore is not allowed "+\
+                "\nPrefixing an item with an underscore is not allowed "+\
                 "because it \nmight clash with a hidden attribute.  If you "+\
                 "want to set this attribute,\n you will need to register "+\
                 "the name in mutable_attributes.")
         elif name in self.protected_attributes:
             raise OptionsDictException(
-                "Setting an item called '{}' is not allowed because it "+\
+                "\nSetting an item called '{}' is not allowed because it "+\
                 "would clash \nwith an attribute of the same name.  If you "+\
                 "want to set this attribute,\n you will need to register "+\
                 "the name in mutable_attributes.")

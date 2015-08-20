@@ -5,16 +5,33 @@ from node_info import OrphanNodeInfo
     
 
 class TestOptionsNodeCreation(unittest.TestCase):
-
-    def test_create_with_bad_common_entries(self):
-        """
-        I create an OptionsNode using something that is not a dictionary
-        for the entries argument.  An error should be raised.
-        """
-        create_node = lambda: OptionsNode('A', 'foo')
-        self.assertRaises(OptionsDictException, create_node)
-
-
+    
+    def check_name_and_entries(self, node, expected_name, expected_entries={}):
+        self.assertEqual(str(node), expected_name)
+        self.assertEqual(dict(node.collapse()[0]), expected_entries)
+    
+    def test_create_node_from_class(self):
+        class a_node:
+            foo = 'bar'
+        node = OptionsNode(a_node)
+        self.check_name_and_entries(node, 'a_node', {'foo': 'bar'})
+        
+    def test_create_node_from_class_and_array(self):
+        class a_node:
+            foo = 'bar'
+        node = OptionsNode(a_node, array_name='an_array')
+        self.check_name_and_entries(node, 'a_node',
+                                    {'an_array': 'a_node',
+                                     'foo': 'bar'})
+        
+    def test_create_node_from_name_and_format_function_and_array(self):
+        name_format = lambda s: '<'+s+'>'
+        node = OptionsNode('a_node', array_name='an_array',
+                           name_format=name_format)
+        self.check_name_and_entries(node, '<a_node>', {'an_array': 'a_node'})
+        
+    
+        
 class TestOptionsNodeBasics(unittest.TestCase):
 
     def setUp(self):
@@ -37,8 +54,24 @@ class TestOptionsNodeBasics(unittest.TestCase):
         self.assertIsInstance(od, OptionsDict)
         self.assertEqual(od['foo'], 1)
 
-
+        
 class TestOrphanNodeAfterCollapse(unittest.TestCase):
+
+    def check_type(self):
+        self.assertIsInstance(self.od, OptionsDict)
+
+    def check_name(self):
+        self.assertEqual(str(self.od), 'A')
+
+    def check_contents(self):
+        self.assertEqual(self.od['foo'], 'bar')
+
+    def check_node_info_name(self):
+        ni = self.od.get_node_info()
+        self.assertEqual(ni.str(), 'A')
+
+        
+class TestOrphanNodeFromUsualArgsAfterCollapse(TestOrphanNodeAfterCollapse):
 
     def setUp(self):
         """
@@ -49,37 +82,56 @@ class TestOrphanNodeAfterCollapse(unittest.TestCase):
         self.od = node.collapse()[0]
 
     def test_type(self):
-        self.assertIsInstance(self.od, OptionsDict)
+        self.check_type()
 
     def test_name(self):
-        self.assertEqual(str(self.od), 'A')
+        self.check_name()
 
     def test_contents(self):
-        self.assertEqual(self.od['foo'], 'bar')
+        self.check_contents()
 
     def test_node_info_name(self):
-        ni = self.od.get_node_info()
-        self.assertEqual(ni.str(), 'A')
+        self.check_node_info_name()
 
-
-class TestOrphanNodeFromClassAfterCollapse(unittest.TestCase):
-    """
-    Repeat the setup and key tests from TestOrphanNodeAfterCollapse,
-    this time creating the node from a class.
-    """
+        
+class TestOrphanNodeFromClassAfterCollapse(TestOrphanNodeAfterCollapse):
 
     def setUp(self):
+        """
+        I create a node from a class and collapse it, which should leave
+        an OptionsDict with OrphanNodeInfo.
+        """
         class A:
             foo = 'bar'
         node = OptionsNode(A)
         self.od = node.collapse()[0]
 
+    def test_type(self):
+        self.check_type()
+
+    def test_name(self):
+        self.check_name()
+
     def test_contents(self):
-        self.assertEqual(self.od['foo'], 'bar')
+        self.check_contents()
 
     def test_node_info_name(self):
-        ni = self.od.get_node_info()
-        self.assertEqual(ni.str(), 'A')
+        self.check_node_info_name()
+
+
+class TestOptionsNodeWithChild(unittest.TestCase):
+    
+    def setUp(self):
+        child = OptionsNode('qux')
+        self.node = OptionsNode('foo', {'bar': 1}, child=child)
+
+    def test_compare_with_node_from_class(self):
+        class foo:
+            bar = 1
+        class qux: 
+            pass
+        node_from_class = OptionsNode(foo, child=OptionsNode(qux))
+        self.assertEqual(node_from_class, self.node)
 
 
 if __name__ == '__main__':

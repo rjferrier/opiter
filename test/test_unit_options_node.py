@@ -1,17 +1,53 @@
 import unittest
 from unit_tree_elements import UnitOptionsNode
 from tree_elements import OptionsNodeException
+from copy import deepcopy
 
 
 class TestOptionsNodeCreation(unittest.TestCase):
 
-    def test_create_node_from_non_string(self):
-        """
-        When I create a node using something other than a string, an
-        error should be raised.
-        """
-        create_node = lambda: UnitOptionsNode({'foo': 'bar'})
-        self.assertRaises(OptionsNodeException, create_node)
+    def check_name_and_entries(self, node, expected_name, expected_entries={}):
+        self.assertEqual(str(node), expected_name)
+        self.assertEqual(node.collapse()[0], expected_entries)
+    
+    def test_create_node_from_name(self):
+        node = UnitOptionsNode('a_node')
+        self.check_name_and_entries(node, 'a_node', {})
+        
+    def test_create_node_from_name_and_array(self):
+        node = UnitOptionsNode('a_node', array_name='an_array')
+        self.check_name_and_entries(node, 'a_node', {'an_array': 'a_node'})
+        
+    def test_create_node_from_name_and_format_function_and_array(self):
+        name_format = lambda s: '<'+s+'>'
+        node = UnitOptionsNode('a_node', array_name='an_array',
+                               name_format=name_format)
+        self.check_name_and_entries(node, '<a_node>', {'an_array': 'a_node'})
+        
+    def test_create_node_from_value_and_format_string(self):
+        name_format = '{:.2f}'
+        node = UnitOptionsNode(1./7, name_format=name_format)
+        self.check_name_and_entries(node, '0.14')
+        
+    def test_create_node_from_value_and_format_function_and_array(self):
+        name_format = lambda x: str(x + 1)
+        node = UnitOptionsNode(1, name_format=name_format, array_name='num')
+        self.check_name_and_entries(node, '2', {'num': 1})
+        
+    def test_create_node_from_name_and_value_and_array(self):
+        node = UnitOptionsNode('a_node', 3, array_name='an_array')
+        self.check_name_and_entries(node, 'a_node', {'an_array': 3})
+        
+    def test_create_node_from_entries(self):
+        node = UnitOptionsNode({'foo': 'bar'}, array_name='num')
+        self.check_name_and_entries(node, '', {'foo': 'bar'})
+        
+    def test_create_node_from_node_and_format_function_and_array(self):
+        name_format = lambda s: '<'+s+'>'
+        src = UnitOptionsNode('a_node')
+        node = UnitOptionsNode(src, array_name='an_array',
+                               name_format=name_format)
+        self.check_name_and_entries(node, '<a_node>', {'an_array': 'a_node'})
 
     def test_create_node_with_bad_child(self):
         """
@@ -19,18 +55,6 @@ class TestOptionsNodeCreation(unittest.TestCase):
         OptionsTreeElement, an error should be raised.
         """
         create_node = lambda: UnitOptionsNode('foo', child='bar')
-        self.assertRaises(OptionsNodeException, create_node)
-
-    def test_create_node_from_non_class(self):
-        """
-        When I create a node using class method from_node and passing in
-        something other than a class, an error should be raised.
-        """
-        class some_node:
-            foo = 'bar'
-        # some_node() instantiates an object from the class - this
-        # should fail as such object won't have a name.
-        create_node = lambda: UnitOptionsNode(some_node())
         self.assertRaises(OptionsNodeException, create_node)
         
         
@@ -59,17 +83,8 @@ class TestOptionsNodeBasics(unittest.TestCase):
         self.assertNotEqual(self.node, 
                             self.make_node(child=UnitOptionsNode('baz')))
 
-    def test_copy(self):
-        other = self.node.copy()
-        # test for equivalence and non-identity
-        self.assertEqual(other, self.node)
-        self.assertFalse(other is self.node)
-
-    def test_str(self):
-        self.assertEqual(str(self.node), 'foo')
-
     def test_donate_copy(self):
-        node_init = self.node.copy()
+        node_init = deepcopy(self.node)
         acceptor = UnitOptionsNode('baz')
         acceptor, remainder = self.node.donate_copy(acceptor)
         self.assertEqual(acceptor.child, node_init)
@@ -77,19 +92,6 @@ class TestOptionsNodeBasics(unittest.TestCase):
 
     def test_count_leaves(self):
         self.assertEqual(self.node.count_leaves(), 1)        
-
-    def test_compare_with_node_from_class(self):
-        """
-        This can be done as long as there aren't any dynamic entries.
-        Dynamic entries are created from functions, and functions
-        created in different contexts aren't equal.
-        """
-        class foo:
-            bar = 1
-        class qux: 
-            pass
-        node_from_class = UnitOptionsNode(foo, child=UnitOptionsNode(qux))
-        self.assertEqual(node_from_class, self.node)
 
         
 if __name__ == '__main__':

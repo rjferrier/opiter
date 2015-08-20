@@ -2,7 +2,7 @@ import unittest
 from options_dict import OptionsDict, CallableEntry, OptionsDictException
 from node_info import SimpleFormatter, TreeFormatter
 from tree_elements import OptionsNode, OptionsArray
-
+from copy import deepcopy
 
 class TestOptionsDictBasics(unittest.TestCase):
 
@@ -15,6 +15,10 @@ class TestOptionsDictBasics(unittest.TestCase):
         string.
         """
         self.assertEqual(str(self.od), '')
+    
+    def test_create_node_info_formatter_default(self):
+        self.assertIsInstance(
+            self.od.create_node_info_formatter(), SimpleFormatter)
     
     def test_create_node_info_formatter_simple(self):
         self.assertIsInstance(
@@ -42,7 +46,7 @@ class TestOptionsDictInteractionsWithNode(unittest.TestCase):
         Passing a node to OptionsDict's donate_copy method should furnish
         the node with dictionary information.
         """
-        od_init = self.od.copy()
+        od_init = deepcopy(self)
         self.node, remainder = self.od.donate_copy(self.node)
         node_od = self.node.collapse()[0]
         self.assertEqual(node_od['bar'], 1)

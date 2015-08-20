@@ -5,7 +5,7 @@ and extension purposes.
 """
 
 from functools import wraps
-
+from copy import deepcopy
 
 def nonmutable(method):
     """
@@ -14,7 +14,7 @@ def nonmutable(method):
     neatly without mutating the operands.
     """
     def decorator(self, other):
-        result = self.copy()
+        result = deepcopy(self)
         method(result, other)
         return result
     return decorator

@@ -4,7 +4,8 @@ from operator import mul
 from base import nonmutable, OptionsBaseException
 from options_dict import OptionsDict
 from node_info import OrphanNodeInfo, ArrayNodeInfo
-
+from copy import deepcopy
+from warnings import warn
 
 class OptionsNodeException(OptionsBaseException):
     pass
@@ -61,31 +62,46 @@ class OptionsNode(OptionsTreeElement):
     Contains an options dictionary and optionally a child
     OptionsTreeElement, hence forming a tree structure.
     """
-    def __init__(self, name_or_class, entries={}, child=None,
-                 array_name=None):
-        try:
-            # if name_or_class is a class, use it to extract a name
-            # and create the options dictionary
-            self.name = name_or_class.__name__
-            self.options_dict = self.create_options_dict(name_or_class)
-            
-        except AttributeError:
-            # otherwise, type-check name_or_class and set name
-            if name_or_class is None:
-                name_or_class = ''
-            elif not isinstance(name_or_class, str):
-                raise OptionsNodeException(
-                    "name_or_class argument must be a string or a named "+\
-                    "class (or None)" + str(name_or_class))
-            self.name = name_or_class
+    def __init__(self, arg1={}, arg2={}, child=None,
+                 name_format='{}', array_name=None):
+        """
+        Constructs an OptionsNode, inferring a name from arg1 and an
+        options dictionary from arg1 and arg2, if present.
 
-            # set attributes.  Note that the entries argument may
-            # still be a class, in which case its attributes and
-            # methods will be converted to entries even if its name is
-            # ignored.
-            self.options_dict = self.create_options_dict(entries)
+        name_format controls the string representation of arg1.  It
+        may take the form of a one-argument function or a format
+        string.
 
-        # check child argument
+        If array_name is given, a representative value taken from
+        either of the arguments will be stored in the dictionary under
+        array_name - i.e. {array_name: representative_value}.  arg2
+        takes precedence over arg1; this allows initialisations such
+        as OptionsNode(node_name, representative_value,
+        array_name=array_name).
+        
+        Possible candidates for the arguments, and consequent node
+        attributes, are:
+        
+          arg         node name        options dict entries
+          -----       ---------        --------------------
+          name        name             array_name: name
+          value       str(value)       array_name: value
+          class       class.__name_    array_name: class.__name__,
+                                       **class.__dict__
+          entries                      **entries
+        """
+
+        # try and infer a name from the first arg 
+        self.set_name_general(arg1, name_format)
+        
+        # instantiate the options dict and update from both args (with
+        # arg2 taking precedence over arg1)
+        self.options_dict = self.create_options_dict()
+        self.update_options_dict_general(arg2, array_name)
+        self.update_options_dict_general(arg1, array_name)
+        
+        # Set the child.  The type check is not ideal but it prevents
+        # bad things happening later.
         if child is not None and not isinstance(child, OptionsTreeElement):
             raise OptionsNodeException(
                 "child argument must be an OptionsTreeElement (or None)")
@@ -93,14 +109,77 @@ class OptionsNode(OptionsTreeElement):
 
         
     @classmethod
-    def another(Class, name, entries={}, child=None):
-        return Class(name, entries, child)
+    def another(Class, arg1={}, arg2={}, child=None):
+        return Class(arg1, arg2, child)
 
         
-    def create_options_dict(self, entries):
+    def set_name_general(self, arg, name_format):
+        if hasattr(arg, 'name'):
+            # if we have another OptionsNode or something with a
+            # 'name' attribute, use that name
+            name_src = arg.name
+        
+        elif hasattr(arg, '__name__'):
+            # if we have a class, use the class name
+            name_src = arg.__name__
+
+        elif arg is None or hasattr(arg, '__iter__'):
+            # containers and None are inappropriate for forming names
+            name_src = ''
+            
+        else:
+            # everything else can be used directly
+            name_src = arg
+            
+        # convert to a string with the help of name_format
+        try:
+            self.name = name_format(name_src)
+            return
+        except TypeError:
+            pass
+
+        # if name_format fails as a function, try treating it as a
+        # format string
+        try:
+            self.name = name_format.format(name_src)
+        except AttributeError:
+            raise OptionsArrayException(
+                "name_format must be a callable or a format string; is {}".\
+                format(name_format))
+            
+
+    def update_options_dict_general(self, arg, array_name):
+        # Try and update the options dictionary directly from the
+        # arg.  Tolerate failures silently since the arg may not
+        # be intended for this purpose.
+        try:
+            self.options_dict.update(arg)
+        except:
+            pass
+        
+        # Try and infer a representative value to be stored under
+        # array_name, if one doesn't already exist
+        if array_name and array_name not in self.options_dict:
+            if hasattr(arg, 'name'):
+                # if the arg is another OptionsNode or something with
+                # a 'name' attribute, make that name the
+                # representative value
+                self.options_dict.update({array_name: arg.name})
+                
+            elif hasattr(arg, '__name__'):
+                # if the arg is a class, make its name the
+                # representative value
+                self.options_dict.update({array_name: arg.__name__})
+            
+            elif not hasattr(arg, '__iter__'):
+                # for all other non-iterable types, store the value
+                # directly
+                self.options_dict.update({array_name: arg})
+
+        
+    def create_options_dict(self, entries={}):
         """
-        Overrideable factory method, used by the OptionsNode
-        constructor.
+        Overrideable factory method, used by OptionsNode.set_options_dict.
         """
         od = OptionsDict(entries)
         od.set_node_info(self.create_info())
@@ -116,6 +195,8 @@ class OptionsNode(OptionsTreeElement):
 
         
     def copy(self):
+        warn("\nThis is a deprecated method.  Consider using "+\
+             "copy.deepcopy \ninstead.")
         return self.another(
             self.name, entries=self.options_dict.copy(),
             child=self.child.copy() if self.child else None)
@@ -134,7 +215,7 @@ class OptionsNode(OptionsTreeElement):
             for sub_od in self.child.collapse():
                 # copy, inform and update the present dictionary with
                 # each element in the result of the recursion
-                od = self.options_dict.copy()
+                od = deepcopy(self.options_dict)
                 od.update(sub_od)
                 result.append(od)
             # return the merged dictionaries
@@ -143,7 +224,7 @@ class OptionsNode(OptionsTreeElement):
         except AttributeError:
             # this is a leaf, so just return the current options
             # dictionary as a one-element list
-            result = [self.options_dict.copy()]
+            result = [deepcopy(self.options_dict)]
 
         return result
 
@@ -157,7 +238,7 @@ class OptionsNode(OptionsTreeElement):
             # recurse
             self.child.multiply_attach(tree)
         except AttributeError:
-            self.child = tree.copy()
+            self.child = deepcopy(tree)
 
             
     def attach(self, tree):
@@ -181,7 +262,7 @@ class OptionsNode(OptionsTreeElement):
                 return remainder
             except AttributeError:
                 # manual implementation, for native iterables
-                self.child = tree[0].copy()
+                self.child = deepcopy(tree[0])
                 return tree[1:]
         else:
             # keep going
@@ -189,7 +270,7 @@ class OptionsNode(OptionsTreeElement):
 
 
     def donate_copy(self, acceptor):
-        node_copy = self.copy()
+        node_copy = deepcopy(self)
         if acceptor:
             acceptor.attach(node_copy)
         else:
@@ -224,7 +305,11 @@ class OptionsNode(OptionsTreeElement):
         if not node_info:
             node_info = self.create_info()
         # delegate
-        self.options_dict.set_node_info(node_info)
+        try:
+            self.options_dict.set_node_info(node_info)
+        except AttributeError:
+            raise OptionsNodeException( str(type(self.options_dict)) + ' '+\
+                                        repr(self.options_dict) )
 
         
     def __eq__(self, other):
@@ -277,9 +362,8 @@ class OptionsArray(OptionsTreeElement):
                 
         # instantiate and record OptionsNodes
         for el in elements:
-            node = self.create_options_node_general(el)
-            # add entries
-            node.update(common_entries)
+            node = self.create_options_node(el, common_entries,
+                                            name_format=name_format)
             # append to the list
             self.nodes.append(node)
 
@@ -293,49 +377,27 @@ class OptionsArray(OptionsTreeElement):
                 name_format='{}'):
         return Class(array_name, elements, common_entries, name_format)
 
-
-    def create_options_node_general(self, thing):
-        if isinstance(thing, dict):
-            raise OptionsArrayException(
-                "Creating an options node from a dictionary is not allowed, "+\
-                "because it\n is not obvious how to name it or what to "+\
-                "enter under the array key.\n Please construct an "+\
-                "OptionsNode explicitly.")
-            
-        # If the thing is already an OptionsNode, simply copy it
-        if isinstance(thing, OptionsNode):
-            node = thing.copy()
+    
+    def create_options_node(self, arg1={}, arg2={}, name_format='{}'):
+        """
+        Overrideable factory method, used by the OptionsArray constructor.
+        """
+        if isinstance(arg1, OptionsNode):
+            # if the first arg is an existing OptionsNode, catch and
+            # copy it
+            node = deepcopy(arg1)
+            node.set_name_general(arg1, name_format) 
+            node.update_options_dict_general(arg2, self.name) 
+            node.update_options_dict_general(arg1, self.name) 
             return node
+        else:
+            return OptionsNode(arg1, arg2, name_format=name_format,
+                               array_name=self.name)
 
-        # If the thing is a named class, use it to instantiate a new
-        # OptionsNode
-        if hasattr(thing, '__name__'):
-            return self.create_options_node(thing)
-
-        # otherwise, instantiate a new OptionsNode with the original
-        # thing stored under array_name.  Determine the node name.
-        try:
-            node_name = self.name_format(thing)
-        except TypeError:
-            try:
-                node_name = self.name_format.format(thing)
-            except AttributeError:
-                raise OptionsArrayException(
-                    "name_format must be a callable or a format string.")
-        node = self.create_options_node(node_name)
-        node.update({self.name: thing})
-        return node
-        
-        
-    def create_options_node(self, name_or_class):
-        """
-        Overrideable factory method, used by
-        OptionsArray.create_options_node_general.
-        """
-        return OptionsNode(name_or_class)
-
-        
+    
     def copy(self):
+        warn("\nThis is a deprecated method.  Consider using "+\
+             "copy.deepcopy \ninstead.")
         return self.another(self.name, [el.copy() for el in self])
 
         
@@ -445,33 +507,34 @@ class OptionsArray(OptionsTreeElement):
         return result
 
 
-    def __getitem__(self, index_or_name_or_slice):
+    def __getitem__(self, subscript):
         try:
             # treat argument as a slice
-            indices = index_or_name_or_slice.indices(len(self.nodes))
-            return self.another(self.name, islice(self.nodes, *indices))
+            indices = subscript.indices(len(self.nodes))
+            return self.another(self.name, self.nodes[subscript])
         except AttributeError:
             pass
 
         try:
             # treat argument as a name
-            index = [str(n) for n in self.nodes].index(index_or_name_or_slice)
+            index = [str(n) for n in self.nodes].index(subscript)
         except ValueError:
             # default to an index
-            index = index_or_name_or_slice
+            index = subscript
 
         return self.nodes[index]
 
 
-    def __setitem__(self, index_or_slice, value_or_values):
+    def __setitem__(self, subscript, value_or_values):
         # convert to nodes
         try:
-            value_or_values = [self.create_options_node_general(v) \
+            value_or_values = [self.create_options_node(v) \
                                for v in value_or_values]
         except TypeError:
-            value_or_values = self.create_options_node_general(value_or_values)
-        self.nodes[index_or_slice] = value_or_values
+            value_or_values = self.create_options_node(value_or_values)
+        self.nodes[subscript] = value_or_values
         self.update_node_info()
+
         
     def __str__(self):
         return str(self.name)
