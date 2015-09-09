@@ -761,6 +761,66 @@ letter: B
         op.check(self, expected_names, expected_tree_str)
 
 
+class TestTreeWithRootNodeOperations(unittest.TestCase):
+    # So far we haven't tried reaching through a node to get or set
+    # items in its child array(s)...
+
+    def setUp(self):
+        root = OptionsNode('root')
+        letters = OptionsArray('letter', ['A', 'B'])
+        numbers = OptionsArray('number', range(2))
+        # way of testing them after a tree collapse
+        add_dynamic_entry(numbers)
+        self.tree = root * letters * numbers
+        self.node = OptionsNode('i')
+
+    def test_get_item_from_index(self):
+        expected_names = ['B_0', 'B_1']
+        expected_tree_str = """
+letter: B
+    number: 0
+    number: 1"""
+        check_result(self, self.tree[1], expected_names, expected_tree_str)
+            
+    def test_get_item_from_slice(self):
+        expected_names = ['B_0', 'B_1']
+        expected_tree_str = """
+letter: B
+    number: 0
+    number: 1"""
+        check_result(self, self.tree[1:2], expected_names, expected_tree_str)
+
+
+    def test_item_incremental_addition_with_node(self):
+        expected_names = ['root_A_0', 'root_A_1', 'root_B_0_i', 'root_B_1']
+        expected_tree_str = """
+root
+    letter: A
+        number: 0
+        number: 1
+    letter: B
+        number: 0
+            i
+        number: 1"""
+        op = PlusEquals(self.tree, self.node, subscript=1)
+        op.check(self, expected_names, expected_tree_str)
+
+        
+    def test_slice_incremental_addition_with_node(self):
+        expected_names = ['root_A_0', 'root_A_1', 'root_B_0_i', 'root_B_1']
+        expected_tree_str = """
+root
+    letter: A
+        number: 0
+        number: 1
+    letter: B
+        number: 0
+            i
+        number: 1"""
+        op = PlusEquals(self.tree, self.node, subscript=slice(1, 2))
+        op.check(self, expected_names, expected_tree_str)
+        
+
             
 if __name__ == '__main__':
     unittest.main()

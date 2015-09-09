@@ -320,6 +320,16 @@ class OptionsNode(OptionsTreeElement):
             result *= self.child == other.child
         return result
 
+    def __getitem__(self, subscript):
+        if self.child:
+            return self.child[subscript]
+        else:
+            raise IndexError('no iterable children')
+
+    def __setitem__(self, subscript, value_or_values):
+        if self.child:
+            self.child[subscript] = value_or_values
+
     def __str__(self):
         return str(self.name)
 
@@ -469,7 +479,11 @@ class OptionsArray(OptionsTreeElement):
         OptionsArray.
         """
         for i, node in enumerate(self.nodes):
-            node.update_info(self.create_node_info(i))
+            try:
+                node.update_info(self.create_node_info(i))
+            except:
+                print node
+                raise
 
         
     def create_node_info(self, index):
@@ -511,28 +525,41 @@ class OptionsArray(OptionsTreeElement):
         try:
             # treat argument as a slice
             indices = subscript.indices(len(self.nodes))
+
+            # return an array
             return self.another(self.name, self.nodes[subscript])
+
         except AttributeError:
-            pass
+            try:
+                # treat argument as a name
+                index = [str(n) for n in self.nodes].index(subscript)
+            except ValueError:
+                # default to an index
+                index = subscript
 
-        try:
-            # treat argument as a name
-            index = [str(n) for n in self.nodes].index(subscript)
-        except ValueError:
-            # default to an index
-            index = subscript
-
-        return self.nodes[index]
+            # return a node
+            return self.nodes[index]
 
 
     def __setitem__(self, subscript, value_or_values):
-        # convert to nodes
         try:
-            value_or_values = [self.create_options_node(v) \
-                               for v in value_or_values]
-        except TypeError:
-            value_or_values = self.create_options_node(value_or_values)
-        self.nodes[subscript] = value_or_values
+            # treat subscript as a slice
+            indices = subscript.indices(len(self.nodes))
+            # convert values to nodes 
+            self.nodes[subscript] = [self.create_options_node(v) \
+                                         for v in value_or_values]
+
+        except AttributeError:
+            try:
+                # treat subscript as a name
+                index = [str(n) for n in self.nodes].index(subscript)
+            except ValueError:
+                # default to an index
+                index = subscript
+                
+            # convert value to a node
+            self.nodes[index] = self.create_options_node(value_or_values)
+
         self.update_node_info()
 
         

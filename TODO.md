@@ -3,17 +3,15 @@
 
 - [ ] OptionsTreeElement behaviour
   - [ ] Consider reworking `collapse` as a generator
+  - [x] Implement `__getitem__` and `__setitem__` for OptionsNode
+        (as delegations)
   
 - [ ] Tidy up
   - [ ] Review/update docstrings
-  - [x] Rename copy methods as `__deepcopy__` or remove them altogether
   - [ ] Replace isinstance tests with try-except blocks
   - [ ] Consider deprecating/removing
     - [ ] `expand_template_file`
     - [ ] `tools.py`, `OptionsDict.array`, `OptionsDict.node`
-  - [x] Push smart initialisation of OptionsArray nodes into the OptionsNode
-        constructor, so that we don't have to duplicate this when writing 
-        alternative OptionsArray factories
 
 - [ ] Tests/Examples
   - [ ] Add a mock simulation example with convergence analysis

@@ -93,6 +93,20 @@ class TestOptionsNodeBasics(unittest.TestCase):
     def test_count_leaves(self):
         self.assertEqual(self.node.count_leaves(), 1)        
 
+    def test_getitem(self):
+        """
+        There are no iterable children, so an IndexError should be raised.
+        """
+        getter = lambda: self.node[0]
+        self.assertRaises(IndexError, getter)
+
+    def test_setitem(self):
+        """
+        There are no iterable children, so an IndexError should be raised.
+        """
+        getter = lambda: self.node[0]
+        self.assertRaises(IndexError, getter)
+
         
 if __name__ == '__main__':
     unittest.main()

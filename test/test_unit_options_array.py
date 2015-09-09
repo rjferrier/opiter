@@ -114,7 +114,8 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         self.assertEqual(str(self.array[2]), 'baz')
 
     def test_setitem_from_slice_and_check_values(self):
-        self.array[1:4:2] = [UnitOptionsNode('baz'), UnitOptionsNode('qux')]
+        self.array[1:4:2] = [UnitOptionsNode('baz'),
+                             UnitOptionsNode('qux')]
         self.assertEqual(str(self.array[1]), 'baz')
         self.assertEqual(str(self.array[3]), 'qux')
 
