@@ -210,11 +210,17 @@ class SimpleRendering:
 
             
 class Jinja2Rendering:
-    def __init__(self, configuration={'trim_blocks': True,
-                                      'lstrip_blocks': True}):
+    def __init__(self, configuration={}, filters={}, globals={}, tests={}):
         if not HAVE_JINJA2:
             raise Exception('jinja2 not installed; needed by this functor')
-        self.configuration = configuration
+        # default configuration
+        self.configuration = {'trim_blocks': True,
+                              'lstrip_blocks': True,
+                              'undefined': jinja2.StrictUndefined}
+        self.configuration.update(configuration)
+        self.filters = filters
+        self.globals = globals
+        self.tests = tests
 
     def get_operation(self, options, source_filename, target_filename, 
                       source_dir, target_dir):
@@ -224,6 +230,9 @@ class Jinja2Rendering:
             env = jinja2.Environment(
                 loader=jinja2.FileSystemLoader(source_dir),
                 **self.configuration)
+            env.filters.update(self.filters)
+            env.globals.update(self.globals)
+            env.tests.update(self.tests)
             template = env.get_template(source_filename)
             with open('{}/{}'.format(target_dir, target_filename), 'w') as f:
                 f.write(template.render(opt=options))
