@@ -197,7 +197,7 @@ class SimpleRendering:
 
     def get_operation(self, options, source_filename, target_filename,
                       source_dir, target_dir):
-        "Creates and return a closure that can be executed with no args"
+        "Creates and returns a closure that can be executed with no args"
 
         def operation():
             with open('{}/{}'.format(source_dir, source_filename), 'r') as src:
@@ -222,21 +222,25 @@ class Jinja2Rendering:
         self.globals = globals
         self.tests = tests
 
+    def render(self, source_filename, target_filename, source_dir,
+               target_dir, **kwargs):
+        env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(source_dir),
+            **self.configuration)
+        env.filters.update(self.filters)
+        env.globals.update(self.globals)
+        env.tests.update(self.tests)
+        template = env.get_template(source_filename)
+        with open('{}/{}'.format(target_dir, target_filename), 'w') as f:
+            f.write(template.render(kwargs))
+            
     def get_operation(self, options, source_filename, target_filename, 
                       source_dir, target_dir):
-        "Creates and return a closure that can be executed with no args"
-
+        "Creates and returns a closure that can be executed with no args"
+        
         def operation():
-            env = jinja2.Environment(
-                loader=jinja2.FileSystemLoader(source_dir),
-                **self.configuration)
-            env.filters.update(self.filters)
-            env.globals.update(self.globals)
-            env.tests.update(self.tests)
-            template = env.get_template(source_filename)
-            with open('{}/{}'.format(target_dir, target_filename), 'w') as f:
-                f.write(template.render(opt=options))
-
+            self.render(source_filename, target_filename, 
+                        source_dir, target_dir, opt=options)
         return operation
     
 
