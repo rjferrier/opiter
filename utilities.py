@@ -19,7 +19,26 @@ except:
     HAVE_JINJA2 = False
 
 
-## TOP LEVEL FUNCTIONS 
+## DIAGNOSTIC FUNCTIONS
+
+def check_entries(options_tree):
+    """
+    Evaluates each entry in each options dictionary in options_tree.
+    Errors will be thrown for missing or invalid dependencies.
+    """
+    for od in options_tree.collapse():
+        for key in od.keys():
+            od[key]
+            
+def pretty_print(options_tree):
+    """
+    Prints options_tree in tree form.
+    """
+    for od in options_tree.collapse():
+        print od.str(formatter='tree')
+
+
+## PROCESSING FUNCTIONS
 
 def smap(functor, options_tree, message=None):
     "Serial processing"
