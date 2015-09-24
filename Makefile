@@ -7,7 +7,7 @@ export PYTHON=python
 
 default: test
 
-all: clean test with_os_test
+all: clean test
 
 clean:
 	rm *.pyc -f
@@ -15,7 +15,4 @@ clean:
 	cd test && $(MAKE) $@
 
 t%: clean
-	cd test && $(MAKE) $@
-
-w%: clean
 	cd test && $(MAKE) $@

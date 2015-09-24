@@ -13,8 +13,5 @@ clean:
 	rm *.pyc -f
 	rm *~ -f
 
-w%: clean
-	$(call run,$@)
-
 t%: clean
 	$(call run,$@)

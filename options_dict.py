@@ -80,9 +80,9 @@ class OptionsDict(dict):
     # the client does not confuse them with dictionary items.
     mutable_attributes = ['_node_info']
     protected_attributes = [
-        'another', 'donate_copy', 'indent', 'create_node_info_formatter', 
-        'expand_template_file', 'expand_template_string', 'get_node_info',
-        'freeze', 'from_class', 'set_node_info', 'str', 'update']
+        'donate_copy', 'indent', 'create_node_info_formatter', 
+        'expand_template_file', 'expand_template_string', 'freeze', 
+        'get_node_info', 'set_node_info', 'str', 'update']
     
     def __init__(self, entries={}):
         """
@@ -96,26 +96,6 @@ class OptionsDict(dict):
         # before it exists.
         self._node_info = []
         self.update(entries)
-
-    @classmethod
-    def another(Class, entries={}):
-        return Class(entries)
-
-    @classmethod
-    def from_class(Class, basis):
-        # ignore magic/hidden attributes, which are prefixed with a
-        # double underscore
-        entries  = {k: basis.__dict__[k] \
-                    for k in basis.__dict__.keys() if '__' not in k}
-        return Class(entries)
-
-
-    def copy(self):
-        warn("\nThis is a deprecated method.  Consider using "+\
-             "copy.deepcopy \ninstead.")
-        obj = self.another(dict.copy(self))
-        obj._node_info = [ni.copy() for ni in self._node_info]
-        return obj
 
     
     def update(self, entries):
@@ -294,19 +274,6 @@ class OptionsDict(dict):
             buffer_string = Template(buffer_string)
             buffer_string = buffer_string.safe_substitute(self)
         return buffer_string
-        
-        
-    def expand_template_file(self, source_filename, target_filename, 
-                             loops=1):
-        """
-        As expand_template_string, but does the reading and writing of
-        files for you.
-        """
-        with open(source_filename, 'r') as src:
-            buf = src.read()
-            buf = self.expand_template_string(buf, loops)
-        with open(target_filename, 'w') as tgt:
-            tgt.write(buf)
 
 
     def donate_copy(self, acceptor):

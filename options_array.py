@@ -18,11 +18,6 @@ class ArrayNodeInfo(NodeInfo):
         self.node_names = node_names
         self.node_index = node_index
 
-    @classmethod
-    def from_other(Class, other):
-        return Class(
-            other.array_name, copy(other.node_names), other.node_index)
-
     def belongs_to(self, collection_name):
         """
         self.belongs_to(collection_name)
@@ -41,7 +36,7 @@ class ArrayNodeInfo(NodeInfo):
         """
         return self.node_index == index or \
             self.node_index == index + len(self.node_names)
-        
+       
     def str(self, absolute=None, relative=None, collection_separator=None):
         """
         self.str(absolute=None, relative=None, collection_separator=None)
@@ -159,12 +154,6 @@ class OptionsArray(OptionsTreeElement):
         else:
             return OptionsNode(arg1, arg2, name_format=name_format,
                                array_name=self.name)
-
-    
-    def copy(self):
-        warn("\nThis is a deprecated method.  Consider using "+\
-             "copy.deepcopy \ninstead.")
-        return self.another(self.name, [el.copy() for el in self])
 
         
     def collapse(self):

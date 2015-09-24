@@ -16,10 +16,6 @@ class OrphanNodeInfo(NodeInfo):
     def __init__(self, node_name):
         self.node_name = node_name
 
-    @classmethod
-    def from_other(Class, other):
-        return Class(other.node_name)
-
     def belongs_to(self, collection_name):
         """
         self.belongs_to(collection_name)
@@ -196,14 +192,6 @@ class OptionsNode(OptionsTreeElement):
         OptionsNode.create_options_dict.
         """
         return OrphanNodeInfo(self.name)
-
-        
-    def copy(self):
-        warn("\nThis is a deprecated method.  Consider using "+\
-             "copy.deepcopy \ninstead.")
-        return self.another(
-            self.name, entries=self.options_dict.copy(),
-            child=self.child.copy() if self.child else None)
 
         
     def collapse(self):
