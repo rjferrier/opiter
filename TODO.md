@@ -3,14 +3,16 @@
 
 - [ ] OptionsTreeElement behaviour
   - [ ] Consider reworking `collapse` as a generator
-  - [ ] Implement __delitem__
+  - [x] Implement __delitem__
+  - [ ] Separate mutating and nonmutating methods to avoid confusion.
+        Consider deprecating/removing the former.
   
 - [ ] Tidy up
   - [ ] Review/update docstrings
   - [ ] Replace isinstance tests with try-except blocks
   - [ ] Consider deprecating/removing
     - [ ] `expand_template_file`
-    - [ ] `tools.py`, `OptionsDict.array`, `OptionsDict.node`
+    - [x] `tools.py`, `OptionsDict.array`, `OptionsDict.node`
 
 - [ ] Tests/Examples
   - [ ] Add a mock simulation example with convergence analysis
@@ -20,6 +22,7 @@
         a more robust alternative.
 
 - [ ] Misc
+  - [ ] Consider changing the license
   - [ ] Check Python version compatibility
   - [ ] Make expand_template_string more conservative (use substitute instead
         of safe_substitute); in utilities, warn about unexpanded placeholders

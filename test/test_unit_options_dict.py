@@ -1,7 +1,6 @@
 import unittest
-import os
-from unit_options_dict import UnitOptionsDict
-from options_dict import freeze, OptionsDictException, NodeInfoException
+from unit_options_dict import UnitOptionsDict, UnitNodeInfo, \
+    OptionsDictException, NodeInfoException
 from types import MethodType
 
 class TestOptionsDictCreation(unittest.TestCase):
@@ -91,7 +90,7 @@ class TestOptionsDictBasics(unittest.TestCase):
     
     def test_set_and_get_node_info(self):
         od = UnitOptionsDict({'foo': 'bar'})
-        ni = od.create_orphan_node_info('foo')
+        ni = UnitNodeInfo('foo')
         # ni should be some throwaway value
         self.assertIsNotNone(ni)
         od.set_node_info(ni)

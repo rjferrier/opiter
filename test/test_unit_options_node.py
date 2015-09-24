@@ -1,6 +1,5 @@
 import unittest
-from unit_tree_elements import UnitOptionsNode
-from tree_elements import OptionsNodeException
+from unit_options_node import UnitOptionsNode, OptionsNodeException
 from copy import deepcopy
 
 

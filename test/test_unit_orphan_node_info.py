@@ -1,5 +1,5 @@
 import unittest
-from node_info import OrphanNodeInfo
+from options_node import OrphanNodeInfo
 
 
 class TestOrphanNodeInfoString(unittest.TestCase):

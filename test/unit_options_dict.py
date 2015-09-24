@@ -1,8 +1,17 @@
-from base import INodeInfo
-from options_dict import OptionsDict
+from options_dict import OptionsDict, OptionsDictException, \
+    NodeInfoException
 
 
-class UnitNodeInfo(INodeInfo):
+class UnitOptionsDict(OptionsDict):
+    """
+    This is OptionsDict decoupled from the NodeInfo and NodeFormat
+    implementations for unit testing purposes.
+    """
+    def create_node_info_formatter(self, which=None):
+        return lambda node_info, absolute, relative: ''
+
+
+class UnitNodeInfo:
     """
     Throwaway NodeInfo implementation for unit testing purposes.
     """
@@ -15,18 +24,18 @@ class UnitNodeInfo(INodeInfo):
     def str(self, absolute=None, relative=None, collection_separator=None,
             only_indent=False):
         return self.name
-
-
-class UnitOptionsDict(OptionsDict):
-    """
-    This is OptionsDict decoupled from the NodeInfo and NodeFormat
-    implementations for unit testing purposes.
-    """
-    def create_orphan_node_info(self, node_name):
-        return UnitNodeInfo(node_name)
-
-    def create_array_node_info(self, array_name, node_names, node_index):
-        return UnitNodeInfo(':'.join((array_name, node_names[node_index])))
-
-    def create_node_info_formatter(self, which=None):
-        return lambda node_info, absolute, relative: ''
+    
+    def copy(self):
+        raise NotImplementedError
+        
+    def belongs_to(self, collection_name):
+        raise NotImplementedError
+        
+    def at(self, index):
+        raise NotImplementedError
+        
+    def is_first(self):
+        raise NotImplementedError
+        
+    def is_last(self):
+        raise NotImplementedError

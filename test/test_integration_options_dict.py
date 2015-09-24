@@ -1,7 +1,8 @@
 import unittest
 from options_dict import OptionsDict, CallableEntry, OptionsDictException
-from node_info import SimpleFormatter, TreeFormatter
-from tree_elements import OptionsNode, OptionsArray
+from options_node import OptionsNode
+from options_array import OptionsArray
+from formatters import SimpleFormatter, TreeFormatter
 from copy import deepcopy
 
 class TestOptionsDictBasics(unittest.TestCase):

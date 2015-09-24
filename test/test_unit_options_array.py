@@ -1,6 +1,6 @@
 import unittest
-from unit_tree_elements import UnitOptionsArray, UnitOptionsNode
-from tree_elements import OptionsArrayException
+from unit_options_array import UnitOptionsArray, OptionsArrayException
+from unit_options_node import UnitOptionsNode
 from copy import deepcopy
 
 
@@ -14,18 +14,6 @@ class TestOptionsArrayCreation(unittest.TestCase):
         class another_node_basis:
             qux = 1
         UnitOptionsArray('random', ['A', 3.14, some_node, another_node_basis])
-
-        
-    # def test_create_with_unwrapped_dictionary(self):
-    #     """
-    #     I should not be able to create an array when one of the input
-    #     elements is a dictionary.  This is because it is not obvious
-    #     how to name the resulting nodes or what to store under the
-    #     array key ('random').
-    #     """
-    #     create_array = lambda: UnitOptionsArray('random',
-    #                                             ['A', 2, {'pi': 3.14}])
-    #     self.assertRaises(OptionsArrayException, create_array)
 
         
     def test_format_names_with_string(self):
@@ -58,7 +46,7 @@ class TestOptionsArrayCreation(unittest.TestCase):
                                                 name_format=None)
         self.assertRaises(OptionsArrayException, create_array)
 
-
+        
 class TestOptionsDictArrayBasics(unittest.TestCase):
 
     def setUp(self):

@@ -1,5 +1,7 @@
-from test_functional_common import *
 import unittest
+from test_functional_common import \
+    TestOptionsDictCartesianProductIteration, \
+    TestOptionsDictTreeIteration
 import numpy
 
 

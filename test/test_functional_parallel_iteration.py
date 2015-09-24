@@ -1,4 +1,8 @@
-from test_functional_common import *
+import unittest
+from test_functional_common import \
+    TestOptionsDictCartesianProductIteration, \
+    TestOptionsDictTreeIteration
+from options_dict import Lookup, Str, freeze
 from multiprocessing import Pool
 
 

@@ -1,15 +1,16 @@
-from copy import deepcopy
+from base import OptionsBaseException
+from formatters import SimpleFormatter, TreeFormatter
 from types import FunctionType
 from string import Template
+from copy import deepcopy
 from warnings import warn
-
-from base import OptionsBaseException
-from node_info import OrphanNodeInfo, ArrayNodeInfo, SimpleFormatter, \
-    TreeFormatter, NodeInfoException
 
 
 
 class OptionsDictException(OptionsBaseException):
+    pass
+
+class NodeInfoException(OptionsBaseException):
     pass
 
         
@@ -79,8 +80,7 @@ class OptionsDict(dict):
     # the client does not confuse them with dictionary items.
     mutable_attributes = ['_node_info']
     protected_attributes = [
-        'another', 'donate_copy', 'indent', 'create_array_node_info',
-        'create_node_info_formatter', 'create_orphan_node_info',
+        'another', 'donate_copy', 'indent', 'create_node_info_formatter', 
         'expand_template_file', 'expand_template_string', 'get_node_info',
         'freeze', 'from_class', 'set_node_info', 'str', 'update']
     
@@ -109,101 +109,6 @@ class OptionsDict(dict):
                     for k in basis.__dict__.keys() if '__' not in k}
         return Class(entries)
 
-    @classmethod
-    def node(Class, name, entries={}):
-        """
-        Returns an OptionsDict as an orphan node, i.e. having a name
-        for identification purposes but not belonging to a collection.
-        """
-
-        warn("\nThis is a deprecated method.  Consider using "+\
-             "tree_elements.OptionsNode \ninstead.")
-        
-        # check name argument
-        if not name:
-            name = ''
-        elif not isinstance(name, str):
-            raise OptionsDictException(
-                "name argument must be a string (or None).")
-        # instantiate object and set the first node information
-        obj = Class(entries)
-        obj._node_info.append(obj.create_orphan_node_info(name))
-        return obj
-
-        
-    @classmethod
-    def array(Class, array_name, elements, common_entries={},
-              name_format='{}'):
-        """
-        Returns a list of OptionsDicts, wrapping the given elements as
-        necessary.
-
-        If a given element is not already an OptionsDict node, it is
-        converted to a string which becomes the name of a new
-        OptionsDict.  The new OptionsDict acquires the entry
-        {array_name: element}.  This feature is useful for setting up
-        an independent variable with an associated array of values.
-        For example,
-           OptionsDict.array('velocity', [0.01, 0.02, 0.04])
-        would be equivalent to
-          [OptionsDict.node('0.01', {'velocity': 0.01}),
-           OptionsDict.node('0.02', {'velocity': 0.02}),
-           OptionsDict.node('0.04', {'velocity': 0.04})]
-        except that the NodeInfo components are different.
-
-        If an element is already an OptionsDict node, it simply
-        acquires the entry {array_name: str(element)}.
-        
-        All dicts are initialised with common_entries if this argument
-        is given.  The element-to-string conversion is governed by
-        name_format, which can either be a format string or a callable
-        that takes the element value and returns a string.
-        """
-
-        warn("\nThis is a deprecated method.  Consider using "+\
-             "tree_elements.OptionsArray\n instead.")
-
-        options_dicts = []
-        node_names = []
-        
-        # First pass: instantiate OptionsDict elements
-        for index, el in enumerate(elements):
-            if isinstance(el, OptionsDict):
-                # If the element is already an OptionsDict object,
-                # copy it and add a special entry using array_name.
-                # Keep track of the node name.
-                od = deepcopy(el)
-                node_name = str(el)
-                od.update({array_name: node_name})
-            else:
-                # otherwise, instantiate a new OptionsDict node with
-                # the original element stored under array_name.
-                # Determine the node name.
-                try:
-                    node_name = name_format(el)
-                except TypeError:
-                    try:
-                        node_name = name_format.format(el)
-                    except AttributeError:
-                        raise OptionsDictException(
-                            "name_format must be a callable "+\
-                            "or a format string.")
-                od = Class.node(node_name, {array_name: el})
-
-            # add entries
-            od.update(common_entries)
-            # append to the lists
-            options_dicts.append(od)
-            node_names.append(node_name)
-
-        # Second pass: set array node information.  This will replace
-        # the preexisting orphan node information.
-        for index, od in enumerate(options_dicts):
-            od.set_node_info(
-                od.create_array_node_info(array_name, node_names, index))
-        
-        return options_dicts
-
 
     def copy(self):
         warn("\nThis is a deprecated method.  Consider using "+\
@@ -211,20 +116,6 @@ class OptionsDict(dict):
         obj = self.another(dict.copy(self))
         obj._node_info = [ni.copy() for ni in self._node_info]
         return obj
-
-        
-    def create_orphan_node_info(self, node_name):
-        """
-        Overrideable factory method, used by OptionsDict.node().
-        """
-        return OrphanNodeInfo(node_name)
-
-        
-    def create_array_node_info(self, array_name, node_names, node_index):
-        """
-        Overrideable factory method, used by OptionsDict.array().
-        """
-        return ArrayNodeInfo(array_name, node_names, node_index)
 
     
     def update(self, entries):
@@ -369,6 +260,7 @@ class OptionsDict(dict):
             raise NodeInfoException(
                 "couldn't find any node information corresponding to '{}'".\
                 format(collection_name))
+
         
     def set_node_info(self, new_node_info, collection_name=None):
         """
@@ -390,6 +282,7 @@ class OptionsDict(dict):
             raise NodeInfoException(
                 "couldn't find any node information corresponding to '{}'".\
                 format(collection_name))
+
         
     def expand_template_string(self, buffer_string, loops=1):
         """
@@ -417,10 +310,11 @@ class OptionsDict(dict):
 
 
     def donate_copy(self, acceptor):
-        # polymorphic; used by tree_elements
+        # polymorphic; used by tree elements
         acceptor.update(self)
         return acceptor, []
 
+    
     def _update_from_dict(self, other, default_error):
         # update OptionsDict attributes
         if isinstance(other, OptionsDict):
@@ -431,6 +325,7 @@ class OptionsDict(dict):
             self._check_new_item_name(k)
         dict.update(self, other)
 
+        
     def _update_from_dynamic_entries(self, functions, default_error):
         for func in functions:
             if not isinstance(func, FunctionType):
@@ -439,6 +334,7 @@ class OptionsDict(dict):
             self._check_new_item_name(func.__name__)
             self[func.__name__] = func
 
+            
     def _update_from_class(self, basis_class, default_error):
         # recurse through the basis_class' superclasses first
         if basis_class.__bases__:
@@ -453,6 +349,7 @@ class OptionsDict(dict):
         # can now call update again
         self.update(entries)
 
+        
     def _check_new_item_name(self, name):
         if name[0] == '_':
             raise OptionsDictException(
@@ -466,7 +363,8 @@ class OptionsDict(dict):
                 "would clash \nwith an attribute of the same name.  If you "+\
                 "want to set this attribute,\n you will need to register "+\
                 "the name in mutable_attributes.")
-            
+
+        
     def __str__(self):
         return self.str()
 

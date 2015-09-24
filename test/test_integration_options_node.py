@@ -1,7 +1,6 @@
 import unittest
-from tree_elements import OptionsNode
-from options_dict import OptionsDict, OptionsDictException
-from node_info import OrphanNodeInfo
+from options_node import OptionsNode, OrphanNodeInfo
+from options_dict import OptionsDict
     
 
 class TestOptionsNodeCreation(unittest.TestCase):

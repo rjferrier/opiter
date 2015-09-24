@@ -19,6 +19,7 @@ except:
     HAVE_JINJA2 = False
 
 
+
 ## DIAGNOSTIC FUNCTIONS
 
 def check_entries(options_tree):
@@ -395,4 +396,5 @@ class OptionsArrayFactory:
         # bump the array counter for next time
         self.array_index += 1
         return OptionsArray(array_name, nodes)
-    
+
+

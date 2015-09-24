@@ -1,62 +1,66 @@
-from itertools import islice
-from operator import mul
-
-from base import nonmutable, OptionsBaseException
+from base import OptionsBaseException
+from options_tree_elements import OptionsTreeElement, NodeInfo
 from options_dict import OptionsDict
-from node_info import OrphanNodeInfo, ArrayNodeInfo
 from copy import deepcopy
 from warnings import warn
+
 
 class OptionsNodeException(OptionsBaseException):
     pass
 
-class OptionsArrayException(OptionsBaseException):
-    pass
 
-    
-class OptionsTreeElement:
+class OrphanNodeInfo(NodeInfo):
     """
-    Abstract class to be inherited by OptionsArray and OptionsNode.
-    This inheritance hierarchy is similar to the Composite pattern in
-    that it can be used to build an arbitrary tree.  However,
-    OptionsNode can act as a branch as well as a leaf, so it shares
-    some of the parent-child functionality.
+    Describes a node which is not part of any collection.
     """
+    def __init__(self, node_name):
+        self.node_name = node_name
 
-    def __ne__(self, other):
-        return not self == other
+    @classmethod
+    def from_other(Class, other):
+        return Class(other.node_name)
 
-    @nonmutable
-    def __mul__(self, other):
-        self.multiply_attach(other)
+    def belongs_to(self, collection_name):
+        """
+        self.belongs_to(collection_name)
 
-    @nonmutable
-    def __rmul__(self, other):
-        # this conditional stops us trying to multiply with 1 during a
-        # product() call
-        if isinstance(other, OptionsTreeElement):
-            self.multiply_attach(other)
-
-    @nonmutable
-    def __add__(self, other):
-        self.attach(other)
-
-    @nonmutable
-    def __radd__(self, other):
-        # this conditional stops us trying to add to 0 during a
-        # product() call
-        if isinstance(other, OptionsTreeElement):
-            self.attach(other)
-
-    def __imul__(self, other):
-        self.multiply_attach(other)
-        return self
-
-    def __iadd__(self, other):
-        self.attach(other)
-        return self
-
+        The node is not part of a collection, so this method will
+        always return False.
+        """
+        return False
     
+    def at(self, index):
+        """
+        self.at(index)
+
+        Checks that the node is at the given index, which for an orphan
+        node is only true for 0 (first) and -1 (last).
+        """
+        return index in (0, -1)
+
+    def str(self, absolute=None, relative=None, collection_separator=None):
+        """
+        self.str(absolute=None, relative=None, collection_separator=None)
+        
+        Returns the name of the node in question.  The optional arguments
+        are not applicable for an orphan node.
+        """
+        args = [absolute, relative]
+        for i, a in enumerate(args):
+            if isinstance(a, dict):
+                args[i] = None
+        if self.at(self._create_index(0, *args)):
+            return self.node_name
+        else:
+            raise IndexError("list index out of range")
+
+    def __eq__(self, other):
+        result = isinstance(other, OrphanNodeInfo)
+        if result:
+            result *= self.node_name == other.node_name
+        return result
+
+
 class OptionsNode(OptionsTreeElement):
     """
     Contains an options dictionary and optionally a child
@@ -143,7 +147,7 @@ class OptionsNode(OptionsTreeElement):
         try:
             self.name = name_format.format(name_src)
         except AttributeError:
-            raise OptionsArrayException(
+            raise OptionsNodeException(
                 "name_format must be a callable or a format string; is {}".\
                 format(name_format))
             
@@ -339,257 +343,3 @@ class OptionsNode(OptionsTreeElement):
     def __str__(self):
         return str(self.name)
 
-
-
-class OptionsArray(OptionsTreeElement):
-    """
-    A sequence of OptionsNodes.
-    """
-
-    def __init__(self, array_name, elements, common_entries={},
-                 name_format='{}'):
-        """
-        Returns an OptionsArray, wrapping the given elements as
-        OptionsNodes where necessary.
-
-        If a given element is not already an OptionsNode, it is
-        converted to a string which becomes the name of a new
-        OptionsNode.  The embedded dictionary acquires the entry
-        {array_name: element}.  This feature is useful for setting up
-        an independent variable with an associated array of values.
-
-        For example,
-           OptionsArray('velocity', [0.01, 0.02, 0.04])
-        will contain
-          [OptionsNode('0.01', {'velocity': 0.01}),
-           OptionsNode('0.02', {'velocity': 0.02}),
-           OptionsNode('0.04', {'velocity': 0.04})]
-        but the nodes will contain different node info.
-        
-        All embedded dictionaries are initialised with common_entries
-        if this argument is given.  The element-to-string conversion
-        is governed by name_format, which can either be a format
-        string or a callable that takes the element value and returns
-        a string.
-        """
-        self.name = array_name
-        self.nodes = []
-        self.name_format = name_format
-                
-        # instantiate and record OptionsNodes
-        for el in elements:
-            node = self.create_options_node(el, common_entries,
-                                            name_format=name_format)
-            # append to the list
-            self.nodes.append(node)
-
-        # set array node information in each node.  This will replace
-        # any preexisting node information.
-        self.update_node_info()
-
-
-    @classmethod
-    def another(Class, array_name, elements, common_entries={},
-                name_format='{}'):
-        return Class(array_name, elements, common_entries, name_format)
-
-    
-    def create_options_node(self, arg1={}, arg2={}, name_format='{}'):
-        """
-        Overrideable factory method, used by the OptionsArray constructor.
-        """
-        if isinstance(arg1, OptionsNode):
-            # if the first arg is an existing OptionsNode, catch and
-            # copy it
-            node = deepcopy(arg1)
-            node.set_name_general(arg1, name_format) 
-            node.update_options_dict_general(arg2, self.name) 
-            node.update_options_dict_general(arg1, self.name) 
-            return node
-        else:
-            return OptionsNode(arg1, arg2, name_format=name_format,
-                               array_name=self.name)
-
-    
-    def copy(self):
-        warn("\nThis is a deprecated method.  Consider using "+\
-             "copy.deepcopy \ninstead.")
-        return self.another(self.name, [el.copy() for el in self])
-
-        
-    def collapse(self):
-        """
-        Returns a list of options dictionaries corresponding to the leaves
-        in the the present tree structure.  Each dictionary is the
-        result of a merge from the root, through the branch nodes, to
-        the corresponding leaf.
-        """
-        result = []
-        for el in self:
-            result += el.collapse()
-        return result
-
-        
-    def multiply_attach(self, tree):
-        """
-        Appends a copy of the given tree to each leaf node in the
-        present tree.
-        """
-        # delegate to each node
-        for el in self:
-            el.multiply_attach(tree)
-
-
-    def attach(self, tree):
-        """
-        Appends a copy of each root node in the tree argument (or
-        whichever elements get traversed during iteration) to a
-        corresponding leaf node in the present tree.  Returns the
-        depleted source tree.
-        """
-        # delegate to each node
-        for el in self:
-            tree = el.attach(tree)
-        return tree
-
-
-    def donate_copy(self, acceptor):
-        # It is nice to preserve array information, so grab a
-        # one-element slice rather than a node.  The slice preserves
-        # the OptionsArray type.
-        one_node_array = self[0:1]
-        one_node_array.update_node_info()
-        if acceptor:
-            acceptor.attach(one_node_array)
-        else:
-            acceptor = one_node_array
-        # also return (a copy of) the depleted array
-        return acceptor, self[1:]
-
-
-    def count_leaves(self):
-        return sum([el.count_leaves() for el in self.nodes])
-
-        
-    def update(self, entries):
-        """
-        Updates the leaf dictionaries with entries.
-        """
-        for el in self:
-            el.update(entries)
-
-
-    def update_node_info(self):
-        """
-        Updates the nodes with node information appropriate to an
-        OptionsArray.
-        """
-        for i, node in enumerate(self.nodes):
-            try:
-                node.update_info(self.create_node_info(i))
-            except:
-                print node
-                raise
-
-        
-    def create_node_info(self, index):
-        """
-        Overrideable factory method, used by
-        OptionsArray.update_node_info.
-        """
-        node_names = [str(node) for node in self.nodes]
-        return ArrayNodeInfo(self.name, node_names, index)
-
-
-    def append(self, item):
-        if not isinstance(item, OptionsNode):
-            raise OptionsArrayException("item needs to be an OptionsNode")
-        self.nodes.append(item)
-        self.update_node_info()
-            
-    def pop(self):
-        node = self.nodes.pop()
-        # update node info on both sides
-        node.update_info()
-        self.update_node_info()
-        return node
-        
-    def __len__(self):
-        return len(self.nodes)
-            
-    def __eq__(self, other):
-        result = isinstance(other, OptionsArray)
-        if result:
-            result *= self.name == other.name
-            result *= len(self.nodes) == len(other.nodes)
-            for node, other in zip(self.nodes, other.nodes):
-                result *= node == other
-        return result
-
-
-    def __getitem__(self, subscript):
-        try:
-            # treat argument as a slice
-            indices = subscript.indices(len(self.nodes))
-
-            # return an array
-            return self.another(self.name, self.nodes[subscript])
-
-        except AttributeError:
-            try:
-                # treat argument as a name
-                index = [str(n) for n in self.nodes].index(subscript)
-            except ValueError:
-                # default to an index
-                index = subscript
-
-            # return a node
-            return self.nodes[index]
-
-
-    def __setitem__(self, subscript, value_or_values):
-        try:
-            # treat subscript as a slice
-            indices = subscript.indices(len(self.nodes))
-            # convert values to nodes 
-            self.nodes[subscript] = [self.create_options_node(v) \
-                                         for v in value_or_values]
-
-        except AttributeError:
-            try:
-                # treat subscript as a name
-                index = [str(n) for n in self.nodes].index(subscript)
-            except ValueError:
-                # default to an index
-                index = subscript
-                
-            # convert value to a node
-            self.nodes[index] = self.create_options_node(value_or_values)
-
-        self.update_node_info()
-
-
-    def __delitem__(self, subscript):
-        try:
-            # treat argument as a slice
-            indices = subscript.indices(len(self.nodes))
-            del self.nodes[subscript]
-
-        except AttributeError:
-            try:
-                # treat argument as a name
-                index = [str(n) for n in self.nodes].index(subscript)
-            except ValueError:
-                # default to an index
-                index = subscript
-
-            del self.nodes[index]
-
-
-        
-    def __str__(self):
-        return str(self.name)
-
-    
-def product(iterable):
-    return reduce(mul, iterable, 1)

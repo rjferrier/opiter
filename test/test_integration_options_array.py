@@ -1,7 +1,7 @@
 import unittest
-from tree_elements import OptionsArray, OptionsNode, OptionsArrayException
-from options_dict import OptionsDict, OptionsDictException
-from node_info import OrphanNodeInfo, ArrayNodeInfo
+from options_array import OptionsArray, OptionsArrayException, ArrayNodeInfo
+from options_node import OptionsNode, OrphanNodeInfo
+from options_dict import OptionsDict
     
 
 class TestOptionsArrayCreation(unittest.TestCase):

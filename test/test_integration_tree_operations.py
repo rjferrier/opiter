@@ -1,9 +1,10 @@
 import unittest
-from copy import deepcopy
-
-from tree_elements import OptionsArray, OptionsNode, product
+from options_tree_elements import product
+from options_array import OptionsArray
+from options_array import OptionsNode
 from options_dict import OptionsDict, Lookup, freeze
 from multiprocessing import Pool
+from copy import deepcopy
 
 
 # ---------------------------------------------------------------------

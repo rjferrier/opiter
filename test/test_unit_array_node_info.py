@@ -1,5 +1,5 @@
 import unittest
-from node_info import ArrayNodeInfo
+from options_array import ArrayNodeInfo
     
 
 class TestArrayNodeInfoBasics(unittest.TestCase):
