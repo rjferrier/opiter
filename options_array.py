@@ -20,8 +20,6 @@ class ArrayNodeInfo(NodeInfo):
 
     def belongs_to(self, collection_name):
         """
-        self.belongs_to(collection_name)
-
         Returns True if the node in question is associated with the
         given collection name.
         """
@@ -29,8 +27,6 @@ class ArrayNodeInfo(NodeInfo):
 
     def at(self, index):
         """
-        self.at(index)
-        
         Checks that the node in question is at the given index, which can
         be negative to signify position from the end of the sequence.
         """
@@ -40,9 +36,6 @@ class ArrayNodeInfo(NodeInfo):
     def get_string(self, absolute=None, relative=None,
                    collection_separator=None):
         """
-        self.get_string(absolute=None, relative=None,
-                        collection_separator=None)
-        
         Returns the name of the node in question or, if arguments are
         given, one of its siblings.  The optional arguments correspond
         to absolute and relative indices, respectively.  In accordance

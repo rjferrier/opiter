@@ -18,8 +18,6 @@ class OrphanNodeInfo(NodeInfo):
 
     def belongs_to(self, collection_name):
         """
-        self.belongs_to(collection_name)
-
         The node is not part of a collection, so this method will
         always return False.
         """
@@ -27,8 +25,6 @@ class OrphanNodeInfo(NodeInfo):
     
     def at(self, index):
         """
-        self.at(index)
-
         Checks that the node is at the given index, which for an orphan
         node is only true for 0 (first) and -1 (last).
         """
@@ -37,9 +33,6 @@ class OrphanNodeInfo(NodeInfo):
     def get_string(self, absolute=None, relative=None,
                    collection_separator=None):
         """
-        self.get_string(absolute=None, relative=None,
-                        collection_separator=None)
-        
         Returns the name of the node in question.  The optional arguments
         are not applicable for an orphan node.
         """

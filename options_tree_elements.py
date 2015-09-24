@@ -35,8 +35,6 @@ class NodeInfo:
 
     def belongs_to_any(self, collection_names):
         """
-        self.belongs_to_any(collection_names)
-        
         Returns True if the node in question is associated with any of
         collection_names.
         """
@@ -47,8 +45,6 @@ class NodeInfo:
     
     def is_first(self):
         """
-        self.is_first()
-        
         Checks that the node in question is at the beginning of its
         container.
         """
@@ -56,8 +52,6 @@ class NodeInfo:
         
     def is_last(self):
         """
-        self.is_last()
-        
         Checks that the node in question is at the end of its container.
         """
         return self.at(-1)
