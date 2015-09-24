@@ -65,7 +65,8 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         self.assertEqual(self.array, UnitOptionsArray('random', self.values))
 
     def test_unequal_names(self):
-        self.assertNotEqual(self.array, UnitOptionsArray('things', self.values))
+        self.assertNotEqual(self.array,
+                            UnitOptionsArray('things', self.values))
 
     def test_unequal_nodes(self):
         values = self.values

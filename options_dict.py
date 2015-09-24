@@ -66,8 +66,8 @@ class OptionsDict(dict):
         the update() method, and can be used to form a string
         identifier for the ensemble.  For example, updating node 'A'
         with node 'B' will produce node 'A_B'.  The identifier can be
-        accessed via the usual str() idiom, but a str() method is also
-        provided with optional arguments for customising the
+        accessed via the usual str() idiom, but a get_string() method is
+        also provided with optional arguments for customising the
         identifier and inferring the identifiers of other
         combinations.
 
@@ -82,7 +82,7 @@ class OptionsDict(dict):
     protected_attributes = [
         'donate_copy', 'indent', 'create_node_info_formatter', 
         'expand_template_file', 'expand_template_string', 'freeze', 
-        'get_node_info', 'set_node_info', 'str', 'update']
+        'get_node_info', 'set_node_info', 'get_string', 'update']
     
     def __init__(self, entries={}):
         """
@@ -139,7 +139,7 @@ class OptionsDict(dict):
         return self
 
             
-    def str(self, only=[], exclude=[], absolute={}, relative={}, 
+    def get_string(self, only=[], exclude=[], absolute={}, relative={}, 
             formatter=None, only_indent=False):
         """
         Returns a string identifier, providing more control than the
@@ -198,7 +198,7 @@ class OptionsDict(dict):
         
     def create_node_info_formatter(self, which=None):
         """
-        Overrideable factory method, used by OptionsDict.str().  The
+        Overrideable factory method, used by OptionsDict.get_string().  The
         argument may be 'simple', 'tree', or omitted (defaulting to
         'simple').
         """
@@ -215,7 +215,7 @@ class OptionsDict(dict):
             
     def indent(self, only=[], exclude=[], absolute={}, relative={}, 
             formatter='tree'):
-        return self.str(only=only, exclude=exclude, absolute=absolute,
+        return self.get_string(only=only, exclude=exclude, absolute=absolute,
                         relative=relative, formatter=formatter,
                         only_indent=True)
             
@@ -333,7 +333,7 @@ class OptionsDict(dict):
 
         
     def __str__(self):
-        return self.str()
+        return self.get_string()
 
     def __repr__(self):
         return dict.__repr__(self) + repr(self._node_info)
@@ -405,11 +405,12 @@ class Lookup:
         return dictionary[self.key]
 
 
-class Str:
+class GetString:
     """
-    Provides a function object that calls the str() method when passed
-    an OptionsDict.  Optional arguments can be given upon
-    initialisation.  See OptionsDict.str for further information.
+    Provides a function object that calls the get_string() method when
+    passed an OptionsDict.  Optional arguments can be given upon
+    initialisation.  See OptionsDict.get_string for further
+    information.
     """
     def __init__(self, only=[], exclude=[], absolute={}, relative={}, 
                  formatter=None):
@@ -420,7 +421,7 @@ class Str:
         self.formatter = formatter
 
     def __call__(self, options_dict):
-        return options_dict.str(
+        return options_dict.get_string(
             only=self.only, exclude=self.exclude, absolute=self.absolute,
             relative=self.relative, formatter=self.formatter)
 

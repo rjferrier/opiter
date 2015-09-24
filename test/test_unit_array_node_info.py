@@ -29,9 +29,9 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
     def test_node_name(self):
         """
         I should be able to recover the name of the node from both 
-        __str__ and str() methods.
+        __str__ and get_string() methods.
         """
-        self.assertEqual(self.node_info.str(), 'B')
+        self.assertEqual(self.node_info.get_string(), 'B')
         self.assertEqual(str(self.node_info), 'B')
 
     def test_other_node_name_from_absolute_index(self):
@@ -42,9 +42,9 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
         If the index runs past the end, an IndexError should be
         raised.
         """
-        self.assertEqual(self.node_info.str(0), 'A')
-        self.assertEqual(self.node_info.str(-1), 'C')
-        self.assertRaises(IndexError, lambda: self.node_info.str(3))
+        self.assertEqual(self.node_info.get_string(0), 'A')
+        self.assertEqual(self.node_info.get_string(-1), 'C')
+        self.assertRaises(IndexError, lambda: self.node_info.get_string(3))
 
     def test_other_node_name_from_relative_index(self):
         """
@@ -52,18 +52,19 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
         relative index.  If it runs past the beginning, an IndexError
         should be raised.
         """
-        self.assertEqual(self.node_info.str(relative=-1), 'A')
+        self.assertEqual(self.node_info.get_string(relative=-1), 'A')
         self.assertRaises(IndexError,
-                          lambda: self.node_info.str(relative=-2))
+                          lambda: self.node_info.get_string(relative=-2))
 
     def test_other_node_name_from_relative_and_absolute_index(self):
         """
         Using both a relative and absolute index should also work.
         A resulting negative index raises an IndexError.
         """
-        self.assertEqual(self.node_info.str(relative=-1, absolute=2), 'B')
-        self.assertRaises(
-            IndexError, lambda: self.node_info.str(relative=-2, absolute=1))
+        self.assertEqual(self.node_info.get_string(relative=-1, absolute=2),
+                         'B')
+        self.assertRaises(IndexError, lambda: \
+                          self.node_info.get_string(relative=-2, absolute=1))
 
     def test_other_node_name_from_absolute_index_in_dict(self):
         """
@@ -71,8 +72,9 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
         in the form {array_name: index}.  A deficient dictionary will
         cause the node name to default.
         """
-        self.assertEqual(self.node_info.str({'seq': -1, 'foo': -1}), 'C')
-        self.assertEqual(self.node_info.str({'foo': -1}), 'B')
+        self.assertEqual(self.node_info.get_string({'seq': -1, 'foo': -1}),
+                         'C')
+        self.assertEqual(self.node_info.get_string({'foo': -1}), 'B')
 
     def test_other_node_name_from_relative_index_in_dict(self):
         """
@@ -81,16 +83,16 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
         cause the node name to default.
         """
         self.assertEqual(
-            self.node_info.str(relative={'seq': -1, 'foo': -1}), 'A')
+            self.node_info.get_string(relative={'seq': -1, 'foo': -1}), 'A')
         self.assertEqual(
-            self.node_info.str(relative={'foo': -1}), 'B')
+            self.node_info.get_string(relative={'foo': -1}), 'B')
         
     def test_array_and_node_name(self):
-        self.assertEqual(self.node_info.str(collection_separator=': '),
+        self.assertEqual(self.node_info.get_string(collection_separator=': '),
                          'seq: B')
         
     def test_array_and_node_name_no_separation(self):
-        self.assertEqual(self.node_info.str(collection_separator=''),
+        self.assertEqual(self.node_info.get_string(collection_separator=''),
                          'seqB')
 
         

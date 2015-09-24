@@ -25,28 +25,28 @@ class TestOrphanNodeInfoString(unittest.TestCase):
     def test_node_name(self):
         """
         I should be able to recover the name of the node from both the
-        __str__ and str() methods.
+        __str__ and get_string() methods.
         """
-        self.assertEqual(self.node_info.str(), 'A')
+        self.assertEqual(self.node_info.get_string(), 'A')
         self.assertEqual(str(self.node_info), 'A')
 
     def test_other_node_name_from_absolute_index(self):
         """
-        There is only one node.  Asking str() for the first or last node
+        There is only one node.  Asking get_string() for the first or last node
         name should get the same result; anything else should trigger an
         error.
         """
-        self.assertEqual(self.node_info.str(0), 'A')
-        self.assertEqual(self.node_info.str(-1), 'A')
-        self.assertRaises(IndexError, lambda: self.node_info.str(1))
+        self.assertEqual(self.node_info.get_string(0), 'A')
+        self.assertEqual(self.node_info.get_string(-1), 'A')
+        self.assertRaises(IndexError, lambda: self.node_info.get_string(1))
 
     def test_other_node_name_from_relative_index(self):
         """
         Only a relative index of 0 should be valid.
         """
-        self.assertEqual(self.node_info.str(relative=0), 'A')
+        self.assertEqual(self.node_info.get_string(relative=0), 'A')
         self.assertRaises(IndexError,
-                          lambda: self.node_info.str(relative=-1))
+                          lambda: self.node_info.get_string(relative=-1))
 
     def test_other_node_name_from_relative_and_absolute_index(self):
         """
@@ -54,9 +54,11 @@ class TestOrphanNodeInfoString(unittest.TestCase):
         should work, but a resulting negative index will raise an
         IndexError.
         """
-        self.assertEqual(self.node_info.str(relative=-1, absolute=1), 'A')
+        self.assertEqual(self.node_info.get_string(relative=-1, absolute=1),
+                         'A')
         self.assertRaises(
-            IndexError, lambda: self.node_info.str(relative=-2, absolute=1))
+            IndexError, lambda: \
+            self.node_info.get_string(relative=-2, absolute=1))
 
     def test_other_node_name_from_absolute_index_in_dict(self):
         """
@@ -64,7 +66,7 @@ class TestOrphanNodeInfoString(unittest.TestCase):
         in the form {collection_name: index}.  Here the node name will
         default.
         """
-        self.assertEqual(self.node_info.str({'foo': -1}), 'A')
+        self.assertEqual(self.node_info.get_string({'foo': -1}), 'A')
 
     def test_other_node_name_from_relative_index_in_dict(self):
         """
@@ -72,7 +74,7 @@ class TestOrphanNodeInfoString(unittest.TestCase):
         in the form {collection_name: index}.  Here the node name will
         default.
         """
-        self.assertEqual(self.node_info.str(relative={'foo': 1}), 'A')
+        self.assertEqual(self.node_info.get_string(relative={'foo': 1}), 'A')
         
 
 class TestOrphanNodeInfoIndex(unittest.TestCase):

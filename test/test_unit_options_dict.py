@@ -45,7 +45,7 @@ class TestOptionsDictCreation(unittest.TestCase):
         When I create an OptionsDict and one of my entries has the same
         name as a preexisting attribute, an error should be raised.
         """
-        create_od = lambda: UnitOptionsDict({'str': 'hello'})
+        create_od = lambda: UnitOptionsDict({'get_string': 'hello'})
         self.assertRaises(OptionsDictException, create_od)
 
     def test_create_with_underscore_prefixed_item_name(self):
@@ -81,12 +81,12 @@ class TestOptionsDictBasics(unittest.TestCase):
 
     def test_setitem_dot_syntax_clashes_with_attribute(self):
         def setter():
-            self.od.str = 'qux'
+            self.od.get_string = 'qux'
         self.assertRaises(OptionsDictException, setter)
         
     def test_getitem_dot_syntax_clashes_with_attribute(self):
-        self.od['str'] = 'baz'
-        self.assertIsInstance(self.od.str, MethodType)
+        self.od['get_string'] = 'baz'
+        self.assertIsInstance(self.od.get_string, MethodType)
     
     def test_set_and_get_node_info(self):
         od = UnitOptionsDict({'foo': 'bar'})

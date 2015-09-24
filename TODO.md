@@ -1,5 +1,5 @@
 - [ ] Interface
-  - [ ] Rename the `str` method to avoid confusion with the `str` idiom
+  - [x] Rename the `str` method to avoid confusion with the `str` idiom
   - [ ] Change NodeInfo method names to be more semantically correct
   - [ ] Introduce an OptionsDict.get_position method so that the user
         doesn't have to touch get_node_info
@@ -12,8 +12,6 @@
 - [ ] Tidy up
   - [ ] Review/update docstrings
   - [ ] Replace isinstance tests with try-except blocks
-  - [x] Consider deprecating/removing
-    - [x] `expand_template_file`
 
 - [ ] Tests/Examples
   - [ ] Add a mock simulation example with convergence analysis

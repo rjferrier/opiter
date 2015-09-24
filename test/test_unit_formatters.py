@@ -27,7 +27,8 @@ class FakeNodeInfo:
             result.append(Self(i, node_name, node_index))
         return result
 
-    def str(self, absolute=None, relative=None, collection_separator=None):
+    def get_string(self, absolute=None, relative=None,
+                   collection_separator=None):
         if not self.node_name:
             return ''
         result = ''

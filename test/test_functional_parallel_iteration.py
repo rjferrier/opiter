@@ -2,7 +2,7 @@ import unittest
 from test_functional_common import \
     TestOptionsDictCartesianProductIteration, \
     TestOptionsDictTreeIteration
-from options_dict import Lookup, Str, freeze
+from options_dict import Lookup, GetString, freeze
 from multiprocessing import Pool
 
 
@@ -43,11 +43,12 @@ class TestOptionsDictTreeParallelIteration(
         TestOptionsDictTreeIteration):
             
     def test_mapping_and_name_check(self):
-        resulting_names = pool().map(Str(), freeze(self.options_dicts))
+        resulting_names = pool().map(GetString(), freeze(self.options_dicts))
         self.check_names(resulting_names)
             
     def test_mapping_and_lookup(self):
-        resulting_times = pool().map(Lookup('cost'), freeze(self.options_dicts))
+        resulting_times = pool().map(Lookup('cost'),
+                                     freeze(self.options_dicts))
         self.check_times(resulting_times)
 
             

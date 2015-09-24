@@ -1,5 +1,5 @@
 import unittest
-from options_dict import Lookup, Str, freeze
+from options_dict import Lookup, GetString, freeze
 
 
 class TestOptionsDictHelpers(unittest.TestCase):
@@ -9,14 +9,14 @@ class TestOptionsDictHelpers(unittest.TestCase):
         results = map(Lookup('foo'), objs)
         self.assertEqual(results, ['bar'] * 3)
 
-    def test_str_functor(self):
+    def test_get_string_functor(self):
         class Stringifiable:
-            def str(self, only=[], exclude=[], absolute={}, relative={}, 
-                    formatter=None):
+            def get_string(self, only=[], exclude=[], absolute={},
+                           relative={}, formatter=None):
                 return only + exclude + absolute + relative + formatter
         objs = [Stringifiable()] * 3
-        functor = Str(only='a', exclude='b', absolute='c', relative='d',
-                          formatter='e')
+        functor = GetString(only='a', exclude='b', absolute='c',
+                             relative='d', formatter='e')
         results = map(functor, objs)
         self.assertEqual(results, ['abcde'] * 3)
 

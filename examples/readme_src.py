@@ -1,8 +1,8 @@
 import sys
 sys.path.append('..')
 
-from __init__ import OptionsNode, OptionsArray, OptionsDict, Lookup, Str, \
-    freeze
+from __init__ import OptionsNode, OptionsArray, OptionsDict, Lookup, \
+    GetString, freeze
 import multiprocessing
 
 # setup
@@ -29,7 +29,7 @@ options_dicts = options_tree.collapse()
 for opt in options_dicts:
     kinematic_visc = opt.dynamic_viscosity / opt.density
     Re = opt.velocity * opt.pipe_diameter / kinematic_visc
-    print '{:20s}: Reynolds number = {:.2e}'.format(opt.str(), Re)
+    print '{:20s}: Reynolds number = {:.2e}'.format(opt.get_string(), Re)
 
 print "\nUsing parallel iterator:\n"
 
@@ -41,7 +41,8 @@ p = multiprocessing.Pool(4)
 Reynolds_numbers = p.map(calculate_Re, options_tree.collapse())
 
 # for completeness...
-for descr, Re in zip(map(Str(), options_tree.collapse()), Reynolds_numbers):
+for descr, Re in zip(map(GetString(), options_tree.collapse()),
+                     Reynolds_numbers):
     print '{:20s}: Reynolds number = {:.2e}'.format(descr, Re)
     
 
@@ -79,5 +80,6 @@ Reynolds_numbers = p.map(Lookup('Reynolds_number'), freeze(options_dicts))
 # for completeness...
 observations = p.map(Lookup('observation'), freeze(options_dicts))
 for descr, Re, obs in \
-    zip(map(Str(), options_tree.collapse()), Reynolds_numbers, observations):
+    zip(map(GetString(), options_tree.collapse()),
+        Reynolds_numbers, observations):
     print '{:20s}: Reynolds number = {:.2e}, {}'.format(descr, Re, obs)

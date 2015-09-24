@@ -5,7 +5,7 @@ from options_node import OptionsNode
 from options_array import OptionsArray
 
 # provide some useful stuff
-from options_dict import CallableEntry, Lookup, Str, freeze
+from options_dict import CallableEntry, Lookup, GetString, freeze
 from options_tree_elements import product
 from utilities import check_entries, pretty_print, smap, pmap, \
     SimpleRendering, Jinja2Rendering, ExpandTemplate, RunProgram, \

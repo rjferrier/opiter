@@ -21,8 +21,8 @@ class UnitNodeInfo:
     def belongs_to_any(self, collection_names):
         return False
         
-    def str(self, absolute=None, relative=None, collection_separator=None,
-            only_indent=False):
+    def get_string(self, absolute=None, relative=None,
+                   collection_separator=None, only_indent=False):
         return self.name
     
     def copy(self):

@@ -85,7 +85,8 @@ class TestOptionsDictAfterTreeCollapse(unittest.TestCase):
         2: a
         2: b
         2: c"""
-        result = ''.join(['\n' + od.str(formatter='tree') for od in ods])
+        result = ''.join(['\n' + od.get_string(formatter='tree') \
+                          for od in ods])
         self.assertEqual(result, expected)
 
         

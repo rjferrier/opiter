@@ -67,7 +67,7 @@ class TestOrphanNodeAfterCollapse(unittest.TestCase):
 
     def check_node_info_name(self):
         ni = self.od.get_node_info()
-        self.assertEqual(ni.str(), 'A')
+        self.assertEqual(ni.get_string(), 'A')
 
         
 class TestOrphanNodeFromUsualArgsAfterCollapse(TestOrphanNodeAfterCollapse):

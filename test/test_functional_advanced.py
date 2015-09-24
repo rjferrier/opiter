@@ -64,7 +64,7 @@ class Postprocessor:
     def __call__(self, options):
         
         # get the current mesh resolution and error metric
-        current_ID = options.str()
+        current_ID = options.get_string()
         current_res = options['res']
         current_err = self.simulation_errors[current_ID]
         
@@ -146,14 +146,14 @@ class DictionaryStrategy:
     errors = {}
     def get_previous_info(self, options, current_err):
         # register current values for future reference
-        current_ID = options.str()
+        current_ID = options.get_string()
         self.resolutions[current_ID] = options['res']
         self.errors[current_ID] = current_err
         
         # now try loading the previous values.  If we can't, exit
         # gracefully
         try:
-            previous_ID = options.str(relative={'res': -1})
+            previous_ID = options.get_string(relative={'res': -1})
         except IndexError:
             raise NotEnoughInfoException
         

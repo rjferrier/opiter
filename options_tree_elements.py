@@ -75,7 +75,7 @@ class NodeInfo:
         return index
         
     def __str__(self):
-        return self.str()
+        return self.get_string()
         
 
 class OptionsTreeElement:

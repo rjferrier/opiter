@@ -25,7 +25,7 @@ def add_dynamic_entry(tree_element):
 def make_tree_str(options_dicts):
     result_str = ''
     for od in options_dicts:
-        branch = od.str(formatter='tree')
+        branch = od.get_string(formatter='tree')
         if branch:
             result_str += '\n' + branch
     return result_str
@@ -259,13 +259,13 @@ A
         other_od = self.other_node.collapse()[0]
         self.node.update(other_od)
         node_od = self.node.collapse()[0]
-        self.assertEqual(node_od.str(), 'A_B')
+        self.assertEqual(node_od.get_string(), 'A_B')
 
     def test_update_with_options_dict_from_array(self):
         other_od = self.array.collapse()[0]
         self.node.update(other_od)
         node_od = self.node.collapse()[0]
-        self.assertEqual(node_od.str(), 'A_0')
+        self.assertEqual(node_od.get_string(), 'A_0')
 
     def test_collapse_mp_safe(self):
         self.node.update({'letter': 'A', 'number': 2})
@@ -421,14 +421,14 @@ letter: C
         node_od = self.node.collapse()[0]
         self.array.update(node_od)
         array_ods = self.array.collapse()
-        self.assertEqual([od.str() for od in array_ods],
+        self.assertEqual([od.get_string() for od in array_ods],
                          ['A_0', 'B_0', 'C_0'])
 
     def test_update_with_options_dict_from_other_array(self):
         other_od = self.other_array.collapse()[1]
         self.array.update(other_od)
         array_ods = self.array.collapse()
-        self.assertEqual([od.str() for od in array_ods],
+        self.assertEqual([od.get_string() for od in array_ods],
                          ['A_1', 'B_1', 'C_1'])
 
     def test_collapse_and_freeze(self):
@@ -682,14 +682,14 @@ letter: B
         node_od = self.node.collapse()[0]
         self.tree.update(node_od)
         tree_ods = self.tree.collapse()
-        self.assertEqual([od.str() for od in tree_ods],
+        self.assertEqual([od.get_string() for od in tree_ods],
                          ['A_0_i', 'A_1_i', 'B_0_i', 'B_1_i'])
 
     def test_update_with_options_dict_from_array(self):
         array_od = self.array.collapse()[1]
         self.tree.update(array_od)
         tree_ods = self.tree.collapse()
-        self.assertEqual([od.str() for od in tree_ods],
+        self.assertEqual([od.get_string() for od in tree_ods],
                          ['A_0_ii', 'A_1_ii', 'B_0_ii', 'B_1_ii'])
 
     def test_collapse_and_freeze(self):

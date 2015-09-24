@@ -37,9 +37,11 @@ class ArrayNodeInfo(NodeInfo):
         return self.node_index == index or \
             self.node_index == index + len(self.node_names)
        
-    def str(self, absolute=None, relative=None, collection_separator=None):
+    def get_string(self, absolute=None, relative=None,
+                   collection_separator=None):
         """
-        self.str(absolute=None, relative=None, collection_separator=None)
+        self.get_string(absolute=None, relative=None,
+                        collection_separator=None)
         
         Returns the name of the node in question or, if arguments are
         given, one of its siblings.  The optional arguments correspond

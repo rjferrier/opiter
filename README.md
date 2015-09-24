@@ -40,8 +40,8 @@ options_tree *= OptionsArray('fluid', [water, ethanol])
 An options tree may be collapsed to form a single list of options
 dictionaries.  Each of these `OptionsDict`s merges a combination of
 options which can be accessed either through the usual dictionary
-syntax or through the dot operator.  There is also a `str()` method
-which can be used to identify the combination.
+syntax or through the dot operator.  There is also a `get_string`
+method which can be used to identify the combination.
   
 ```python
 options_dicts = options_tree.collapse()
@@ -49,7 +49,8 @@ options_dicts = options_tree.collapse()
 for opt in options_dicts:
     kinematic_visc = opt.dynamic_viscosity / opt.density
     Re = opt.velocity * opt.pipe_diameter / kinematic_visc
-    print '{:20s}: Reynolds number = {:.2e}'.format(opt.str(), Re)
+    print '{:20s}: Reynolds number = {:.2e}'.\
+        format(opt.get_string(), Re)
 ```
   
 A serial `for` loop is not the only means of performing a batch of

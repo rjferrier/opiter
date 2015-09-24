@@ -36,7 +36,7 @@ def pretty_print(options_tree):
     Prints options_tree in tree form.
     """
     for od in options_tree.collapse():
-        print od.str(formatter='tree')
+        print od.get_string(formatter='tree')
 
 
 ## PROCESSING FUNCTIONS
@@ -175,7 +175,7 @@ class SerialFunctor(Functor):
             else:
                 sep = ''
                 msg = msg.replace('\n', '\n' + options.indent())
-            branch = options.str(formatter='tree')
+            branch = options.get_string(formatter='tree')
             target.write(branch + sep + msg + '\n')
         else:
             if msg:

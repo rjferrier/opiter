@@ -2,7 +2,7 @@ import unittest
 from test_functional_common import \
     TestOptionsDictCartesianProductIteration, \
     TestOptionsDictTreeIteration
-from options_dict import Lookup, Str
+from options_dict import Lookup, GetString
 
 
 class TestOptionsDictCartesianProductSerialIteration(
@@ -59,7 +59,7 @@ class TestOptionsDictTreeSerialIteration(TestOptionsDictTreeIteration):
         self.check_times(resulting_times)
 
     def test_mapping_and_name_check(self):
-        resulting_names = map(Str(), self.tree.collapse())
+        resulting_names = map(GetString(), self.tree.collapse())
         self.check_names(resulting_names)
             
     def test_mapping_and_lookup(self):

@@ -34,9 +34,11 @@ class OrphanNodeInfo(NodeInfo):
         """
         return index in (0, -1)
 
-    def str(self, absolute=None, relative=None, collection_separator=None):
+    def get_string(self, absolute=None, relative=None,
+                   collection_separator=None):
         """
-        self.str(absolute=None, relative=None, collection_separator=None)
+        self.get_string(absolute=None, relative=None,
+                        collection_separator=None)
         
         Returns the name of the node in question.  The optional arguments
         are not applicable for an orphan node.
@@ -300,8 +302,8 @@ class OptionsNode(OptionsTreeElement):
         try:
             self.options_dict.set_node_info(node_info)
         except AttributeError:
-            raise OptionsNodeException( str(type(self.options_dict)) + ' '+\
-                                        repr(self.options_dict) )
+            raise OptionsNodeException(str(type(self.options_dict)) + ' '+\
+                                       repr(self.options_dict))
 
         
     def __eq__(self, other):

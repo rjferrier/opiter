@@ -88,7 +88,8 @@ class TestOptionsArrayBasics(unittest.TestCase):
     def test_create_node_info(self):
         ni = self.array.create_node_info(1)
         self.assertIsInstance(ni, ArrayNodeInfo)
-        self.assertEqual(ni.str(collection_separator=':'), 'random:3.14')
+        self.assertEqual(ni.get_string(collection_separator=':'),
+                         'random:3.14')
 
     def test_element_types(self):
         for el in self.array:
@@ -123,7 +124,7 @@ class TestOptionsArrayBasics(unittest.TestCase):
         """
         for i, el in enumerate(self.array.collapse()):
             ni = el.get_node_info()
-            self.assertEqual(ni.str(), self.expected_names[i])
+            self.assertEqual(ni.get_string(), self.expected_names[i])
 
     def test_element_node_position_after_collapse(self):
         """

@@ -19,7 +19,7 @@ class SimpleFormatter:
         substrings = []
         for ni in node_info_list:
             substr = ''
-            substr += ni.str(absolute=absolute, relative=relative, 
+            substr += ni.get_string(absolute=absolute, relative=relative, 
                              collection_separator=self.collection_separator)
             if substr:
                 substrings.append(substr)
@@ -54,8 +54,9 @@ class TreeFormatter:
         indent = ''
         for level, ni in enumerate(node_info_list):
             # get a descriptor for the current node
-            substr = ni.str(absolute=absolute, relative=relative, 
-                            collection_separator=self.collection_separator)
+            substr = ni.get_string(
+                absolute=absolute, relative=relative, 
+                collection_separator=self.collection_separator)
 
             # if not the first node, the branch up to this point will
             # have already been printed, so reset the branch
