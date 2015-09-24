@@ -107,6 +107,13 @@ class TestOptionsNodeBasics(unittest.TestCase):
         getter = lambda: self.node[0]
         self.assertRaises(IndexError, getter)
 
+    def test_delitem(self):
+        """
+        There are no iterable children, so an IndexError should be raised.
+        """
+        def deleter(): del self.node[0]
+        self.assertRaises(IndexError, deleter)
+
         
 if __name__ == '__main__':
     unittest.main()

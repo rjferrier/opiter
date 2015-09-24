@@ -3,8 +3,7 @@
 
 - [ ] OptionsTreeElement behaviour
   - [ ] Consider reworking `collapse` as a generator
-  - [x] Implement `__getitem__` and `__setitem__` for OptionsNode
-        (as delegations)
+  - [ ] Implement __delitem__
   
 - [ ] Tidy up
   - [ ] Review/update docstrings

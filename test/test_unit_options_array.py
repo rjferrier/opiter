@@ -119,6 +119,16 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         self.assertEqual(str(self.array[1]), 'baz')
         self.assertEqual(str(self.array[3]), 'qux')
 
+    def test_delitem_from_index(self):
+        del self.array[2]
+        self.assertEqual(len(self.array), 3)
+        self.assertEqual(str(self.array[2]), 'another_node')
+
+    def test_delitem_from_slice(self):
+        del self.array[1:4:2]
+        self.assertEqual(len(self.array), 2)
+        self.assertEqual(str(self.array[1]), 'some_node')
+
     def test_append(self):
         self.array.append(UnitOptionsNode('5'))
         self.assertEqual(len(self.array), 5)

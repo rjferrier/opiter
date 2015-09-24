@@ -330,6 +330,12 @@ class OptionsNode(OptionsTreeElement):
         if self.child:
             self.child[subscript] = value_or_values
 
+    def __delitem__(self, subscript):
+        if self.child:
+            del self.child[subscript]
+        else:
+            raise IndexError('no iterable children')
+
     def __str__(self):
         return str(self.name)
 
@@ -561,6 +567,24 @@ class OptionsArray(OptionsTreeElement):
             self.nodes[index] = self.create_options_node(value_or_values)
 
         self.update_node_info()
+
+
+    def __delitem__(self, subscript):
+        try:
+            # treat argument as a slice
+            indices = subscript.indices(len(self.nodes))
+            del self.nodes[subscript]
+
+        except AttributeError:
+            try:
+                # treat argument as a name
+                index = [str(n) for n in self.nodes].index(subscript)
+            except ValueError:
+                # default to an index
+                index = subscript
+
+            del self.nodes[index]
+
 
         
     def __str__(self):
