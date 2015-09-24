@@ -32,7 +32,11 @@ class TestOptionsDictTreePostprocessing(TestOptionsDictTreeIteration):
             if i in expect_not_applicable:
                 self.assertIsNone(result)
             else:
-                self.assertAlmostEqual(result, 1., delta=0.15)
+                try:
+                    self.assertAlmostEqual(result, 1., delta=0.15)
+                except TypeError:
+                    print i
+                    raise
 
     def test_postprocessing_with_is_first_strategy(self):
         self.check_convergence(
@@ -93,8 +97,8 @@ class NotEnoughInfoException(Exception):
     
 class IsFirstStrategy:
     def get_previous_info(self, options, current_err):
-        node_info = options.get_node_info('res')
-        if not node_info.is_first():
+        position = options.get_position('res')
+        if not position.is_first():
             # if this is not the first in a series of mesh
             # resolutions, we can load previous values
             return_res = self.previous_res
@@ -105,7 +109,7 @@ class IsFirstStrategy:
         self.previous_err = current_err
 
         # return previous values if they were loaded
-        if node_info.is_first():
+        if position.is_first():
             raise NotEnoughInfoException()
         else:
             return return_res, return_err
@@ -122,8 +126,8 @@ class IsLastStrategy:
             # fail - hold on to this exception
             pass
             
-        node_info = options.get_node_info('res')
-        if node_info.is_last():
+        position = options.get_position('res')
+        if position.is_last():
             # if this is the last in a series of mesh resolutions,
             # clear the stored values
             del(self.previous_res)

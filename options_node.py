@@ -1,5 +1,5 @@
 from base import OptionsBaseException
-from options_tree_elements import OptionsTreeElement, NodeInfo
+from options_tree_elements import OptionsTreeElement, NodeInfo, Position
 from options_dict import OptionsDict
 from copy import deepcopy
 from warnings import warn
@@ -14,6 +14,8 @@ class OrphanNodeInfo(NodeInfo):
     Describes a node which is not part of any collection.
     """
     def __init__(self, node_name):
+        # treat orphan nodes as belonging to a one-node collection
+        NodeInfo.__init__(self, 0, 0)
         self.node_name = node_name
 
     def belongs_to(self, collection_name):
@@ -22,13 +24,6 @@ class OrphanNodeInfo(NodeInfo):
         always return False.
         """
         return False
-    
-    def at(self, index):
-        """
-        Checks that the node is at the given index, which for an orphan
-        node is only true for 0 (first) and -1 (last).
-        """
-        return index in (0, -1)
 
     def get_string(self, absolute=None, relative=None,
                    collection_separator=None):
@@ -40,11 +35,11 @@ class OrphanNodeInfo(NodeInfo):
         for i, a in enumerate(args):
             if isinstance(a, dict):
                 args[i] = None
-        if self.at(self._create_index(0, *args)):
+        if self.position.is_at(self._create_index(0, *args)):
             return self.node_name
         else:
             raise IndexError("list index out of range")
-
+        
     def __eq__(self, other):
         result = isinstance(other, OrphanNodeInfo)
         if result:

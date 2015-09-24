@@ -215,9 +215,9 @@ class OptionsDict(dict):
             
     def indent(self, only=[], exclude=[], absolute={}, relative={}, 
             formatter='tree'):
-        return self.get_string(only=only, exclude=exclude, absolute=absolute,
-                        relative=relative, formatter=formatter,
-                        only_indent=True)
+        return self.get_string(
+            only=only, exclude=exclude, absolute=absolute, relative=relative,
+            formatter=formatter, only_indent=True)
             
         
     def get_node_info(self, collection_name=None):
@@ -263,6 +263,16 @@ class OptionsDict(dict):
                 "couldn't find any node information corresponding to '{}'".\
                 format(collection_name))
 
+
+    def get_position(self, collection_name=None):
+        """
+        Returns the OptionDict's position in the present collection.  If
+        the OptionsDict is part of a tree, the client can get the
+        position with respect to a particular collection by passing in
+        the collection name.
+        """
+        return self.get_node_info(collection_name).position
+        
         
     def expand_template_string(self, buffer_string, loops=1):
         """

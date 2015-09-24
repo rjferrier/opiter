@@ -1,7 +1,7 @@
 - [ ] Interface
   - [x] Rename the `str` method to avoid confusion with the `str` idiom
   - [ ] Change NodeInfo method names to be more semantically correct
-  - [ ] Introduce an OptionsDict.get_position method so that the user
+  - [x] Introduce an OptionsDict.get_position method so that the user
         doesn't have to touch get_node_info
 
 - [ ] OptionsTreeElement behaviour

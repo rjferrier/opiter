@@ -1,5 +1,5 @@
 from base import OptionsBaseException
-from options_tree_elements import OptionsTreeElement, NodeInfo
+from options_tree_elements import OptionsTreeElement, NodeInfo, Position
 from options_node import OptionsNode, OptionsNodeException
 from copy import deepcopy
 from warnings import warn
@@ -14,6 +14,7 @@ class ArrayNodeInfo(NodeInfo):
     Describes a node which is part of an array (or sequence).
     """
     def __init__(self, array_name, node_names, node_index):
+        NodeInfo.__init__(self, node_index, len(node_names))
         self.array_name = array_name
         self.node_names = node_names
         self.node_index = node_index
@@ -24,14 +25,6 @@ class ArrayNodeInfo(NodeInfo):
         given collection name.
         """
         return collection_name == self.array_name
-
-    def at(self, index):
-        """
-        Checks that the node in question is at the given index, which can
-        be negative to signify position from the end of the sequence.
-        """
-        return self.node_index == index or \
-            self.node_index == index + len(self.node_names)
        
     def get_string(self, absolute=None, relative=None,
                    collection_separator=None):

@@ -19,8 +19,9 @@ class SimpleFormatter:
         substrings = []
         for ni in node_info_list:
             substr = ''
-            substr += ni.get_string(absolute=absolute, relative=relative, 
-                             collection_separator=self.collection_separator)
+            substr += ni.get_string(
+                absolute=absolute, relative=relative, 
+                collection_separator=self.collection_separator)
             if substr:
                 substrings.append(substr)
         if node_info_list:
@@ -60,7 +61,7 @@ class TreeFormatter:
 
             # if not the first node, the branch up to this point will
             # have already been printed, so reset the branch
-            if not ni.is_first():
+            if not ni.position.is_first():
                 branch = ''
 
             # cycle if blank

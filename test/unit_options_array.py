@@ -1,7 +1,16 @@
-from options_array import OptionsArray, OptionsArrayException
+from options_array import ArrayNodeInfo, OptionsArray, OptionsArrayException
 from unit_options_node import UnitOptionsNode
 
 
+class UnitArrayNodeInfo(ArrayNodeInfo):
+    """
+    This is ArrayNodeInfo decoupled from the Position implementation
+    for unit testing purposes.
+    """
+    def create_position(self, node_index, array_length):
+        return None
+
+    
 class UnitOptionsArray(OptionsArray):
     """
     This is OptionsArray decoupled from the OptionsNode and

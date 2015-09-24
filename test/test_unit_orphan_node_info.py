@@ -1,5 +1,5 @@
 import unittest
-from options_node import OrphanNodeInfo
+from unit_options_node import UnitOrphanNodeInfo
 
 
 class TestOrphanNodeInfoString(unittest.TestCase):
@@ -8,7 +8,7 @@ class TestOrphanNodeInfoString(unittest.TestCase):
         """
         I create an OrphanNodeInfo object.
         """
-        self.node_info = OrphanNodeInfo('A')
+        self.node_info = UnitOrphanNodeInfo('A')
 
     def test_belongs_to(self):
         """
@@ -29,16 +29,6 @@ class TestOrphanNodeInfoString(unittest.TestCase):
         """
         self.assertEqual(self.node_info.get_string(), 'A')
         self.assertEqual(str(self.node_info), 'A')
-
-    def test_other_node_name_from_absolute_index(self):
-        """
-        There is only one node.  Asking get_string() for the first or last node
-        name should get the same result; anything else should trigger an
-        error.
-        """
-        self.assertEqual(self.node_info.get_string(0), 'A')
-        self.assertEqual(self.node_info.get_string(-1), 'A')
-        self.assertRaises(IndexError, lambda: self.node_info.get_string(1))
 
     def test_other_node_name_from_relative_index(self):
         """
@@ -77,30 +67,6 @@ class TestOrphanNodeInfoString(unittest.TestCase):
         self.assertEqual(self.node_info.get_string(relative={'foo': 1}), 'A')
         
 
-class TestOrphanNodeInfoIndex(unittest.TestCase):
-    
-    def setUp(self):
-        """
-        I create an OrphanNodeInfo object.
-        """
-        self.node_info = OrphanNodeInfo('A')
-    
-    def test_at(self):
-        # check positions from start 
-        self.assertTrue(self.node_info.at(0))
-        self.assertFalse(self.node_info.at(1))
-        # check position from end
-        self.assertFalse(self.node_info.at(-2))
-        self.assertTrue(self.node_info.at(-1))
-    
-    def test_is_first(self):
-        self.assertTrue(self.node_info.is_first())
-    
-    def test_is_last(self):
-        self.assertTrue(self.node_info.is_last())
-
-
-        
 if __name__ == '__main__':
     unittest.main()
         

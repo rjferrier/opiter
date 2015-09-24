@@ -134,7 +134,7 @@ class TestOptionsArrayBasics(unittest.TestCase):
         """
         for i, el in enumerate(self.array.collapse()):
             ni = el.get_node_info()
-            self.assertTrue(ni.at(i))
+            self.assertTrue(ni.position.is_at(i))
 
     def test_getitem_from_index_and_check_type_and_node_info(self):
         node = self.array[2]
@@ -142,7 +142,7 @@ class TestOptionsArrayBasics(unittest.TestCase):
         # check node info is up to date
         od = node.collapse()[0]
         ni = od.get_node_info()
-        self.assertTrue(ni.at(2))
+        self.assertTrue(ni.position.is_at(2))
 
     def test_getitem_from_slice_and_check_type_and_node_info(self):
         subarray = self.array[1:4:2]
@@ -153,7 +153,7 @@ class TestOptionsArrayBasics(unittest.TestCase):
         # check that node info is up to date in this subarray
         for i, od in enumerate(subarray.collapse()):
             ni = od.get_node_info()
-            self.assertTrue(ni.at(i))
+            self.assertTrue(ni.position.is_at(i))
 
     def test_setitem_from_slice_and_check_type_and_node_info(self):
         node = OptionsNode('some_other_dict', {'foo': 'baz'})
@@ -165,7 +165,7 @@ class TestOptionsArrayBasics(unittest.TestCase):
         # check that node info is up to date
         for i, od in enumerate(self.array.collapse()):
             ni = od.get_node_info()
-            self.assertTrue(ni.at(i))
+            self.assertTrue(ni.position.is_at(i))
 
     def check_array_node_info(self, index, expected_node_names):
         """
@@ -175,7 +175,7 @@ class TestOptionsArrayBasics(unittest.TestCase):
         od = self.array.collapse()[index]
         ni = od.get_node_info()
         self.assertIsInstance(ni, ArrayNodeInfo)
-        self.assertTrue(ni.at(index))
+        self.assertTrue(ni.position.is_at(index))
         self.assertEqual(ni.node_names, expected_node_names)
 
     def test_append_and_check_node_info(self):
@@ -218,8 +218,8 @@ class TestOptionsArraySlice(unittest.TestCase):
 
     def test_element_node_position_after_collapse(self):
         for i, el in enumerate(self.array.collapse()):
-            ni = el.get_node_info()
-            self.assertTrue(ni.at(i))
+            pos = el.get_position()
+            self.assertTrue(pos.is_at(i))
 
             
 if __name__ == '__main__':

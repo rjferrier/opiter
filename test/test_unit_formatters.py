@@ -3,6 +3,13 @@ from formatters import SimpleFormatter, TreeFormatter
 from itertools import product
 
 
+class FakePosition:
+    def __init__(self, index):
+        self.index = index
+    def is_first(self):
+        return self.index == 0
+    
+
 class FakeNodeInfo:
     """
     For representing a node on this tree:
@@ -16,6 +23,7 @@ class FakeNodeInfo:
         self.level = level
         self.node_name = node_name
         self.node_index = node_index
+        self.position = FakePosition(node_index)
 
     @classmethod
     def combo(Self, node_names, anon=[]):
@@ -35,9 +43,6 @@ class FakeNodeInfo:
         if collection_separator:
             result += str(self.level) + collection_separator
         return result + self.node_name
-
-    def is_first(self):
-        return self.node_index == 0
 
         
 class TestSimpleFormatter(unittest.TestCase):

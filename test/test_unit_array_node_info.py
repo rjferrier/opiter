@@ -1,5 +1,5 @@
 import unittest
-from options_array import ArrayNodeInfo
+from unit_options_array import UnitArrayNodeInfo
     
 
 class TestArrayNodeInfoBasics(unittest.TestCase):
@@ -9,7 +9,7 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
         With a sequence of nodes named 'A', 'B' and 'C', I create an
         ArrayNodeInfo object for the second node.
         """
-        self.node_info = ArrayNodeInfo('seq', ['A', 'B', 'C'], 1)
+        self.node_info = UnitArrayNodeInfo('seq', ['A', 'B', 'C'], 1)
 
     def test_belongs_to(self):
         """
@@ -96,38 +96,6 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
                          'seqB')
 
         
-class TestArrayNodeInfoIndex(unittest.TestCase):
-    
-    def setUp(self):
-        """
-        With a sequence of nodes named 'A', 'B' and 'C', I create
-        ArrayNodeInfos for all three nodes.  I'll want to know which
-        of these represent the start or end of the sequence.
-        """
-        seq = ['A', 'B', 'C']
-        self.a = ArrayNodeInfo('seq', seq, 0)
-        self.b = ArrayNodeInfo('seq', seq, 1)
-        self.c = ArrayNodeInfo('seq', seq, 2)
-    
-    def test_at(self):
-        # check position from start
-        self.assertTrue(self.b.at(1))
-        self.assertFalse(self.b.at(2))
-        # check position from end
-        self.assertTrue(self.b.at(-2))
-        self.assertFalse(self.b.at(-1))
-    
-    def test_is_first(self):
-        self.assertTrue(self.a.is_first())
-        self.assertFalse(self.b.is_first())
-        self.assertFalse(self.c.is_first())
-    
-    def test_is_last(self):
-        self.assertFalse(self.a.is_last())
-        self.assertFalse(self.b.is_last())
-        self.assertTrue(self.c.is_last())
-
-
 if __name__ == '__main__':
     unittest.main()
         
