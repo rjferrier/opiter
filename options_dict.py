@@ -81,8 +81,9 @@ class OptionsDict(dict):
     mutable_attributes = ['_node_info']
     protected_attributes = [
         'donate_copy', 'indent', 'create_node_info_formatter', 
-        'expand_template_file', 'expand_template_string', 'freeze', 
-        'get_node_info', 'set_node_info', 'get_string', 'update']
+        'expand_template_file', 'expand_template_string', 'freeze',
+        'get_position', 'get_node_info', 'get_string', 'set_node_info', 
+        'update']
     
     def __init__(self, entries={}):
         """
@@ -134,7 +135,14 @@ class OptionsDict(dict):
         functions) residing in the dict.
         """
         for k in self.keys():
-            self[k] = self[k]
+            try:
+                self[k] = self[k]
+            except (KeyError, AttributeError):
+                # If there is a broken dependency, don't raise it just
+                # now because the user may not be interested in this
+                # entry.  Just delete it; a KeyError will be raised
+                # later if the user does try to access it.
+                del self[k]
         # return self so as to be inlineable
         return self
 
