@@ -134,19 +134,22 @@ class OptionsDict(dict):
         pickle module has trouble serialising any lambdas (anonymous
         functions) residing in the dict.
 
-        If clean is set to True, any entries that have missing
-        dependencies will be removed.  This means a KeyError will not
-        be raised immediately, and is therefore useful if the user is
-        not interested in such entries at the time of freezing.
+        If clean is set to True, any entries prone to pickling errors
+        (callables, dynamic entries with missing dependencies) will be
+        removed.  This means errors will not be raised if said entries
+        are not needed.
         """
         for k in self.keys():
             try:
                 self[k] = self[k]
+                if clean and isinstance(self[k], CallableEntry):
+                    del self[k]
             except (KeyError, AttributeError):
                 if clean:
                     del self[k]
                 else:
                     raise
+                
         # return self so as to be inlineable
         return self
 

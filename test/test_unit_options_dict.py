@@ -196,7 +196,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
     def test_freeze_with_missing_dependency(self):
         self.assertRaises(KeyError, lambda: self.od.freeze())
 
-    def test_freeze_with_missing_dependency_removed(self):
+    def test_freeze_and_clean_missing_dependency(self):
         """
         Freezing can also remove entries with missing dependencies, so I
         won't get a KeyError right away.
@@ -204,7 +204,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         self.od.freeze(clean=True)
         self.assertRaises(KeyError, lambda: self.od['velocity'])
 
-    def test_freeze_with_missing_dependency_via_dot_syntax_removed(self):
+    def test_freeze_and_clean_missing_dependency_via_dot_syntax(self):
         """
         As above, but the dependency involves attribute-getting syntax.
         """

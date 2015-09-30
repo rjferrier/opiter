@@ -99,18 +99,38 @@ class TestOptionsDictAfterTreeCollapse(unittest.TestCase):
         
         
 class TestCallableEntry(unittest.TestCase):
-    
-    def test_callable_entry(self):
+
+    def setUp(self):
         """
         I create an OptionsDict with a callable entry stored under
-        'my_func'.  This should not evaluate like a dynamic entry but
-        instead remain intact and work as intended.
+        'my_func'.  
         """
-        od = OptionsDict({
+        self.od = OptionsDict({
             'my_func': CallableEntry(lambda a, b=1: a + b)})
-        self.assertIsInstance(od['my_func'], CallableEntry)
-        self.assertEqual(od['my_func'](1), 2)
-        self.assertEqual(od['my_func'](1, 2), 3)
+
+    def test_as_function(self):
+        """
+        The callable should not evaluate like a dynamic entry but instead
+        remain intact and work as intended.
+        """
+        self.assertIsInstance(self.od['my_func'], CallableEntry)
+        self.assertEqual(self.od['my_func'](1), 2)
+        self.assertEqual(self.od['my_func'](1, 2), 3)
+
+    def test_freeze(self):
+        """
+        Freezing should not affect the existence of the callable.
+        """
+        self.od.freeze()
+        self.od['my_func']
+
+    def test_freeze_and_clean(self):
+        """
+        Freezing with the clean option should remove the callable so that
+        the whole object is safe to pickle.
+        """
+        self.od.freeze(clean=True)
+        self.assertRaises(KeyError, lambda: self.od['my_func'])
 
         
 if __name__ == '__main__':
