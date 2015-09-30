@@ -194,21 +194,24 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
 
     def test_freeze_with_missing_dependency(self):
+        self.assertRaises(KeyError, lambda: self.od.freeze())
+
+    def test_freeze_with_missing_dependency_removed(self):
         """
-        Freezing should also remove entries with missing dependencies, so
-        I won't get a KeyError right away.
+        Freezing can also remove entries with missing dependencies, so I
+        won't get a KeyError right away.
         """
-        self.od.freeze()
+        self.od.freeze(clean=True)
         self.assertRaises(KeyError, lambda: self.od['velocity'])
 
-    def test_freeze_with_missing_dependency_via_dot_syntax(self):
+    def test_freeze_with_missing_dependency_via_dot_syntax_removed(self):
         """
         As above, but the dependency involves attribute-getting syntax.
         """
         def Reynolds_number(d):
             return d.velocity * d.pipe_diameter / d.kinematic_viscosity
         self.od.update([Reynolds_number])
-        self.od.freeze()
+        self.od.freeze(clean=True)
         self.assertRaises(KeyError, lambda: self.od['velocity'])
 
         

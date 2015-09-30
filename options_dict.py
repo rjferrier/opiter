@@ -127,22 +127,26 @@ class OptionsDict(dict):
         raise default_err
 
     
-    def freeze(self):
+    def freeze(self, clean=False):
         """
         Converts all dynamic entries to static ones.  This may be
         necessary before multiprocessing, because Python's native
         pickle module has trouble serialising any lambdas (anonymous
         functions) residing in the dict.
+
+        If clean is set to True, any entries that have missing
+        dependencies will be removed.  This means a KeyError will not
+        be raised immediately, and is therefore useful if the user is
+        not interested in such entries at the time of freezing.
         """
         for k in self.keys():
             try:
                 self[k] = self[k]
             except (KeyError, AttributeError):
-                # If there is a broken dependency, don't raise it just
-                # now because the user may not be interested in this
-                # entry.  Just delete it; a KeyError will be raised
-                # later if the user does try to access it.
-                del self[k]
+                if clean:
+                    del self[k]
+                else:
+                    raise
         # return self so as to be inlineable
         return self
 
