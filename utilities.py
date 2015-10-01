@@ -55,13 +55,13 @@ def smap(functor, options_tree, message=None):
     
 
 def pmap(functor, options_tree, message=None, nprocs_max=None,
-         in_reverse=False, clean_entries=False):
+         in_reverse=False, recursive_freeze=False, clean_entries=False):
     "Parallel processing"
     functor.check_processing(True)
     options_dicts = options_tree.collapse()
     nprocs = get_nprocs(len(options_dicts), nprocs_max)
     for opt in options_dicts:
-        opt.freeze(clean=clean_entries)
+        opt.freeze(recursive=recursive_freeze, clean=clean_entries)
     if in_reverse:
         options_dicts.reverse()
     functor.preamble(options_dicts[0])

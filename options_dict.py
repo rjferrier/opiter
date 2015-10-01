@@ -126,8 +126,8 @@ class OptionsDict(dict):
         # the argument was incompatible
         raise default_err
 
-    
-    def freeze(self, clean=False):
+
+    def freeze(self, clean=False, recursive=False):
         """
         Converts all dynamic entries to static ones.  This may be
         necessary before multiprocessing, because Python's native
@@ -142,8 +142,14 @@ class OptionsDict(dict):
         for k in self.keys():
             try:
                 self[k] = self[k]
+                
                 if clean and isinstance(self[k], CallableEntry):
                     del self[k]
+                elif recursive:
+                    # TESTME
+                    self._try_freeze(self[k], clean)
+                    self._try_freeze_iterable(self[k], clean)
+                    
             except (KeyError, AttributeError):
                 if clean:
                     del self[k]
@@ -356,6 +362,20 @@ class OptionsDict(dict):
                 "want to set this attribute,\n you will need to register "+\
                 "the name in mutable_attributes.")
 
+    @staticmethod
+    def _try_freeze(item, clean):
+        try:
+            item.freeze(clean)
+        except AttributeError:
+            pass
+
+    @classmethod
+    def _try_freeze_iterable(cls, item, clean):
+        try:
+            for el in item:
+                cls._try_freeze(el, clean)
+        except TypeError:
+            pass
         
     def __str__(self):
         return self.get_string()
@@ -450,7 +470,8 @@ class GetString:
             only=self.only, exclude=self.exclude, absolute=self.absolute,
             relative=self.relative, formatter=self.formatter)
 
-
+    
+# TODO update according to method options
 def freeze(options_dicts):
     """
     Freezes the given OptionsDicts.  See OptionsDict.freeze for
