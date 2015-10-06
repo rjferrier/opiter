@@ -361,10 +361,10 @@ class TestOptionsDictTemplateExpansion(unittest.TestCase):
 
     def test_expand_string_missing_entry(self):
         template = "$fluid has a density of $density kg/m^3."
-        expected = "water has a density of $density kg/m^3."
-        self.assertEqual(self.od.expand_template_string(template), expected)
+        self.assertRaises(KeyError,
+                          lambda: self.od.expand_template_string(template))
 
-
+        
     def test_expand_nested(self):
         template = "$fluid has a $change point of ${${change}_point}"+\
                    " degrees C."
@@ -387,8 +387,8 @@ class TestOptionsDictTemplateExpansion(unittest.TestCase):
         self.od['change'] = 'melting'
         expected = "water has a melting point of ${melting_point}"+\
                    " degrees C."
-        self.assertEqual(self.od.expand_template_string(template),
-                         expected)
+        self.assertRaises(KeyError,
+                          lambda: self.od.expand_template_string(template, 1))
 
         
     

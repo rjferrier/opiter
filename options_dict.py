@@ -302,8 +302,10 @@ class OptionsDict(dict):
         will be needed if the placeholders are nested.
         """
         for i in range(loops):
-            buffer_string = Template(buffer_string)
-            buffer_string = buffer_string.safe_substitute(self)
+            buffer_string = Template(buffer_string).safe_substitute(self)
+        # this next line will flag any unexpanded placeholders as
+        # KeyErrors
+        Template(buffer_string).substitute({})
         return buffer_string
 
 
