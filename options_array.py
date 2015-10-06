@@ -311,6 +311,8 @@ class OptionsArray(OptionsTreeElement):
                 index = subscript
 
             del self.nodes[index]
+            
+        self.update_node_info()
 
         
     def __str__(self):

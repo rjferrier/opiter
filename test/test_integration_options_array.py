@@ -155,6 +155,16 @@ class TestOptionsArrayBasics(unittest.TestCase):
             ni = od.get_node_info()
             self.assertTrue(ni.position.is_at(i))
 
+    def test_setitem_from_index_and_check_type_and_node_info(self):
+        node = OptionsNode('some_other_dict', {'foo': 'baz'})
+        self.array[2] = 3
+        # check that the value has been converted into a node
+        self.assertIsInstance(self.array[2], OptionsNode)
+        # check that node info is up to date
+        for i, od in enumerate(self.array.collapse()):
+            ni = od.get_node_info()
+            self.assertTrue(ni.position.is_at(i))
+
     def test_setitem_from_slice_and_check_type_and_node_info(self):
         node = OptionsNode('some_other_dict', {'foo': 'baz'})
         self.array[1:4:2] = [3, node]
@@ -162,6 +172,20 @@ class TestOptionsArrayBasics(unittest.TestCase):
         # check that all set items have been converted to nodes
         for node in self.array:
             self.assertIsInstance(node, OptionsNode)
+        # check that node info is up to date
+        for i, od in enumerate(self.array.collapse()):
+            ni = od.get_node_info()
+            self.assertTrue(ni.position.is_at(i))
+
+    def test_delitem_from_index_and_check_type_and_node_info(self):
+        del self.array[2]
+        # check that node info is up to date
+        for i, od in enumerate(self.array.collapse()):
+            ni = od.get_node_info()
+            self.assertTrue(ni.position.is_at(i))
+
+    def test_delitem_from_slice_and_check_type_and_node_info(self):
+        del self.array[1:4:2]
         # check that node info is up to date
         for i, od in enumerate(self.array.collapse()):
             ni = od.get_node_info()
