@@ -259,8 +259,12 @@ class Jinja2TemplateEngine:
         "Creates and returns a closure that can be executed with no args"
         
         def operation():
+            # need to convert the nonstandard dictionary entries
+            # otherwise jinja2 will get confused
+            options.freeze(clean=True, recursive=True)
             self.render(source_filename, target_filename, 
-                        source_dir, target_dir, opt=options)
+                        source_dir, target_dir, **options)
+            
         return operation
 
     

@@ -1,7 +1,5 @@
 - [ ] Interface
   - [ ] Change NodeInfo method names to be more semantically correct
-  - [x] Change `rendering_strategy` to `engine`, make
-        prerequisite_filenames_key optional.
 
 - [ ] OptionsTreeElement behaviour
   - [ ] Consider reworking `collapse` as a generator
@@ -9,8 +7,8 @@
         Consider deprecating/removing the former.
   - [ ] Add a branch narrowing method (inverse of del)
 
-- [ ] Syntax
-  - [ ] Remove the necessity for `opt.` before every key in Jinja 2
+- [x] Syntax
+  - [x] Remove the necessity for `opt.` before every key in Jinja 2
         templates
   
 - [ ] Tidy up
