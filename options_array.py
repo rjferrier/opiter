@@ -76,17 +76,16 @@ class OptionsArray(OptionsTreeElement):
     A sequence of OptionsNodes.
     """
 
-    def __init__(self, array_name, elements, common_entries={},
-                 name_format='{}'):
+    def __init__(self, array_name, elements, names=None, name_format='{}'):
         """
         Returns an OptionsArray, wrapping the given elements as
         OptionsNodes where necessary.
 
-        If a given element is not already an OptionsNode, it is
-        converted to a string which becomes the name of a new
-        OptionsNode.  The embedded dictionary acquires the entry
-        {array_name: element}.  This feature is useful for setting up
-        an independent variable with an associated array of values.
+        If a given element is not already an OptionsNode, a new
+        OptionsNode is created whose embedded dictionary includes the
+        entry {array_name: element}.  This feature is useful for
+        setting up an independent variable with an associated array of
+        values.
 
         For example,
            OptionsArray('velocity', [0.01, 0.02, 0.04])
@@ -95,22 +94,26 @@ class OptionsArray(OptionsTreeElement):
            OptionsNode('0.02', {'velocity': 0.02}),
            OptionsNode('0.04', {'velocity': 0.04})]
         but the nodes will contain different node info.
-        
-        All embedded dictionaries are initialised with common_entries
-        if this argument is given.  The element-to-string conversion
-        is governed by name_format, which can either be a format
+
+        The names of the OptionsNodes can be given explicitly in the
+        names argument; otherwise each name is taken from the string
+        representation of the corresponding element and possibly
+        modified by name_format.  name_format can either be a format
         string or a callable that takes the element value and returns
         a string.
         """
         self.name = array_name
         self.nodes = []
-        self.name_format = name_format
-                
+
+        if names:
+            arg_list = zip(names, elements)
+        else:
+            arg_list = zip(elements)
+            
         # instantiate and record OptionsNodes
-        for el in elements:
+        for args in arg_list:
             try:
-                node = self.create_options_node(el, common_entries,
-                                                name_format=name_format)
+                node = self.create_options_node(*args, name_format=name_format)
             except OptionsNodeException as e:
                 raise OptionsArrayException(str(e))
             # append to the list
@@ -122,12 +125,14 @@ class OptionsArray(OptionsTreeElement):
 
 
     @classmethod
-    def another(Class, array_name, elements, common_entries={},
-                name_format='{}'):
-        return Class(array_name, elements, common_entries, name_format)
+    def another(Class, array_name, elements, 
+                names=None, name_format='{}'):
+        return Class(array_name, elements, names=names,
+                     name_format=name_format)
 
     
-    def create_options_node(self, arg1={}, arg2={}, name_format='{}'):
+    def create_options_node(self, arg1={}, arg2={}, names=None,
+                            name_format='{}'):
         """
         Overrideable factory method, used by the OptionsArray constructor.
         """

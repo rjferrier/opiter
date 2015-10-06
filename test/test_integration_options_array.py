@@ -6,13 +6,14 @@ from options_dict import OptionsDict
 
 class TestOptionsArrayCreation(unittest.TestCase):
 
-    def test_create_with_common_entries(self):
+    def test_create(self):
         """
-        I create an OptionsArray 'A' using three integers and a valid
-        common_entries argument.  I should be able to use the latter
-        after collapsing the array to get options dictionaries.
+        I create an OptionsArray 'A' using three integers and update it
+        with a dict.  I should be able to use the latter after
+        collapsing the array to get options dictionaries.
         """
-        array = OptionsArray('A', range(3), {'foo': 'bar'})
+        array = OptionsArray('A', range(3))
+        array.update({'foo': 'bar'})
         ods = array.collapse()
         for od in ods:
             self.assertEqual(od['foo'], 'bar') 

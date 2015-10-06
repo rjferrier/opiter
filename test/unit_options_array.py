@@ -16,7 +16,8 @@ class UnitOptionsArray(OptionsArray):
     This is OptionsArray decoupled from the OptionsNode and
     ArrayNodeInfo implementations for unit testing purposes.
     """
-    def create_options_node(self, arg1={}, arg2={}, name_format='{}'):
+    def create_options_node(self, arg1={}, arg2={}, names=None,
+                            name_format='{}'):
         return UnitOptionsNode(arg1, arg2, name_format=name_format,
                                array_name=self.name)
 

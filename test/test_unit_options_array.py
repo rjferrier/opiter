@@ -14,7 +14,6 @@ class TestOptionsArrayCreation(unittest.TestCase):
         class another_node_basis:
             qux = 1
         UnitOptionsArray('random', ['A', 3.14, some_node, another_node_basis])
-
         
     def test_format_names_with_string(self):
         """
@@ -45,6 +44,17 @@ class TestOptionsArrayCreation(unittest.TestCase):
         create_array = lambda: UnitOptionsArray('A', [1., 2.5, 6.25],
                                                 name_format=None)
         self.assertRaises(OptionsArrayException, create_array)
+
+    def test_supply_names(self):
+        """
+        I create an OptionsArray and explicitly supply names for its
+        elements.
+        """
+        array = UnitOptionsArray('A', [2, 5, 10],
+                                 names=['i', 'ii', 'iii'])
+        expected_names = ['i', 'ii', 'iii']
+        for el, expected in zip(array, expected_names):
+            self.assertEqual(str(el), expected)
 
         
 class TestOptionsDictArrayBasics(unittest.TestCase):
