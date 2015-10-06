@@ -322,3 +322,52 @@ class OptionsArray(OptionsTreeElement):
         
     def __str__(self):
         return str(self.name)
+
+
+# TESTME
+class OptionsArrayFactory:
+    """
+    Provides an OptionsArray constructor with an alternative system
+    for naming the nodes.  For example, where
+
+       OptionsArray('array1', [class1, class2])
+       OptionsArray('array2', range(3))
+
+    produces nodes named ['class1', 'class2'] and ['0', '1', '2'],
+
+       factory = OptionsArrayFactory()
+       factory('array1', [class1, class2])
+       factory('array2', range(3))
+
+    produces nodes named ['A00', 'A01'] and ['B00', 'B01', 'B02'].
+    """
+    def __init__(self, array_index_formatter=None, node_index_formatter=None):
+        self.array_index = 0
+        if not array_index_formatter:
+            self.array_index_formatter = self.default_array_index_formatter
+        if not node_index_formatter:
+            self.node_index_formatter = self.default_node_index_formatter
+
+    @staticmethod
+    def default_array_index_formatter(i):
+        "Converts 0, 1, 2,... to A, B, C,... "
+        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i]
+
+    @staticmethod
+    def default_node_index_formatter(i):
+        "Converts 0, 1, 2,... to 00, 01, 02,... "
+        return '{:02d}'.format(i)
+        
+    def __call__(self, array_name, elements):
+        nodes = []
+        for node_index, el in enumerate(elements):
+            node_name = self.array_index_formatter(self.array_index) +\
+                        self.node_index_formatter(node_index)
+            nodes.append(
+                OptionsNode(node_name, el, array_name=array_name))
+
+        # bump the array counter for next time
+        self.array_index += 1
+        return OptionsArray(array_name, nodes)
+
+

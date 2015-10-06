@@ -7,10 +7,6 @@ import os
 import multiprocessing
 import subprocess
 import sys
-import numpy
-import glob
-
-from options_iteration import OptionsArray, OptionsNode
 
 try:
     import jinja2
@@ -18,8 +14,7 @@ try:
 except:
     HAVE_JINJA2 = False
 
-
-
+    
 ## DIAGNOSTIC FUNCTIONS
 
 def check_entries(options_tree):
@@ -216,7 +211,7 @@ class ParallelFunctor(Functor):
 
 ## FUNCTOR HELPERS
 
-class SimpleRendering:
+class SimpleTemplateEngine:
     def __init__(self, nloops=1):
         self.nloops = nloops
 
@@ -234,10 +229,10 @@ class SimpleRendering:
         return operation
 
             
-class Jinja2Rendering:
+class Jinja2TemplateEngine:
     def __init__(self, configuration={}, filters={}, globals={}, tests={}):
         if not HAVE_JINJA2:
-            raise Exception('jinja2 not installed; needed by this functor')
+            raise Exception('jinja2 not installed')
         # default configuration
         self.configuration = {'trim_blocks': True,
                               'lstrip_blocks': True,
@@ -267,17 +262,17 @@ class Jinja2Rendering:
             self.render(source_filename, target_filename, 
                         source_dir, target_dir, opt=options)
         return operation
-    
 
+    
 ## FUNCTOR CLASSES FOR PUBLIC USE
 
 class ExpandTemplate(SerialFunctor):
     def __init__(self, source_filename_key, target_filename_key,
-                 rendering_strategy=SimpleRendering(),
-                 source_dir_key=None, target_dir_key=None):
+                 engine=SimpleTemplateEngine(), source_dir_key=None,
+                 target_dir_key=None):
         self.source_filename_key = source_filename_key
         self.target_filename_key = target_filename_key
-        self.rendering_strategy = rendering_strategy
+        self.engine = engine
         self.source_dir_key = source_dir_key
         self.target_dir_key = target_dir_key
 
@@ -295,7 +290,7 @@ class ExpandTemplate(SerialFunctor):
         else:
             target_dir = '.'
             
-        operation = self.rendering_strategy.get_operation(
+        operation = self.engine.get_operation(
             options, source_filename, target_filename,
             source_dir, target_dir)
 
@@ -306,7 +301,7 @@ class ExpandTemplate(SerialFunctor):
 
 class RunProgram(ParallelFunctor):
     def __init__(self, command_line_arguments_key,
-                 prerequisite_filenames_key, target_name_key=None,
+                 prerequisite_filenames_key=None, target_name_key=None,
                  working_dir_key=None, error_filename_key=None):
         self.command_line_arguments_key = command_line_arguments_key
         self.prerequisite_filenames_key = prerequisite_filenames_key
@@ -316,8 +311,11 @@ class RunProgram(ParallelFunctor):
     
     def __call__(self, options):
         subp_args = options[self.command_line_arguments_key]
-        prerequisite_filenames = options[self.prerequisite_filenames_key]
-        
+        if self.prerequisite_filenames_key:
+            prerequisite_filenames = options[self.prerequisite_filenames_key]
+        else:
+            prerequisite_filenames = []
+            
         if self.target_name_key:
             target_name = options[self.target_name_key]
         else:
@@ -353,53 +351,3 @@ class RunProgram(ParallelFunctor):
                 options, [operation], prerequisite_filenames,
                 target_name=target_name)
         
-
-            
-## ALTERNATIVE CONSTRUCTORS
-
-class OptionsArrayFactory:
-    """
-    Provides an OptionsArray constructor with an alternative system
-    for naming the nodes.  For example, where
-
-       OptionsArray('array1', [class1, class2])
-       OptionsArray('array2', range(3))
-
-    produces nodes named ['class1', 'class2'] and ['0', '1', '2'],
-
-       factory = OptionsArrayFactory()
-       factory('array1', [class1, class2])
-       factory('array2', range(3))
-
-    produces nodes named ['A00', 'A01'] and ['B00', 'B01', 'B02'].
-    """
-    def __init__(self, array_index_formatter=None, node_index_formatter=None):
-        self.array_index = 0
-        if not array_index_formatter:
-            self.array_index_formatter = self.default_array_index_formatter
-        if not node_index_formatter:
-            self.node_index_formatter = self.default_node_index_formatter
-
-    @staticmethod
-    def default_array_index_formatter(i):
-        "Converts 0, 1, 2,... to A, B, C,... "
-        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i]
-
-    @staticmethod
-    def default_node_index_formatter(i):
-        "Converts 0, 1, 2,... to 00, 01, 02,... "
-        return '{:02d}'.format(i)
-        
-    def __call__(self, array_name, elements):
-        nodes = []
-        for node_index, el in enumerate(elements):
-            node_name = self.array_index_formatter(self.array_index) +\
-                        self.node_index_formatter(node_index)
-            nodes.append(
-                OptionsNode(node_name, el, array_name=array_name))
-
-        # bump the array counter for next time
-        self.array_index += 1
-        return OptionsArray(array_name, nodes)
-
-

@@ -6,10 +6,11 @@ from options_array import OptionsArray
 
 # provide some useful stuff
 from options_dict import CallableEntry, Lookup, GetString, freeze
+from options_array import OptionsArrayFactory
 from options_tree_elements import product
 from utilities import check_entries, pretty_print, smap, pmap, \
-    SimpleRendering, Jinja2Rendering, ExpandTemplate, RunProgram, \
-    OptionsArrayFactory
+    ExpandTemplate, RunProgram, SimpleTemplateEngine, \
+    Jinja2TemplateEngine
 
 # everything else will be accessible via the subpackage syntax,
 # e.g. "from options_iteration.options_dict import OptionsDictException".
