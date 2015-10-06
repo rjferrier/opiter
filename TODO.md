@@ -1,13 +1,18 @@
 - [ ] Interface
-  - [x] Rename the `str` method to avoid confusion with the `str` idiom
   - [ ] Change NodeInfo method names to be more semantically correct
-  - [x] Introduce an OptionsDict.get_position method so that the user
-        doesn't have to touch get_node_info
+  - [ ] Change `rendering_strategy` to `engine`, make
+        prerequisite_filenames_key optional.
 
 - [ ] OptionsTreeElement behaviour
   - [ ] Consider reworking `collapse` as a generator
   - [ ] Separate mutating and nonmutating methods to avoid confusion.
         Consider deprecating/removing the former.
+  - [x] Introduce `names` optional argument into OptionsArray constructor
+  - [ ] Add a branch narrowing method (inverse of del)
+
+- [ ] Syntax
+  - [ ] Remove the necessity for `opt.` before every key in Jinja 2
+        templates
   
 - [ ] Tidy up
   - [ ] Review/update docstrings

@@ -31,12 +31,17 @@ def check_entries(options_tree):
         for key in od.keys():
             od[key]
             
-def pretty_print(options_tree):
+def pretty_print(options_tree, keys=[]):
     """
-    Prints options_tree in tree form.
+    Prints options_tree in tree form and optionally the values
+    corresponding to some keys.
     """
+    if isinstance(keys, str):
+        keys = [keys]
     for od in options_tree.collapse():
         print od.get_string(formatter='tree')
+        for k in keys:
+            print '{}{}: {}'.format(od.indent(), k, od[k])
 
 
 ## PROCESSING FUNCTIONS
