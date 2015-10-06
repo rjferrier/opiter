@@ -330,7 +330,7 @@ class RunProgram(ParallelFunctor):
         if self.working_dir_key:
             working_dir = options[self.working_dir_key]
         else:
-            working_dir = None
+            working_dir = '.'
 
         with ChDir(working_dir):
             def operation():

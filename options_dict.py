@@ -81,8 +81,8 @@ class OptionsDict(dict):
     mutable_attributes = ['_node_info']
     protected_attributes = [
         'donate_copy', 'indent', 'create_node_info_formatter', 
-        'expand_template_file', 'expand_template_string', 'freeze',
-        'get_position', 'get_node_info', 'get_string', 'set_node_info', 
+        'expand_template_string', 'freeze', 'get_position',
+        'get_node_info', 'get_string', 'set_node_info', 
         'update']
     
     def __init__(self, entries={}):
