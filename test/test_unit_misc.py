@@ -1,6 +1,11 @@
 import unittest
 from options_dict import Lookup, GetString, freeze
 
+        
+# TODO: test the optional arguments on freeze.  It's not high priority
+# since these args are simply forwarded to the method of the same
+# name.
+
 
 class TestOptionsDictHelpers(unittest.TestCase):
     
@@ -24,7 +29,7 @@ class TestOptionsDictHelpers(unittest.TestCase):
         class Freezable:
             def __init__(self):
                 self.frozen = False
-            def freeze(self):
+            def freeze(self, clean=False, recursive=False):
                 self.frozen = True
         self.objs = [Freezable()] * 3
         before = [obj.frozen for obj in self.objs]
@@ -41,6 +46,7 @@ class TestOptionsDictHelpers(unittest.TestCase):
         freeze(self.objs)
         after = [obj.frozen for obj in self.objs]
         self.assertEqual(after, [False] * 3)
+
 
         
 if __name__ == '__main__':

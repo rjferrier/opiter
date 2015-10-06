@@ -143,7 +143,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         self.od['pipe_diameter'] = 0.15
         self.assertAlmostEqual(self.od['Reynolds_number'], 3000.)
 
-    def test_nested_entry(self):
+    def test_twice_removed_dynamic_entry(self):
         """
         I add an 'observation' entry which depends on Reynolds_number.
         When velocity is changed, observation should update
@@ -164,7 +164,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         self.od['velocity'] = 0.05
         self.assertEqual(self.od['observation'], 'turbulent')
         
-    def test_nested_object(self):
+    def test_independence_after_duplication(self):
         """
         Suppose I use self.od to create a new OptionsDict.  The new
         object should be equivalent, but not identical to, the old
@@ -214,6 +214,61 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         self.od.freeze(clean=True)
         self.assertRaises(KeyError, lambda: self.od['velocity'])
 
+
+class TestNestedOptionsDictBasics(unittest.TestCase):
+
+    def setUp(self):
+        self.od = UnitOptionsDict({
+            'inner': UnitOptionsDict({
+                'foo': 'bar'})})
+        
+    def test_equal(self):
+        other = UnitOptionsDict({
+            'inner': UnitOptionsDict({
+                'foo': 'bar'})})
+        self.assertEqual(self.od, other)
+        
+    def test_unequal(self):
+        other = UnitOptionsDict({
+            'inner': UnitOptionsDict({})})
+        self.assertNotEqual(self.od, other)
+    
+    def test_setitem_dot_syntax(self):
+        self.od.inner.baz = 'qux'
+        self.assertEqual(self.od['inner']['baz'], 'qux')
+        
+    def test_getitem_dot_syntax(self):
+        self.assertEqual(self.od.inner.foo, 'bar')
+
+        
+class TestNestedOptionsDictDynamicEntries(unittest.TestCase):
+    
+    def setUp(self):
+        inner_od = UnitOptionsDict({
+            'foo': 1,
+            'bar': lambda self: self['foo'] + 1})
+        self.od = UnitOptionsDict({
+            'inner': inner_od,
+            'baz': lambda self: self['inner']['bar'] + 1})
+
+    def test_nested_dynamic_entry(self):
+        self.od['inner']['foo'] = 2
+        self.assertEqual(self.od['inner']['bar'], 3)
+        self.assertEqual(self.od['baz'], 4)
+        
+    def test_nonrecursive_freeze(self):
+        self.od.freeze()
+        self.od['inner']['foo'] = 2
+        self.assertEqual(self.od['inner']['bar'], 3)
+        self.assertEqual(self.od['baz'], 3)
+        
+    def test_recursive_freeze(self):
+        self.od.freeze(recursive=True)
+        self.od['inner']['foo'] = 2
+        self.assertEqual(self.od['inner']['bar'], 2)
+        self.assertEqual(self.od['baz'], 3)
+
+        
         
 class TestOptionsDictFromClassDynamicEntries(unittest.TestCase):
 

@@ -471,13 +471,12 @@ class GetString:
             relative=self.relative, formatter=self.formatter)
 
     
-# TODO update according to method options
-def freeze(options_dicts):
+def freeze(options_dicts, clean=False, recursive=False):
     """
     Freezes the given OptionsDicts.  See OptionsDict.freeze for
     further information.
     """
     result = deepcopy(options_dicts)
     for od in result:
-        od.freeze()
+        od.freeze(clean=clean, recursive=recursive)
     return result
