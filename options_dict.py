@@ -127,38 +127,25 @@ class OptionsDict(dict):
         raise default_err
 
 
-    def freeze(self, clean=False, recursive=False):
+    def freeze(self, recursive=False):
         """
         Converts all dynamic entries to static ones.  This may be
         necessary before multiprocessing, because Python's native
         pickle module has trouble serialising any lambdas (anonymous
-        functions) residing in the dict.
-
-        If clean is set to True, any entries prone to pickling errors
-        (callables, dynamic entries with missing dependencies) will be
-        removed.  This means errors will not be raised if said entries
-        are not needed.
+        functions) residing in the dict, or before passing to a
+        template engine.
         """
+        kwargs = {'recursive': recursive}
         for k in self.keys():
-            try:
-                self[k] = self[k]
-                
-                if clean and isinstance(self[k], CallableEntry):
-                    del self[k]
-                elif recursive:
-                    # TESTME
-                    self._try_freeze(self[k], clean)
-                    self._try_freeze_iterable(self[k], clean)
-                    
-            except (KeyError, AttributeError):
-                if clean:
-                    del self[k]
-                else:
-                    raise
-                
+            self[k] = self[k]
+            
+            if recursive:
+                self._try_freeze(self[k], **kwargs)
+                self._try_freeze_iterable(self[k], **kwargs)
+        
         # return self so as to be inlineable
         return self
-
+    
             
     def get_string(self, only=[], exclude=[], absolute={}, relative={}, 
             formatter=None, only_indent=False):
@@ -365,17 +352,17 @@ class OptionsDict(dict):
                 "the name in mutable_attributes.")
 
     @staticmethod
-    def _try_freeze(item, clean):
+    def _try_freeze(item, **kwargs):
         try:
-            item.freeze(clean)
+            item.freeze(**kwargs)
         except AttributeError:
             pass
 
     @classmethod
-    def _try_freeze_iterable(cls, item, clean):
+    def _try_freeze_iterable(cls, item, **kwargs):
         try:
             for el in item:
-                cls._try_freeze(el, clean)
+                cls._try_freeze(el, **kwargs)
         except TypeError:
             pass
         
@@ -473,12 +460,12 @@ class GetString:
             relative=self.relative, formatter=self.formatter)
 
     
-def freeze(options_dicts, clean=False, recursive=False):
+def freeze(options_dicts, **kwargs):
     """
     Freezes the given OptionsDicts.  See OptionsDict.freeze for
     further information.
     """
     result = deepcopy(options_dicts)
     for od in result:
-        od.freeze(clean=clean, recursive=recursive)
+        od.freeze(**kwargs)
     return result

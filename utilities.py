@@ -17,15 +17,6 @@ except:
     
 ## DIAGNOSTIC FUNCTIONS
 
-def check_entries(options_tree):
-    """
-    Evaluates each entry in each options dictionary in options_tree.
-    Errors will be thrown for missing or invalid dependencies.
-    """
-    for od in options_tree.collapse():
-        for key in od.keys():
-            od[key]
-            
 def pretty_print(options_tree, keys=[]):
     """
     Prints options_tree in tree form and optionally the values
@@ -55,13 +46,13 @@ def smap(functor, options_tree, message=None):
     
 
 def pmap(functor, options_tree, message=None, nprocs_max=None,
-         in_reverse=False, recursive_freeze=False, clean_entries=False):
+         in_reverse=False):
     "Parallel processing"
     functor.check_processing(True)
     options_dicts = options_tree.collapse()
     nprocs = get_nprocs(len(options_dicts), nprocs_max)
     for opt in options_dicts:
-        opt.freeze(recursive=recursive_freeze, clean=clean_entries)
+        opt.freeze(recursive=True)
     if in_reverse:
         options_dicts.reverse()
     functor.preamble(options_dicts[0])
@@ -261,7 +252,7 @@ class Jinja2TemplateEngine:
         def operation():
             # need to convert the nonstandard dictionary entries
             # otherwise jinja2 will get confused
-            options.freeze(clean=True, recursive=True)
+            options.freeze(recursive=True)
             self.render(source_filename, target_filename, 
                         source_dir, target_dir, **options)
             

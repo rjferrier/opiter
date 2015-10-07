@@ -117,21 +117,6 @@ class TestCallableEntry(unittest.TestCase):
         self.assertEqual(self.od['my_func'](1), 2)
         self.assertEqual(self.od['my_func'](1, 2), 3)
 
-    def test_freeze(self):
-        """
-        Freezing should not affect the existence of the callable.
-        """
-        self.od.freeze()
-        self.od['my_func']
-
-    def test_freeze_and_clean(self):
-        """
-        Freezing with the clean option should remove the callable so that
-        the whole object is safe to pickle.
-        """
-        self.od.freeze(clean=True)
-        self.assertRaises(KeyError, lambda: self.od['my_func'])
-
         
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,7 @@
 - [ ] Interface
   - [ ] Change NodeInfo method names to be more semantically correct
+  - [ ] Change "dynamic" entries to "dependent" entries; change `freeze`
+        to `remove_links`
 
 - [ ] OptionsTreeElement behaviour
   - [ ] Consider reworking `collapse` as a generator
@@ -7,10 +9,11 @@
         Consider deprecating/removing the former.
   - [ ] Add a branch narrowing method (inverse of del)
 
-- [x] Syntax
-  - [x] Remove the necessity for `opt.` before every key in Jinja 2
-        templates
-  
+- [ ] OptionsDict behaviour
+  - [ ] Reimplement __iter__ to be recursive
+  - [ ] Implement clean and check functors with "not pickleable" and
+        "missing dependencies" criteria
+
 - [ ] Tidy up
   - [ ] Review/update docstrings
   - [ ] Replace isinstance tests with try-except blocks
