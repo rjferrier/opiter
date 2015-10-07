@@ -2,7 +2,7 @@ import unittest
 from options_tree_elements import product
 from options_array import OptionsArray
 from options_array import OptionsNode
-from options_dict import OptionsDict, Lookup, freeze
+from options_dict import OptionsDict, Lookup, remove_links
 from multiprocessing import Pool
 from copy import deepcopy
 
@@ -13,9 +13,9 @@ from copy import deepcopy
 def pool():
     return Pool(2)
 
-def add_dynamic_entry(tree_element):
+def add_dependent_entry(tree_element):
     """
-    Implements a dynamic entry which returns the product of 'letter'
+    Implements a dependent entry which returns the product of 'letter'
     and 'number' entries, treating A, B, C as 1, 2, 3.
     """
     tree_element.update({'product': lambda opt: \
@@ -269,8 +269,8 @@ A
 
     def test_collapse_mp_safe(self):
         self.node.update({'letter': 'A', 'number': 2})
-        add_dynamic_entry(self.node)
-        ods = freeze(self.node.collapse())
+        add_dependent_entry(self.node)
+        ods = remove_links(self.node.collapse())
         results = pool().map(Lookup('product'), ods)
         self.assertEqual(results, [2])
 
@@ -431,10 +431,10 @@ letter: C
         self.assertEqual([od.get_string() for od in array_ods],
                          ['A_1', 'B_1', 'C_1'])
 
-    def test_collapse_and_freeze(self):
+    def test_collapse_and_remove_links(self):
         self.array.update({'number': 2})
-        add_dynamic_entry(self.array)
-        ods = freeze(self.array.collapse())
+        add_dependent_entry(self.array)
+        ods = remove_links(self.array.collapse())
         results = pool().map(Lookup('product'), ods)
         expected = [2, 4, 6]
         self.assertEqual(results, expected)
@@ -496,9 +496,9 @@ class TestTreeOperations(unittest.TestCase):
     def setUp(self):
         letters = OptionsArray('letter', ['A', 'B'])
         numbers = OptionsArray('number', range(2))
-        # putting dynamic entries on the leaves is the most rigorous
+        # putting dependent entries on the leaves is the most rigorous
         # way of testing them after a tree collapse
-        add_dynamic_entry(numbers)
+        add_dependent_entry(numbers)
         self.tree = letters * numbers
         self.node = OptionsNode('i')
         self.array = OptionsArray('subnumber', ['i', 'ii', 'iii'])
@@ -692,8 +692,8 @@ letter: B
         self.assertEqual([od.get_string() for od in tree_ods],
                          ['A_0_ii', 'A_1_ii', 'B_0_ii', 'B_1_ii'])
 
-    def test_collapse_and_freeze(self):
-        ods = freeze(self.tree.collapse())
+    def test_collapse_and_remove_links(self):
+        ods = remove_links(self.tree.collapse())
         results = pool().map(Lookup('product'), ods)
         expected = [0, 1, 0, 2]
         self.assertEqual(results, expected)
@@ -771,7 +771,7 @@ class TestTreeWithRootNodeOperations(unittest.TestCase):
         letters = OptionsArray('letter', ['A', 'B'])
         numbers = OptionsArray('number', range(2))
         # way of testing them after a tree collapse
-        add_dynamic_entry(numbers)
+        add_dependent_entry(numbers)
         self.tree = root * letters * numbers
         self.node = OptionsNode('i')
 

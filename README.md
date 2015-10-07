@@ -70,8 +70,8 @@ Reynolds_numbers = p.map(calculate_Re, options_dicts)
 In practice, the client may have to deal with many dependent variables
 that would clutter the function body.  For this reason, an
 `OptionsDict` has some extra functionality compared to a conventional
-dict.  Entries can be defined as dynamic, updating automatically
-according to the values of others.  Such dynamic entries may be
+dict.  Entries can be defined as dependent, updating automatically
+according to the values of others.  Such dependent entries may be
 defined by (possibly inherited) methods in the classes used to
 construct the options...
 
@@ -112,12 +112,13 @@ options_tree.update([observation])
 ```
  
 A caveat is that, if they are defined using non-global functions such
-as lambdas, dynamic entries have to be converted back to static values
-before multiprocessing.  This is because Python's `pickle` module has
-trouble serialising these types of functions.  The `freeze` function
-is provided for converting dynamic entries.
+as lambdas, dependent entries have to be converted back to independent
+values before multiprocessing.  This is because Python's `pickle`
+module has trouble serialising these types of functions.  The
+`remove_links` function is provided for converting dependent entries.
 
 ```python
 options_dicts = options_tree.collapse()
-Reynolds_numbers = p.map(Lookup('Reynolds_number'), freeze(options_dicts))
+Reynolds_numbers = p.map(Lookup('Reynolds_number'),
+                         remove_links(options_dicts))
 ```

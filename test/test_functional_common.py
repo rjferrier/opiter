@@ -36,7 +36,7 @@ class TestOptionsDictTreeIteration(unittest.TestCase):
              3     10, 20
 
         This should be possible using the attach and product
-        functions.  I will implement a dynamic entry at the root of
+        functions.  I will implement a dependent entry at the root of
         the tree to calculate the computational cost.
         """
         dims = OptionsArray('dim', [1, 2, 3], name_format='{}d')

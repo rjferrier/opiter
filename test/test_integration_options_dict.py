@@ -110,7 +110,7 @@ class TestCallableEntry(unittest.TestCase):
 
     def test_as_function(self):
         """
-        The callable should not evaluate like a dynamic entry but instead
+        The callable should not evaluate like a dependent entry but instead
         remain intact and work as intended.
         """
         self.assertIsInstance(self.od['my_func'], CallableEntry)

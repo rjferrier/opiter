@@ -5,7 +5,7 @@ from options_node import OptionsNode
 from options_array import OptionsArray
 
 # provide some useful stuff
-from options_dict import CallableEntry, Lookup, GetString, freeze
+from options_dict import CallableEntry, Lookup, GetString, remove_links
 from options_array import OptionsArrayFactory
 from options_tree_elements import product
 from utilities import pretty_print, smap, pmap, \

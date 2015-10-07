@@ -1,6 +1,6 @@
 - [ ] Interface
   - [ ] Change NodeInfo method names to be more semantically correct
-  - [ ] Change "dynamic" entries to "dependent" entries; change `freeze`
+  - [x] Change "dynamic" entries to "dependent" entries; change `freeze`
         to `remove_links`
 
 - [ ] OptionsTreeElement behaviour
@@ -10,7 +10,7 @@
   - [ ] Add a branch narrowing method (inverse of del)
 
 - [ ] OptionsDict behaviour
-  - [ ] Reimplement __iter__ to be recursive
+  - [ ] Implement recursive iterator
   - [ ] Implement clean and check functors with "not pickleable" and
         "missing dependencies" criteria
 

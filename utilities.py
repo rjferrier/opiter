@@ -52,7 +52,7 @@ def pmap(functor, options_tree, message=None, nprocs_max=None,
     options_dicts = options_tree.collapse()
     nprocs = get_nprocs(len(options_dicts), nprocs_max)
     for opt in options_dicts:
-        opt.freeze(recursive=True)
+        opt.remove_links(recursive=True)
     if in_reverse:
         options_dicts.reverse()
     functor.preamble(options_dicts[0])
@@ -252,7 +252,7 @@ class Jinja2TemplateEngine:
         def operation():
             # need to convert the nonstandard dictionary entries
             # otherwise jinja2 will get confused
-            options.freeze(recursive=True)
+            options.remove_links(recursive=True)
             self.render(source_filename, target_filename, 
                         source_dir, target_dir, **options)
             

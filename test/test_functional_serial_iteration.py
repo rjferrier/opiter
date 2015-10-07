@@ -22,9 +22,9 @@ class TestOptionsDictCartesianProductSerialIteration(
             result = od['speed'] * od['travel_time']
             self.assertAlmostEqual(result, expected)
             
-    def test_manual_iteration_with_extra_dict_and_dynamic_entry(self):
+    def test_manual_iteration_with_extra_dict_and_dependent_entry(self):
         """
-        I define distance as a dynamic entry and pass a corresponding
+        I define distance as a dependent entry and pass a corresponding
         Lookup functor to a serial map.
         """
         self.tree.update({'distance': lambda opt: \

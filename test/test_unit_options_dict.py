@@ -11,7 +11,7 @@ class TestOptionsDictCreation(unittest.TestCase):
         """
         UnitOptionsDict({'foo': 'bar'})
 
-    def test_create_from_dynamic_entries(self):
+    def test_create_from_dependent_entries(self):
         """
         When I create an OptionsDict from an iterable of functions, there
         is no error.
@@ -98,8 +98,8 @@ class TestOptionsDictBasics(unittest.TestCase):
 
     def test_compare_with_options_dict_from_class(self):
         """
-        This can be done as long as there aren't any dynamic entries.
-        Dynamic entries are created from functions, and functions
+        This can be done as long as there aren't any dependent entries.
+        Dependent entries are created from functions, and functions
         created in different contexts aren't equal.
         """
         class basis:
@@ -108,12 +108,12 @@ class TestOptionsDictBasics(unittest.TestCase):
         self.assertEqual(self.od, od_from_class)
         
         
-class TestOptionsDictDynamicEntries(unittest.TestCase):
+class TestOptionsDictDependentEntries(unittest.TestCase):
     
     def setUp(self):
         """
         I create an OptionsDict with two variables: kinematic_viscosity
-        and pipe_diameter.  I define Reynolds_number, which is a dynamic
+        and pipe_diameter.  I define Reynolds_number, which is a dependent
         entry dependent on velocity, pipe_diameter and
         kinematic_viscosity.  I haven't defined velocity yet.
         """
@@ -133,7 +133,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         self.assertRaises(KeyError, 
                           lambda: self.od['Reynolds_number'])
 
-    def test_dynamic_entry(self):
+    def test_dependent_entry(self):
         """
         I define velocity and change one the variables.
         Reynolds_number should update automatically.
@@ -143,7 +143,7 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         self.od['pipe_diameter'] = 0.15
         self.assertAlmostEqual(self.od['Reynolds_number'], 3000.)
 
-    def test_twice_removed_dynamic_entry(self):
+    def test_twice_removed_dependent_entry(self):
         """
         I add an 'observation' entry which depends on Reynolds_number.
         When velocity is changed, observation should update
@@ -181,37 +181,37 @@ class TestOptionsDictDynamicEntries(unittest.TestCase):
         self.assertAlmostEqual(dd['Reynolds_number'], 2000.)
         self.assertAlmostEqual(self.od['Reynolds_number'], 0.)
 
-    def test_freeze(self):
+    def test_remove_links(self):
         """
         I set velocity, which should in turn set the Reynolds_number.
-        However, after I freeze the dictionary, redefining velocity
+        However, after I delink the dictionary, redefining velocity
         should not redefine the Reynolds number.
         """
         self.od['velocity'] = 0.02
         self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
-        self.od.freeze()
+        self.od.remove_links()
         self.od['velocity'] = 0.04
         self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
 
-    def test_freeze_with_missing_dependency(self):
-        self.assertRaises(KeyError, lambda: self.od.freeze())
+    def test_remove_links_with_missing_dependency(self):
+        self.assertRaises(KeyError, lambda: self.od.remove_links())
 
-    # def test_freeze_and_clean_missing_dependency(self):
+    # def test_remove_links_and_clean_missing_dependency(self):
     #     """
     #     Freezing can also remove entries with missing dependencies, so I
     #     won't get a KeyError right away.
     #     """
-    #     self.od.freeze(clean=True)
+    #     self.od.remove_links(clean=True)
     #     self.assertRaises(KeyError, lambda: self.od['velocity'])
 
-    # def test_freeze_and_clean_missing_dependency_via_dot_syntax(self):
+    # def test_remove_links_and_clean_missing_dependency_via_dot_syntax(self):
     #     """
     #     As above, but the dependency involves attribute-getting syntax.
     #     """
     #     def Reynolds_number(d):
     #         return d.velocity * d.pipe_diameter / d.kinematic_viscosity
     #     self.od.update([Reynolds_number])
-    #     self.od.freeze(clean=True)
+    #     self.od.remove_links(clean=True)
     #     self.assertRaises(KeyError, lambda: self.od['velocity'])
 
 
@@ -241,7 +241,7 @@ class TestNestedOptionsDictBasics(unittest.TestCase):
         self.assertEqual(self.od.inner.foo, 'bar')
 
         
-class TestNestedOptionsDictDynamicEntries(unittest.TestCase):
+class TestNestedOptionsDictDependentEntries(unittest.TestCase):
     
     def setUp(self):
         inner_od = UnitOptionsDict({
@@ -251,39 +251,39 @@ class TestNestedOptionsDictDynamicEntries(unittest.TestCase):
             'inner': inner_od,
             'baz': lambda self: self['inner']['bar'] + 1})
 
-    def test_nested_dynamic_entry(self):
+    def test_nested_dependent_entry(self):
         self.od['inner']['foo'] = 2
         self.assertEqual(self.od['inner']['bar'], 3)
         self.assertEqual(self.od['baz'], 4)
         
-    def test_nonrecursive_freeze(self):
-        self.od.freeze()
+    def test_nonrecursive_remove_links(self):
+        self.od.remove_links()
         self.od['inner']['foo'] = 2
         self.assertEqual(self.od['inner']['bar'], 3)
         self.assertEqual(self.od['baz'], 3)
         
-    def test_recursive_freeze(self):
-        self.od.freeze(recursive=True)
+    def test_recursive_remove_links(self):
+        self.od.remove_links(recursive=True)
         self.od['inner']['foo'] = 2
         self.assertEqual(self.od['inner']['bar'], 2)
         self.assertEqual(self.od['baz'], 3)
 
         
         
-class TestOptionsDictFromClassDynamicEntries(unittest.TestCase):
+class TestOptionsDictFromClassDependentEntries(unittest.TestCase):
 
-    def check_dynamic_entries(self):
+    def check_dependent_entries(self):
         self.od['velocity'] = 0.02
         self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
         self.od['pipe_diameter'] = 0.15
         self.assertAlmostEqual(self.od['Reynolds_number'], 3000.)
         
-    def test_dynamic_entry_from_simple_class(self):
+    def test_dependent_entry_from_simple_class(self):
         """
-        I repeat the setup and a key test in TestOptionsDictDynamicEntries,
+        I repeat the setup and a key test in TestOptionsDictDependentEntries,
         but I use a class with attributes and methods to construct the
         OptionsDict.  Ideally an equality check would be used to check the
-        state of this OptionsDict, but functions and hence dynamic entries
+        state of this OptionsDict, but functions and hence dependent entries
         created in different contexts are never equal.
         """
         class basis:
@@ -293,11 +293,11 @@ class TestOptionsDictFromClassDynamicEntries(unittest.TestCase):
                 return self['velocity'] * self['pipe_diameter'] / \
                     self['kinematic_viscosity']
         self.od = UnitOptionsDict(basis)
-        self.check_dynamic_entries()
+        self.check_dependent_entries()
 
-    def test_dynamic_entry_from_inheritance(self):
+    def test_dependent_entry_from_inheritance(self):
         """
-        This time the dynamic entry is inherited from a base class.
+        This time the dependent entry is inherited from a base class.
         """
         class parent_basis:
             def Reynolds_number(self):
@@ -307,11 +307,11 @@ class TestOptionsDictFromClassDynamicEntries(unittest.TestCase):
             kinematic_viscosity = 1.e-6
             pipe_diameter = 0.1
         self.od = UnitOptionsDict(child_basis)
-        self.check_dynamic_entries()
+        self.check_dependent_entries()
 
-    def test_dynamic_entry_from_multiple_inheritance(self):
+    def test_dependent_entry_from_multiple_inheritance(self):
         """
-        This time the dynamic entry is inherited from one of two parallel
+        This time the dependent entry is inherited from one of two parallel
         base classes.
         """
         class parent_basis_1:
@@ -327,9 +327,9 @@ class TestOptionsDictFromClassDynamicEntries(unittest.TestCase):
             kinematic_viscosity = 1.e-6
             pipe_diameter = 0.1
         self.od = UnitOptionsDict(child_basis)
-        self.check_dynamic_entries()
+        self.check_dependent_entries()
 
-    def test_dynamic_entry_from_extended_inheritance(self):
+    def test_dependent_entry_from_extended_inheritance(self):
         """
         This time the entries are spread over an extended inheritance
         hierarchy.
@@ -343,7 +343,7 @@ class TestOptionsDictFromClassDynamicEntries(unittest.TestCase):
         class child_basis(parent_basis):
             pipe_diameter = 0.1
         self.od = UnitOptionsDict(child_basis)
-        self.check_dynamic_entries()
+        self.check_dependent_entries()
             
 
 class TestOptionsDictTemplateExpansion(unittest.TestCase):

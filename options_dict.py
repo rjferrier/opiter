@@ -37,7 +37,7 @@ class OptionsDict(dict):
 
         As an added convenience, the OptionsDict can be constructed or
         updated from a class whose attributes represent the new
-        entries.  Any class methods will go on to become dynamic
+        entries.  Any class methods will go on to become dependent
         entries (see next note).
             class basis:
                 foo = 'bar'
@@ -53,12 +53,12 @@ class OptionsDict(dict):
         with a list of functions instead of the usual key-value pairs,
         in which case the functions' names become the keys.
 
-        N.B.  If dynamic entries are created using more exotic
+        N.B.  If dependent entries are created using more exotic
         constructs such lambdas or closures, it will be necessary to
-        call OptionsDict.freeze() before using the multiprocessing
+        call OptionsDict.remove_links before using the multiprocessing
         module, because it seems that such constructs cause pickling
-        problems.  freeze() gets around the problems by converting the
-        dynamic entries back to static ones.
+        problems.  remove_links gets around the problems by converting the
+        dependent entries back to independent ones.
 
     (3) An OptionsDict can be given 'node information' which lends the
         OptionsDict a name and describes its position in a tree.  This
@@ -81,7 +81,7 @@ class OptionsDict(dict):
     mutable_attributes = ['_node_info']
     protected_attributes = [
         'donate_copy', 'indent', 'create_node_info_formatter', 
-        'expand_template_string', 'freeze', 'get_position',
+        'expand_template_string', 'remove_links', 'get_position',
         'get_node_info', 'get_string', 'set_node_info', 
         'update']
     
@@ -93,7 +93,7 @@ class OptionsDict(dict):
         """
         # With just an entries argument, treat as a simple dict.  Set
         # the node_info list first.  This is necessary to prevent
-        # dynamic entries from possibly referencing the component
+        # dependent entries from possibly referencing the component
         # before it exists.
         self._node_info = []
         self.update(entries)
@@ -103,16 +103,16 @@ class OptionsDict(dict):
         """
         As with conventional dicts, updates entries with the key-value
         pairs given in the entries argument.  Alternatively, a list of
-        functions may be supplied which will go on to become dynamic
+        functions may be supplied which will go on to become dependent
         entries, or a class may be supplied whose attributes and
-        methods will go on to become conventional and dynamic entries,
+        methods will go on to become conventional and dependent entries,
         respectively.
         """
         default_err = OptionsDictException(
-            "\nArgument must be a dict, an iterable of dynamic entries "+\
+            "\nArgument must be a dict, an iterable of dependent entries "+\
             "(i.e. functions),\nor a class with attributes and/or methods.")
         for strategy in [self._update_from_dict,
-                         self._update_from_dynamic_entries,
+                         self._update_from_dependent_entries,
                          self._update_from_class]:
             try:
                 strategy(entries, default_err)
@@ -127,9 +127,9 @@ class OptionsDict(dict):
         raise default_err
 
 
-    def freeze(self, recursive=False):
+    def remove_links(self, recursive=False):
         """
-        Converts all dynamic entries to static ones.  This may be
+        Converts all dependent entries to independent ones.  This may be
         necessary before multiprocessing, because Python's native
         pickle module has trouble serialising any lambdas (anonymous
         functions) residing in the dict, or before passing to a
@@ -140,8 +140,8 @@ class OptionsDict(dict):
             self[k] = self[k]
             
             if recursive:
-                self._try_freeze(self[k], **kwargs)
-                self._try_freeze_iterable(self[k], **kwargs)
+                self._try_remove_links(self[k], **kwargs)
+                self._try_remove_links_iterable(self[k], **kwargs)
         
         # return self so as to be inlineable
         return self
@@ -313,7 +313,7 @@ class OptionsDict(dict):
         dict.update(self, other)
 
         
-    def _update_from_dynamic_entries(self, functions, default_error):
+    def _update_from_dependent_entries(self, functions, default_error):
         for func in functions:
             if not isinstance(func, FunctionType):
                 raise default_error
@@ -352,17 +352,17 @@ class OptionsDict(dict):
                 "the name in mutable_attributes.")
 
     @staticmethod
-    def _try_freeze(item, **kwargs):
+    def _try_remove_links(item, **kwargs):
         try:
-            item.freeze(**kwargs)
+            item.remove_links(**kwargs)
         except AttributeError:
             pass
 
     @classmethod
-    def _try_freeze_iterable(cls, item, **kwargs):
+    def _try_remove_links_iterable(cls, item, **kwargs):
         try:
             for el in item:
-                cls._try_freeze(el, **kwargs)
+                cls._try_remove_links(el, **kwargs)
         except TypeError:
             pass
         
@@ -405,7 +405,7 @@ class OptionsDict(dict):
             raise
         # recurse until the return value is no longer a function
         if isinstance(value, FunctionType):
-            # dynamic entry
+            # dependent entry
             return value(self)
         else:
             # normal entry
@@ -460,12 +460,12 @@ class GetString:
             relative=self.relative, formatter=self.formatter)
 
     
-def freeze(options_dicts, **kwargs):
+def remove_links(options_dicts, **kwargs):
     """
-    Freezes the given OptionsDicts.  See OptionsDict.freeze for
-    further information.
+    Converts dependent entries to dependent ones.  See
+    OptionsDict.remove_links for further information.
     """
     result = deepcopy(options_dicts)
     for od in result:
-        od.freeze(**kwargs)
+        od.remove_links(**kwargs)
     return result

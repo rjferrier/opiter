@@ -1,8 +1,8 @@
 import unittest
-from options_dict import Lookup, GetString, freeze
+from options_dict import Lookup, GetString, remove_links
 
         
-# TODO: test the optional arguments on freeze.  It's not high priority
+# TODO: test the optional arguments on remove_links.  It's not high priority
 # since these args are simply forwarded to the method of the same
 # name.
 
@@ -25,25 +25,25 @@ class TestOptionsDictHelpers(unittest.TestCase):
         results = map(functor, objs)
         self.assertEqual(results, ['abcde'] * 3)
 
-    def setUp_freeze_test(self):
-        class Freezable:
+    def setUp_remove_links_test(self):
+        class Delinkable:
             def __init__(self):
                 self.frozen = False
-            def freeze(self, clean=False, recursive=False):
+            def remove_links(self, clean=False, recursive=False):
                 self.frozen = True
-        self.objs = [Freezable()] * 3
+        self.objs = [Delinkable()] * 3
         before = [obj.frozen for obj in self.objs]
         self.assertEqual(before, [False] * 3)
         
-    def test_freeze(self):
-        self.setUp_freeze_test()
-        frozen_objs = freeze(self.objs)
+    def test_remove_links(self):
+        self.setUp_remove_links_test()
+        frozen_objs = remove_links(self.objs)
         after = [obj.frozen for obj in frozen_objs]
         self.assertEqual(after, [True] * 3)
 
-    def test_freeze_does_not_mutate_argument(self):
-        self.setUp_freeze_test()
-        freeze(self.objs)
+    def test_remove_links_does_not_mutate_argument(self):
+        self.setUp_remove_links_test()
+        remove_links(self.objs)
         after = [obj.frozen for obj in self.objs]
         self.assertEqual(after, [False] * 3)
 
