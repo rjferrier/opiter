@@ -5,6 +5,7 @@ from string import Template
 from copy import deepcopy
 from warnings import warn
 from itertools import chain
+from pickle import dumps, PicklingError
 
 
 class OptionsDictException(OptionsBaseException):
@@ -426,6 +427,56 @@ def unlink(target_dict, key):
     Removes the dependence of target_dict[key] on other entries.
     """
     target_dict[key] = target_dict[key]
+
+
+class Check:
+    """
+    Raises an OptionsDictException if an entry tests positive
+    according to some test function.  The function accepts a
+    dictionary and a key as arguments and may return a string to
+    customise the exception message.
+    """
+    def __init__(self, test):
+        self.test = test
+    def __call__(self, target_dict, key):
+        result = self.test(target_dict, key)
+        if result:
+            msg = result if isinstance(result, str) else \
+                  "this entry did not pass the criteria of " + \
+                  self.test.__name__
+            raise OptionsDictException(msg)
+        return None
+        
+
+class Remove:
+    """
+    Removes an entry if it tests positive according to some test
+    function.  The function accepts a dictionary and a key as
+    arguments.
+    """
+    def __init__(self, test):
+        self.test = test
+        
+    def __call__(self, target_dict, key):
+        if self.test(target_dict, key):
+            del target_dict[key]
+
+
+def missing_dependencies(target_dict, key):
+    try:
+        target_dict[key]
+        return None
+    except (KeyError, AttributeError) as e:
+        return "{} is dependent on missing entry {}".format(key, e)
+
+    
+def unpicklable(target_dict, key):
+    try:
+        dumps(target_dict[key])
+    except PicklingError:
+        return ("{} can't be pickled.  If it is a function, try defining "+\
+                "it in the module space rather than in a class or closure.").\
+                format(key)
 
 
 class CallableEntry:

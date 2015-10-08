@@ -6,7 +6,8 @@ from options_array import OptionsArray
 
 # provide some useful stuff
 from options_dict import CallableEntry, Lookup, GetString, \
-    transform_entries, unlink
+    transform_entries, unlink, Check, Remove, \
+    missing_dependencies, unpicklable
 from options_array import OptionsArrayFactory
 from options_tree_elements import product
 from utilities import pretty_print, smap, pmap, \

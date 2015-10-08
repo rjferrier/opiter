@@ -1,8 +1,39 @@
 import unittest
 from options_dict import Lookup, GetString, dict_key_pairs, \
-    transform_entries, unlink
+    transform_entries, unlink, OptionsDictException, Check, Remove, \
+    missing_dependencies, unpicklable
+
+
+class MixedEntries:
+    """
+    Class synthesising a dictionary with dependent entries.
+    """
+    def __init__(self, items):
+        self.items = items
+    def __getitem__(self, i):
+        val = self.items[i]
+        try:
+            return val(self)
+        except TypeError:
+            return val
+    def __setitem__(self, i, val):
+        self.items[i] = val
+
+                
+def not_bumpable(dictionary, key):
+    "For testing Check and Remove functors."
+    val = dictionary[key]
+    try: 
+        val += 1
+        return None
+    except TypeError:
+        return "this entry cannot be bumped by 1."
 
     
+def picklable_function(self):
+    "For testing unpicklable test function"
+    return "This function was declared in the module space."
+
     
 class TestOptionsDictHelpers(unittest.TestCase):
     
@@ -23,34 +54,67 @@ class TestOptionsDictHelpers(unittest.TestCase):
         self.assertEqual(results, ['abcde'] * 3)
 
 
+
 class TestTransformEntryFunctors(unittest.TestCase):
 
     def test_unlink(self):
-        class Foo:
-            """
-            Class synthesising dependent entries.
-            """
-            def __init__(self):
-                self.items = [0, lambda self: self[0] + 1]
-            def __getitem__(self, i):
-                val = self.items[i]
-                try:
-                    return val(self)
-                except TypeError:
-                    return val
-            def __setitem__(self, i, val):
-                self.items[i] = val
-        foo = Foo()
-        # is Foo working?
-        self.assertEqual(foo[1], 1)
-        foo[0] = 1
-        self.assertEqual(foo[1], 2)
+        mixed_entries = MixedEntries([0, lambda self: self[0] + 1])
+        # is MixedEntries working?
+        self.assertEqual(mixed_entries[1], 1)
+        mixed_entries[0] = 1
+        self.assertEqual(mixed_entries[1], 2)
         # now try unlinking.
-        unlink(foo, 1)
-        foo[0] = 2
-        self.assertEqual(foo[1], 2)
-            
+        unlink(mixed_entries, 1)
+        mixed_entries[0] = 2
+        self.assertEqual(mixed_entries[1], 2)
+        
+    def test_check(self):
+        tgt = {'a': 1,
+               'b': 'some_str',
+               'c': 3.14}
+        check = Check(not_bumpable)
+        for i in 'abc':
+            if i == 'b':
+                # this entry should raise an error
+                self.assertRaises(OptionsDictException,
+                                  lambda: check(tgt, i))
+            else:
+                # this one should not
+                check(tgt, i)
+        
+    def test_remove(self):
+        tgt = {'a': 1,
+               'b': 'some_str',
+               'c': 3.14}
+        rm = Remove(not_bumpable)
+        for i in 'abc':
+            rm(tgt, i)
+        self.assertEqual(tgt, {'a': 1, 'c': 3.14})
 
+
+        
+class TestTestFunctors(unittest.TestCase):
+
+    def test_missing_dependencies(self):
+        mixed_entries = MixedEntries({'a': 1,
+                                      'b': lambda self: self['c'] + 1})
+        self.assertFalse(
+            missing_dependencies(mixed_entries, 'a'))
+        self.assertTrue(
+            missing_dependencies(mixed_entries, 'b'))
+
+    def test_unpicklable(self):
+        def unpicklable_function(self):
+            return "This function was declared in a method."
+        entries = {'f1': picklable_function,
+                   'f2': unpicklable_function}
+        self.assertFalse(
+            unpicklable(entries, 'f1'))
+        self.assertTrue(
+            unpicklable(entries, 'f2'))
+    
+
+    
 class TestDictKeyPairsGenerator(unittest.TestCase):
     
     def setUp(self):

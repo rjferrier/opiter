@@ -7,8 +7,8 @@
         Consider deprecating/removing the former.
   - [ ] Add a branch narrowing method (inverse of del)
 
-- [ ] OptionsDict behaviour
-  - [ ] Implement clean and check functors with "not picklable" and
+- [x] OptionsDict behaviour
+  - [x] Implement clean and check functors with "not picklable" and
         "missing dependencies" criteria
 
 - [ ] Tidy up
