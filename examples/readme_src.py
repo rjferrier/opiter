@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 from __init__ import OptionsNode, OptionsArray, OptionsDict, Lookup, \
-    GetString, remove_links
+    GetString, transform_entries, unlink
 import multiprocessing
 
 # setup
@@ -75,10 +75,12 @@ def observation(opt):
 options_tree.update([observation])
 
 options_dicts = options_tree.collapse()
-Reynolds_numbers = p.map(Lookup('Reynolds_number'), remove_links(options_dicts))
+Reynolds_numbers = p.map(Lookup('Reynolds_number'),
+                         transform_entries(options_dicts, unlink))
 
 # for completeness...
-observations = p.map(Lookup('observation'), remove_links(options_dicts))
+observations = p.map(Lookup('observation'),
+                     transform_entries(options_dicts, unlink))
 for descr, Re, obs in \
     zip(map(GetString(), options_tree.collapse()),
         Reynolds_numbers, observations):

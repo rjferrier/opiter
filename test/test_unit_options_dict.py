@@ -3,6 +3,15 @@ from unit_options_dict import UnitOptionsDict, UnitNodeInfo, \
     OptionsDictException, NodeInfoException
 from types import MethodType
 
+
+def bump(target_dict, key):
+    "For testing transform_entries"
+    try:
+        target_dict[key] += 1
+    except TypeError:
+        pass
+
+    
 class TestOptionsDictCreation(unittest.TestCase):
 
     def test_create_from_dict(self):
@@ -181,39 +190,6 @@ class TestOptionsDictDependentEntries(unittest.TestCase):
         self.assertAlmostEqual(dd['Reynolds_number'], 2000.)
         self.assertAlmostEqual(self.od['Reynolds_number'], 0.)
 
-    def test_remove_links(self):
-        """
-        I set velocity, which should in turn set the Reynolds_number.
-        However, after I delink the dictionary, redefining velocity
-        should not redefine the Reynolds number.
-        """
-        self.od['velocity'] = 0.02
-        self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
-        self.od.remove_links()
-        self.od['velocity'] = 0.04
-        self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
-
-    def test_remove_links_with_missing_dependency(self):
-        self.assertRaises(KeyError, lambda: self.od.remove_links())
-
-    # def test_remove_links_and_clean_missing_dependency(self):
-    #     """
-    #     Freezing can also remove entries with missing dependencies, so I
-    #     won't get a KeyError right away.
-    #     """
-    #     self.od.remove_links(clean=True)
-    #     self.assertRaises(KeyError, lambda: self.od['velocity'])
-
-    # def test_remove_links_and_clean_missing_dependency_via_dot_syntax(self):
-    #     """
-    #     As above, but the dependency involves attribute-getting syntax.
-    #     """
-    #     def Reynolds_number(d):
-    #         return d.velocity * d.pipe_diameter / d.kinematic_viscosity
-    #     self.od.update([Reynolds_number])
-    #     self.od.remove_links(clean=True)
-    #     self.assertRaises(KeyError, lambda: self.od['velocity'])
-
 
 class TestNestedOptionsDictBasics(unittest.TestCase):
 
@@ -259,18 +235,6 @@ class TestNestedOptionsDictDependentEntries(unittest.TestCase):
         self.od['inner']['foo'] = 2
         self.assertEqual(self.od['inner']['bar'], 3)
         self.assertEqual(self.od['baz'], 4)
-        
-    def test_nonrecursive_remove_links(self):
-        self.od.remove_links()
-        self.od['inner']['foo'] = 2
-        self.assertEqual(self.od['inner']['bar'], 3)
-        self.assertEqual(self.od['baz'], 3)
-        
-    def test_recursive_remove_links(self):
-        self.od.remove_links(recursive=True)
-        self.od['inner']['foo'] = 2
-        self.assertEqual(self.od['inner']['bar'], 2)
-        self.assertEqual(self.od['baz'], 3)
 
         
         

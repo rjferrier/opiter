@@ -2,7 +2,7 @@ import unittest
 from test_functional_common import \
     TestOptionsDictCartesianProductIteration, \
     TestOptionsDictTreeIteration
-from options_dict import Lookup, GetString, remove_links
+from options_dict import Lookup, GetString, transform_entries, unlink
 from multiprocessing import Pool
 
 
@@ -24,7 +24,8 @@ class TestOptionsDictCartesianProductParallelIteration(
         test class)
         """
         options_dicts = self.tree.collapse()
-        results = pool().map(distance_func, remove_links(options_dicts))
+        results = pool().map(distance_func,
+                             transform_entries(options_dicts, unlink))
         self.assertAlmostEqual(results, self.expected_distances)
             
     def test_mapping_with_extra_dict_and_dependent_entry(self):
@@ -35,7 +36,8 @@ class TestOptionsDictCartesianProductParallelIteration(
         self.tree.update({'distance': lambda opt: \
                           opt['speed'] * opt['travel_time']})
         options_dicts = self.tree.collapse()
-        results = pool().map(Lookup('distance'), remove_links(options_dicts))
+        results = pool().map(Lookup('distance'),
+                             transform_entries(options_dicts, unlink))
         self.assertAlmostEqual(results, self.expected_distances)
 
 
@@ -43,12 +45,13 @@ class TestOptionsDictTreeParallelIteration(
         TestOptionsDictTreeIteration):
             
     def test_mapping_and_name_check(self):
-        resulting_names = pool().map(GetString(), remove_links(self.options_dicts))
+        resulting_names = pool().map(
+            GetString(), transform_entries(self.options_dicts, unlink))
         self.check_names(resulting_names)
             
     def test_mapping_and_lookup(self):
-        resulting_times = pool().map(Lookup('cost'),
-                                     remove_links(self.options_dicts))
+        resulting_times = pool().map(
+            Lookup('cost'), transform_entries(self.options_dicts, unlink))
         self.check_times(resulting_times)
 
             

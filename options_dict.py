@@ -55,10 +55,11 @@ class OptionsDict(dict):
 
         N.B.  If dependent entries are created using more exotic
         constructs such lambdas or closures, it will be necessary to
-        call OptionsDict.remove_links before using the multiprocessing
-        module, because it seems that such constructs cause pickling
-        problems.  remove_links gets around the problems by converting the
-        dependent entries back to independent ones.
+        call OptionsDict.transform_entries(unlink) before using the
+        multiprocessing module, because it seems that such constructs
+        cause pickling problems.  transform_entries(unlink) gets
+        around the problems by converting the dependent entries back
+        to independent ones.
 
     (3) An OptionsDict can be given 'node information' which lends the
         OptionsDict a name and describes its position in a tree.  This
@@ -81,9 +82,8 @@ class OptionsDict(dict):
     mutable_attributes = ['_node_info']
     protected_attributes = [
         'donate_copy', 'indent', 'create_node_info_formatter', 
-        'expand_template_string', 'remove_links', 'get_position',
-        'get_node_info', 'get_string', 'set_node_info', 
-        'update']
+        'expand_template_string', 'get_position', 'get_node_info', 
+        'get_string', 'set_node_info',  'transform_entries', 'update']
     
     def __init__(self, entries={}):
         """
@@ -126,7 +126,7 @@ class OptionsDict(dict):
         # the argument was incompatible
         raise default_err
 
-    # TESTME
+    
     def transform_entries(self, function, recursive=False):
         """
         Applies a function, which takes arguments of a dictionary and a
@@ -137,15 +137,7 @@ class OptionsDict(dict):
         for d, k in dict_key_pairs(self, recursive=recursive):
             function(d, k)
 
-    def remove_links(self, recursive=False):
-        """
-        Converts all dependent entries to independent ones.  This may be
-        necessary before multiprocessing (because Python's native
-        pickle module may have trouble serialising functions) or
-        before passing to a template engine.
-        """
-        self.transform_entries(unlink, recursive=recursive)
-        
+            
     def get_string(self, only=[], exclude=[], absolute={}, relative={}, 
             formatter=None, only_indent=False):
         """
@@ -349,21 +341,6 @@ class OptionsDict(dict):
                 "would clash \nwith an attribute of the same name.  If you "+\
                 "want to set this attribute,\n you will need to register "+\
                 "the name in mutable_attributes.")
-
-    @staticmethod
-    def _try_remove_links(item, **kwargs):
-        try:
-            item.remove_links(**kwargs)
-        except AttributeError:
-            pass
-
-    @classmethod
-    def _try_remove_links_iterable(cls, item, **kwargs):
-        try:
-            for el in item:
-                cls._try_remove_links(el, **kwargs)
-        except TypeError:
-            pass
         
     def __str__(self):
         return self.get_string()
@@ -429,23 +406,28 @@ def dict_key_pairs(this_dict, key=None, recursive=False):
     else: 
         yield this_dict, key
 
-        
-# TESTME    
-def unlink(options_dict, key):
+    
+def transform_entries(options_dicts, function, recursive=False):
     """
-    Removes the dependence of options_dict[key] on other entries.
+    Applies a function, which takes arguments of a dictionary and a
+    key, to the entries in options_dicts.  If recursive is set to True
+    then the function will be applied to nested dictionaries as well.
+    A fresh deep copy is made so that the original options_dicts are
+    not mutated.
     """
-    options_dict[key] = options_dict[key]
+    result = deepcopy(options_dicts)
+    for d in result:
+        d.transform_entries(function, recursive=recursive)
+    return result
 
-    
-# TODO:
-# def function_chain(functions):
-#     def function(options_dict, key):
-#         for f in functions:
-#             f(options_dict, key)
-#     return function
-    
-        
+
+def unlink(target_dict, key):
+    """
+    Removes the dependence of target_dict[key] on other entries.
+    """
+    target_dict[key] = target_dict[key]
+
+
 class CallableEntry:
     """
     Because the OptionsDict works by evaluating all function objects
@@ -492,16 +474,3 @@ class GetString:
         return options_dict.get_string(
             only=self.only, exclude=self.exclude, absolute=self.absolute,
             relative=self.relative, formatter=self.formatter)
-
-    
-# TODO: generalise as transform_elements(options_dicts, function,
-# recursive=False)
-def remove_links(options_dicts, **kwargs):
-    """
-    Converts dependent entries to dependent ones.  See
-    OptionsDict.remove_links for further information.
-    """
-    result = deepcopy(options_dicts)
-    for od in result:
-        od.remove_links(**kwargs)
-    return result

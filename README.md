@@ -111,14 +111,17 @@ def observation(opt):
 options_tree.update([observation])
 ```
  
-A caveat is that, if they are defined using non-global functions such
-as lambdas, dependent entries have to be converted back to independent
-values before multiprocessing.  This is because Python's `pickle`
-module has trouble serialising these types of functions.  The
-`remove_links` function is provided for converting dependent entries.
+A caveat is that dependent entries may have to be converted back to
+independent values before multiprocessing.  This is because Python's
+`pickle` module has trouble serialising anonymous and locally defined
+functions.  Template engines such as Jinja2 may also need dependent
+entries to be converted back to regular dictionary entries.  A
+`transform_entries` function is provided for such a purpose.  It
+accepts function objects such as `unlink`, `check` and `remove` to
+help the user deal with troublesome entries.
 
 ```python
 options_dicts = options_tree.collapse()
 Reynolds_numbers = p.map(Lookup('Reynolds_number'),
-                         remove_links(options_dicts))
+                         transform_entries(options_dicts, unlink))
 ```

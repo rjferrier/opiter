@@ -1,7 +1,9 @@
 import unittest
-from options_dict import Lookup, GetString, dict_key_pairs, remove_links
+from options_dict import Lookup, GetString, dict_key_pairs, \
+    transform_entries, unlink
 
-        
+    
+    
 class TestOptionsDictHelpers(unittest.TestCase):
     
     def test_lookup_functor(self):
@@ -20,33 +22,39 @@ class TestOptionsDictHelpers(unittest.TestCase):
         results = map(functor, objs)
         self.assertEqual(results, ['abcde'] * 3)
 
-    def setUp_remove_links_test(self):
-        class Delinkable:
+
+class TestTransformEntryFunctors(unittest.TestCase):
+
+    def test_unlink(self):
+        class Foo:
+            """
+            Class synthesising dependent entries.
+            """
             def __init__(self):
-                self.frozen = False
-            def remove_links(self, clean=False, recursive=False):
-                self.frozen = True
-        self.objs = [Delinkable()] * 3
-        before = [obj.frozen for obj in self.objs]
-        self.assertEqual(before, [False] * 3)
-        
-    def test_remove_links(self):
-        self.setUp_remove_links_test()
-        frozen_objs = remove_links(self.objs)
-        after = [obj.frozen for obj in frozen_objs]
-        self.assertEqual(after, [True] * 3)
+                self.items = [0, lambda self: self[0] + 1]
+            def __getitem__(self, i):
+                val = self.items[i]
+                try:
+                    return val(self)
+                except TypeError:
+                    return val
+            def __setitem__(self, i, val):
+                self.items[i] = val
+        foo = Foo()
+        # is Foo working?
+        self.assertEqual(foo[1], 1)
+        foo[0] = 1
+        self.assertEqual(foo[1], 2)
+        # now try unlinking.
+        unlink(foo, 1)
+        foo[0] = 2
+        self.assertEqual(foo[1], 2)
+            
 
-    def test_remove_links_does_not_mutate_argument(self):
-        self.setUp_remove_links_test()
-        remove_links(self.objs)
-        after = [obj.frozen for obj in self.objs]
-        self.assertEqual(after, [False] * 3)
-
-
-class TestOptionsDictRecursiveHelpers(unittest.TestCase):
-
+class TestDictKeyPairsGenerator(unittest.TestCase):
+    
     def setUp(self):
-        self.obj = {
+        self.dict = {
             'A': 1,
             'B': {
                 'C': 2,
@@ -54,28 +62,28 @@ class TestOptionsDictRecursiveHelpers(unittest.TestCase):
                     'E': 3}}}
 
     def test_nonrecursive_dict_key_pairs(self):
-        self.assertEqual([d[k] for d, k in dict_key_pairs(self.obj)],
+        self.assertEqual([d[k] for d, k in dict_key_pairs(self.dict)],
                          [1, {'C': 2, 'D': {'E': 3}}])
 
     def test_nonrecursive_dict_key_pairs_given_key(self):
-        self.assertEqual([d[k] for d, k in dict_key_pairs(self.obj, 'A')],
+        self.assertEqual([d[k] for d, k in dict_key_pairs(self.dict, 'A')],
                          [1])
-        self.assertEqual([d[k] for d, k in dict_key_pairs(self.obj, 'B')],
+        self.assertEqual([d[k] for d, k in dict_key_pairs(self.dict, 'B')],
                          [2, {'E': 3}])
 
     def test_recursive_dict_key_pairs(self):
         self.assertEqual(
-            [d[k] for d, k in dict_key_pairs(self.obj, recursive=True)],
+            [d[k] for d, k in dict_key_pairs(self.dict, recursive=True)],
             [1, 2, 3])
 
     def test_recursive_dict_key_pairs_given_key(self):
         self.assertEqual(
-            [d[k] for d, k in dict_key_pairs(self.obj, 'A', recursive=True)],
+            [d[k] for d, k in dict_key_pairs(self.dict, 'A', recursive=True)],
             [1])
         self.assertEqual(
-            [d[k] for d, k in dict_key_pairs(self.obj, 'B', recursive=True)],
+            [d[k] for d, k in dict_key_pairs(self.dict, 'B', recursive=True)],
             [2, 3])
-
         
+    
 if __name__ == '__main__':
     unittest.main()
