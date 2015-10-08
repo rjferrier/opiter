@@ -1,7 +1,5 @@
 - [ ] Interface
   - [ ] Change NodeInfo method names to be more semantically correct
-  - [x] Change "dynamic" entries to "dependent" entries; change `freeze`
-        to `remove_links`
 
 - [ ] OptionsTreeElement behaviour
   - [ ] Consider reworking `collapse` as a generator
@@ -9,8 +7,8 @@
         Consider deprecating/removing the former.
   - [ ] Add a branch narrowing method (inverse of del)
 
-- [ ] OptionsDict behaviour
-  - [ ] Implement recursive iterator
+- [x] OptionsDict behaviour
+  - [x] Implement recursive iterator
   - [ ] Implement clean and check functors with "not pickleable" and
         "missing dependencies" criteria
 

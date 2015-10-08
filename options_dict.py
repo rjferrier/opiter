@@ -4,7 +4,7 @@ from types import FunctionType
 from string import Template
 from copy import deepcopy
 from warnings import warn
-
+from itertools import chain
 
 
 class OptionsDictException(OptionsBaseException):
@@ -12,8 +12,8 @@ class OptionsDictException(OptionsBaseException):
 
 class NodeInfoException(OptionsBaseException):
     pass
-
         
+
 class OptionsDict(dict):
     """
     An OptionsDict inherits from a conventional dict, but it has a few
@@ -126,27 +126,26 @@ class OptionsDict(dict):
         # the argument was incompatible
         raise default_err
 
+    # TESTME
+    def transform_entries(self, function, recursive=False):
+        """
+        Applies a function, which takes arguments of a dictionary and a
+        key, to the entries in the present OptionsDict.  If recursive
+        is set to True then the function will be applied to nested
+        dictionaries as well.
+        """
+        for d, k in dict_key_pairs(self, recursive=recursive):
+            function(d, k)
 
     def remove_links(self, recursive=False):
         """
         Converts all dependent entries to independent ones.  This may be
-        necessary before multiprocessing, because Python's native
-        pickle module has trouble serialising any lambdas (anonymous
-        functions) residing in the dict, or before passing to a
-        template engine.
+        necessary before multiprocessing (because Python's native
+        pickle module may have trouble serialising functions) or
+        before passing to a template engine.
         """
-        kwargs = {'recursive': recursive}
-        for k in self.keys():
-            self[k] = self[k]
-            
-            if recursive:
-                self._try_remove_links(self[k], **kwargs)
-                self._try_remove_links_iterable(self[k], **kwargs)
+        self.transform_entries(unlink, recursive=recursive)
         
-        # return self so as to be inlineable
-        return self
-    
-            
     def get_string(self, only=[], exclude=[], absolute={}, relative={}, 
             formatter=None, only_indent=False):
         """
@@ -411,6 +410,41 @@ class OptionsDict(dict):
             # normal entry
             return value
 
+
+def dict_key_pairs(this_dict, key=None, recursive=False):
+    """
+    Generator that yields dict-key pairs for a given dict.  When
+    recursive is True, nested dicts are included; otherwise only the
+    given dict and its keys are returned.
+    """
+    subdict = this_dict[key] if key else this_dict
+    if isinstance(subdict, dict):
+        for subkey in subdict.keys():
+            if recursive:
+                for d, k in dict_key_pairs(subdict, subkey,
+                                           recursive=recursive):
+                    yield d, k
+            else:
+                yield subdict, subkey
+    else: 
+        yield this_dict, key
+
+        
+# TESTME    
+def unlink(options_dict, key):
+    """
+    Removes the dependence of options_dict[key] on other entries.
+    """
+    options_dict[key] = options_dict[key]
+
+    
+# TODO:
+# def function_chain(functions):
+#     def function(options_dict, key):
+#         for f in functions:
+#             f(options_dict, key)
+#     return function
+    
         
 class CallableEntry:
     """
@@ -460,6 +494,8 @@ class GetString:
             relative=self.relative, formatter=self.formatter)
 
     
+# TODO: generalise as transform_elements(options_dicts, function,
+# recursive=False)
 def remove_links(options_dicts, **kwargs):
     """
     Converts dependent entries to dependent ones.  See

@@ -1,12 +1,7 @@
 import unittest
-from options_dict import Lookup, GetString, remove_links
+from options_dict import Lookup, GetString, dict_key_pairs, remove_links
 
         
-# TODO: test the optional arguments on remove_links.  It's not high priority
-# since these args are simply forwarded to the method of the same
-# name.
-
-
 class TestOptionsDictHelpers(unittest.TestCase):
     
     def test_lookup_functor(self):
@@ -47,6 +42,39 @@ class TestOptionsDictHelpers(unittest.TestCase):
         after = [obj.frozen for obj in self.objs]
         self.assertEqual(after, [False] * 3)
 
+
+class TestOptionsDictRecursiveHelpers(unittest.TestCase):
+
+    def setUp(self):
+        self.obj = {
+            'A': 1,
+            'B': {
+                'C': 2,
+                'D': {
+                    'E': 3}}}
+
+    def test_nonrecursive_dict_key_pairs(self):
+        self.assertEqual([d[k] for d, k in dict_key_pairs(self.obj)],
+                         [1, {'C': 2, 'D': {'E': 3}}])
+
+    def test_nonrecursive_dict_key_pairs_given_key(self):
+        self.assertEqual([d[k] for d, k in dict_key_pairs(self.obj, 'A')],
+                         [1])
+        self.assertEqual([d[k] for d, k in dict_key_pairs(self.obj, 'B')],
+                         [2, {'E': 3}])
+
+    def test_recursive_dict_key_pairs(self):
+        self.assertEqual(
+            [d[k] for d, k in dict_key_pairs(self.obj, recursive=True)],
+            [1, 2, 3])
+
+    def test_recursive_dict_key_pairs_given_key(self):
+        self.assertEqual(
+            [d[k] for d, k in dict_key_pairs(self.obj, 'A', recursive=True)],
+            [1])
+        self.assertEqual(
+            [d[k] for d, k in dict_key_pairs(self.obj, 'B', recursive=True)],
+            [2, 3])
 
         
 if __name__ == '__main__':

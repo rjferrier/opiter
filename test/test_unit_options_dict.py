@@ -219,27 +219,31 @@ class TestNestedOptionsDictBasics(unittest.TestCase):
 
     def setUp(self):
         self.od = UnitOptionsDict({
-            'inner': UnitOptionsDict({
-                'foo': 'bar'})})
+            'foo': 1,
+            'bar': UnitOptionsDict({
+                'baz': 2})})
         
     def test_equal(self):
         other = UnitOptionsDict({
-            'inner': UnitOptionsDict({
-                'foo': 'bar'})})
+            'foo': 1,
+            'bar': UnitOptionsDict({
+                'baz': 2})})
         self.assertEqual(self.od, other)
         
     def test_unequal(self):
         other = UnitOptionsDict({
-            'inner': UnitOptionsDict({})})
+            'foo': 1,
+            'bar': UnitOptionsDict({})})
         self.assertNotEqual(self.od, other)
     
     def test_setitem_dot_syntax(self):
-        self.od.inner.baz = 'qux'
-        self.assertEqual(self.od['inner']['baz'], 'qux')
+        self.od.bar.baz = 3
+        self.assertEqual(self.od['bar']['baz'], 3)
         
     def test_getitem_dot_syntax(self):
-        self.assertEqual(self.od.inner.foo, 'bar')
+        self.assertEqual(self.od.bar.baz, 2)
 
+        
         
 class TestNestedOptionsDictDependentEntries(unittest.TestCase):
     
