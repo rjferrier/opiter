@@ -7,6 +7,8 @@ import os
 import multiprocessing
 import subprocess
 import sys
+from options_dict import Sequence, unlink, Check, Remove, \
+    unpicklable, missing_dependencies
 
 try:
     import jinja2
@@ -32,10 +34,18 @@ def pretty_print(options_tree, keys=[]):
 
 ## PROCESSING FUNCTIONS
 
-def smap(functor, options_tree, message=None):
-    "Serial processing"
+def smap(functor, options_tree, message=None, preprocessing=[]):
+    """
+    Serial processing.  The user may specify custom transformations on
+    the entries in the preprocessing list (e.g. [unlink]).
+    """
     functor.check_processing(False)
     options_dicts = options_tree.collapse()
+
+    # apply transforms
+    for opt in options_dicts:
+        opt.transform_entries(Sequence(preprocessing), recursive=True)
+
     functor.preamble(options_dicts[0])
     if message:
         print '\n' + message
@@ -46,15 +56,31 @@ def smap(functor, options_tree, message=None):
     
 
 def pmap(functor, options_tree, message=None, nprocs_max=None,
-         in_reverse=False):
-    "Parallel processing"
+         in_reverse=False, preprocessing=[
+             Check(missing_dependencies), unlink, Check(unpicklable)]):
+    """
+    Parallel processing.
+
+    Default preprocessing functions that are applied to each entry
+    include checking for missing dependencies, unlinking, and checking
+    that the entry is picklable.  The user may remove the checks by
+    supplying an empty preprocessing argument, but unlinking will
+    always be performed since dependent entries cause pickling
+    problems.
+    """
+    
     functor.check_processing(True)
     options_dicts = options_tree.collapse()
     nprocs = get_nprocs(len(options_dicts), nprocs_max)
+
+    if unlink not in preprocessing:
+        preprocessing.append(unlink)
     for opt in options_dicts:
-        opt.transform_entries(unlink, recursive=True)
+        opt.transform_entries(Sequence(preprocessing), recursive=True)
+        
     if in_reverse:
         options_dicts.reverse()
+        
     functor.preamble(options_dicts[0])
     p = multiprocessing.Pool(nprocs)
     if message:
@@ -69,6 +95,10 @@ def pmap(functor, options_tree, message=None, nprocs_max=None,
 ## HELPERS
 
 def get_nprocs(iterable_length, nprocs_max=None):
+    """
+    Returns an appropriate number of processors to be used for
+    multiprocessing.
+    """
     nprocs = os.getenv('NPROC')
     if not nprocs:
         nprocs = multiprocessing.cpu_count()

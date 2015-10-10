@@ -2,7 +2,7 @@
   - [ ] Change NodeInfo method names to be more semantically correct
 
 - [ ] OptionsTreeElement behaviour
-  - [ ] Consider reworking `collapse` as a generator
+  - [ ] Implement a recursive iterator; refactor methods accordingly.
   - [ ] Separate mutating and nonmutating methods to avoid confusion.
         Consider deprecating/removing the former.
   - [ ] Add a branch narrowing method (inverse of del)

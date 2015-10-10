@@ -117,7 +117,7 @@ independent values before multiprocessing.  This is because Python's
 functions.  Template engines such as Jinja2 may also need dependent
 entries to be converted back to regular dictionary entries.  A
 `transform_entries` function is provided for such a purpose.  It
-accepts function objects such as `unlink`, `check` and `remove` to
+accepts function objects such as `unlink`, `Check` and `Remove` to
 help the user deal with troublesome entries.
 
 ```python

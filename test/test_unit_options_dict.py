@@ -219,7 +219,22 @@ class TestNestedOptionsDictBasics(unittest.TestCase):
     def test_getitem_dot_syntax(self):
         self.assertEqual(self.od.bar.baz, 2)
 
-        
+    def test_nonrecursive_transform_entries(self):
+        self.od.transform_entries(bump)
+        expected = UnitOptionsDict({
+            'foo': 2,
+            'bar': UnitOptionsDict({
+                'baz': 2})})
+        self.assertEqual(self.od, expected)
+
+    def test_recursive_transform_entries(self):
+        self.od.transform_entries(bump, recursive=True)
+        expected = UnitOptionsDict({
+            'foo': 2,
+            'bar': UnitOptionsDict({
+                'baz': 3})})
+        self.assertEqual(self.od, expected)
+
         
 class TestNestedOptionsDictDependentEntries(unittest.TestCase):
     

@@ -1,7 +1,7 @@
 import unittest
 from options_dict import Lookup, GetString, dict_key_pairs, \
     transform_entries, unlink, OptionsDictException, Check, Remove, \
-    missing_dependencies, unpicklable
+    Sequence, missing_dependencies, unpicklable
 
 
 class MixedEntries:
@@ -33,6 +33,16 @@ def not_bumpable(dictionary, key):
 def picklable_function(self):
     "For testing unpicklable test function"
     return "This function was declared in the module space."
+
+
+def bump(dictionary, key):
+    "For testing Sequence functor"
+    dictionary[key] += 1
+
+def double(dictionary, key):
+    "For testing Sequence functor"
+    dictionary[key] *= 2
+    
 
     
 class TestOptionsDictHelpers(unittest.TestCase):
@@ -90,7 +100,14 @@ class TestTransformEntryFunctors(unittest.TestCase):
         for i in 'abc':
             rm(tgt, i)
         self.assertEqual(tgt, {'a': 1, 'c': 3.14})
-
+        
+    def test_sequence(self):
+        tgt = [1, 2, 3]
+        seq = Sequence([double, bump])
+        for i in range(3):
+            seq(tgt, i)
+        self.assertEqual(tgt, [3, 5, 7])
+        
 
         
 class TestTestFunctors(unittest.TestCase):
@@ -147,7 +164,7 @@ class TestDictKeyPairsGenerator(unittest.TestCase):
         self.assertEqual(
             [d[k] for d, k in dict_key_pairs(self.dict, 'B', recursive=True)],
             [2, 3])
+
         
-    
 if __name__ == '__main__':
     unittest.main()

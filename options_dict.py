@@ -395,17 +395,28 @@ def dict_key_pairs(this_dict, key=None, recursive=False):
     recursive is True, nested dicts are included; otherwise only the
     given dict and its keys are returned.
     """
-    subdict = this_dict[key] if key else this_dict
-    if isinstance(subdict, dict):
-        for subkey in subdict.keys():
-            if recursive:
-                for d, k in dict_key_pairs(subdict, subkey,
-                                           recursive=recursive):
-                    yield d, k
-            else:
-                yield subdict, subkey
-    else: 
+    # get the first entry, which could be a sub-dictionary
+    try:
+        subdict = this_dict[key] if key else this_dict
+        if isinstance(subdict, dict):
+            # if a sub-dictionary, loop over its items
+            for subkey in subdict.keys():
+                if recursive:
+                    # if recursing, get the next level of dict-key pairs
+                    for d, k in dict_key_pairs(subdict, subkey,
+                                               recursive=recursive):
+                        yield d, k
+                else:
+                    yield subdict, subkey
+        else:
+            yield this_dict, key
+            
+    except (KeyError, AttributeError):
+        # the first entry could also be a dependent entry with missing
+        # dependency, in which case a KeyError or AttributeError will
+        # be raised
         yield this_dict, key
+        
 
     
 def transform_entries(options_dicts, function, recursive=False):
@@ -477,6 +488,15 @@ def unpicklable(target_dict, key):
         return ("{} can't be pickled.  If it is a function, try defining "+\
                 "it in the module space rather than in a class or closure.").\
                 format(key)
+
+
+class Sequence:
+    def __init__(self, functors):
+        self.functors = functors
+
+    def __call__(self, target_dict, key):
+        for func in self.functors:
+            func(target_dict, key)
 
 
 class CallableEntry:
