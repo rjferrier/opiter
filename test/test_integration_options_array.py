@@ -4,6 +4,15 @@ from options_node import OptionsNode, OrphanNodeInfo
 from options_dict import OptionsDict
     
 
+def dict_function(d):
+    "For testing apply_hooks"
+    d.update({'A': -1})
+
+def item_function(d, k):
+    "For testing apply_hooks"
+    d[k] += 1
+
+    
 class TestOptionsArrayCreation(unittest.TestCase):
 
     def test_create(self):
@@ -245,6 +254,21 @@ class TestOptionsArraySlice(unittest.TestCase):
         for i, el in enumerate(self.array.collapse()):
             pos = el.get_position()
             self.assertTrue(pos.is_at(i))
+
+            
+class TestOptionsArrayWithHooks(unittest.TestCase):
+    
+    def test_apply_dict_hooks(self):
+        array = OptionsArray('A', range(3), dict_hooks=[dict_function])
+        ods = array.collapse()
+        for od in ods:
+            self.assertEqual(od['A'], -1)
+
+    def test_apply_item_hooks(self):
+        array = OptionsArray('A', range(3), item_hooks=[item_function])
+        ods = array.collapse()
+        for od, i in zip(ods, [1, 2, 3]):
+            self.assertEqual(od['A'], i)
 
             
 if __name__ == '__main__':

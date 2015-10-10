@@ -3,6 +3,15 @@ from options_node import OptionsNode, OrphanNodeInfo
 from options_dict import OptionsDict
     
 
+def dict_function(d):
+    "For testing apply_hooks"
+    d.update({'bar': 'baz'})
+
+def item_function(d, k):
+    "For testing apply_hooks"
+    d[k] += 1
+
+    
 class TestOptionsNodeCreation(unittest.TestCase):
     
     def check_name_and_items(self, node, expected_name, expected_items={}):
@@ -132,6 +141,20 @@ class TestOptionsNodeWithChild(unittest.TestCase):
         node_from_class = OptionsNode(foo, child=OptionsNode(qux))
         self.assertEqual(node_from_class, self.node)
 
+
+class TestOptionsNodeWithHooks(unittest.TestCase):
+
+    def test_apply_dict_hooks(self):
+        node = OptionsNode('foo', {'bar': 1}, dict_hooks=[dict_function])
+        ods = node.collapse()
+        self.assertEqual(ods[0]['bar'], 'baz')
+
+    def test_apply_item_hooks(self):
+        node = OptionsNode('foo', {'bar': 1}, item_hooks=[item_function])
+        ods = node.collapse()
+        self.assertEqual(ods[0]['bar'], 2)
+        
+        
 
 if __name__ == '__main__':
     unittest.main()

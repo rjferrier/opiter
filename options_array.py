@@ -76,7 +76,8 @@ class OptionsArray(OptionsTreeElement):
     A sequence of OptionsNodes.
     """
 
-    def __init__(self, array_name, elements, names=None, name_format='{}'):
+    def __init__(self, array_name, elements, names=None, name_format='{}',
+                 dict_hooks=[], item_hooks=[]):
         """
         Returns an OptionsArray, wrapping the given elements as
         OptionsNodes where necessary.
@@ -102,9 +103,11 @@ class OptionsArray(OptionsTreeElement):
         string or a callable that takes the element value and returns
         a string.
         """
+        OptionsTreeElement.__init__(self, dict_hooks=dict_hooks,
+                                    item_hooks=item_hooks)
         self.name = array_name
         self.nodes = []
-
+        
         if names:
             arg_list = zip(names, elements)
         else:
@@ -159,8 +162,10 @@ class OptionsArray(OptionsTreeElement):
         result = []
         for el in self:
             result += el.collapse()
+            
+        self.apply_hooks(result)
         return result
-
+    
         
     def multiply_attach(self, tree):
         """

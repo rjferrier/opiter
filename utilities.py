@@ -34,7 +34,7 @@ def pretty_print(options_tree, keys=[]):
 
 ## PROCESSING FUNCTIONS
 
-def smap(functor, options_tree, message=None, preprocessing=[]):
+def smap(functor, options_tree, message=None, dict_hooks=[], item_hooks=[]):
     """
     Serial processing.  The user may specify custom transformations on
     the items in the preprocessing list (e.g. [unlink]).
@@ -42,10 +42,13 @@ def smap(functor, options_tree, message=None, preprocessing=[]):
     functor.check_processing(False)
     options_dicts = options_tree.collapse()
 
-    # apply transforms
+    # apply hooks
     for opt in options_dicts:
-        opt.transform_items(Sequence(preprocessing), recursive=True)
+        for func in dict_hooks:
+            func(opt)
+        opt.transform_items(Sequence(item_hooks), recursive=True)
 
+    # processing
     functor.preamble(options_dicts[0])
     if message:
         print '\n' + message
@@ -56,7 +59,7 @@ def smap(functor, options_tree, message=None, preprocessing=[]):
     
 
 def pmap(functor, options_tree, message=None, nprocs_max=None,
-         in_reverse=False, preprocessing=[
+         in_reverse=False, dict_hooks=[], item_hooks=[
              Check(missing_dependencies), unlink, Check(unpicklable)]):
     """
     Parallel processing.
@@ -73,14 +76,18 @@ def pmap(functor, options_tree, message=None, nprocs_max=None,
     options_dicts = options_tree.collapse()
     nprocs = get_nprocs(len(options_dicts), nprocs_max)
 
+    # default and apply hooks
     if unlink not in preprocessing:
         preprocessing.append(unlink)
     for opt in options_dicts:
-        opt.transform_items(Sequence(preprocessing), recursive=True)
-        
+        for func in dict_hooks:
+            func(opt)
+        opt.transform_items(Sequence(item_hooks), recursive=True)
+
     if in_reverse:
         options_dicts.reverse()
         
+    # processing
     functor.preamble(options_dicts[0])
     p = multiprocessing.Pool(nprocs)
     if message:

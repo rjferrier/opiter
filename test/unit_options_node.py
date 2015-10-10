@@ -29,6 +29,8 @@ class UnitOptionsNode(OptionsNode):
         class FakeOptionsDict(dict):
             def set_node_info(self, node_info):
                 pass
+            def transform_items(self, functions, recursive=False):
+                pass
         return FakeOptionsDict()
         
     def create_info(self):

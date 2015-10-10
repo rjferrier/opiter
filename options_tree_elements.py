@@ -103,6 +103,26 @@ class OptionsTreeElement:
     OptionsNode can act as a branch as well as a leaf, so it shares
     some of the parent-child functionality.
     """
+    def __init__(self, dict_hooks=[], item_hooks=[]):
+        self.dict_hooks = dict_hooks
+        self.item_hooks = item_hooks
+        
+    def apply_hooks(self, options_dicts):
+        """
+        Loops over options_dicts, applying the functions in
+        self.dict_hooks and self.item_hooks.  In the latter case the
+        dictionary items are looped over and each item hook is applied
+        within an inner loop.
+        """
+        for od in options_dicts:
+            for func in self.dict_hooks:
+                func(od)
+            # could import the Sequence functor here, but writing a
+            # closure is trivial and incurs no coupling
+            def run_item_hooks(target_dict, key):
+                for func in self.item_hooks:
+                    func(target_dict, key)
+            od.transform_items(run_item_hooks, recursive=True)
 
     def __ne__(self, other):
         return not self == other

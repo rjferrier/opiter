@@ -52,8 +52,8 @@ class OptionsNode(OptionsTreeElement):
     Contains an options dictionary and optionally a child
     OptionsTreeElement, hence forming a tree structure.
     """
-    def __init__(self, arg1={}, arg2={}, child=None,
-                 name_format='{}', array_name=None):
+    def __init__(self, arg1={}, arg2={}, child=None, name_format='{}',
+                 array_name=None, dict_hooks=[], item_hooks=[]):
         """
         Constructs an OptionsNode, inferring a name from arg1 and an
         options dictionary from arg1 and arg2, if present.
@@ -80,6 +80,8 @@ class OptionsNode(OptionsTreeElement):
                                        **class.__dict__
           items                        **items
         """
+        OptionsTreeElement.__init__(self, dict_hooks=dict_hooks,
+                                    item_hooks=item_hooks)
 
         # try and infer a name from the first arg 
         self.set_name_general(arg1, name_format)
@@ -200,16 +202,15 @@ class OptionsNode(OptionsTreeElement):
                 od = deepcopy(self.options_dict)
                 od.update(sub_od)
                 result.append(od)
-            # return the merged dictionaries
-            return result
             
         except AttributeError:
             # this is a leaf, so just return the current options
             # dictionary as a one-element list
             result = [deepcopy(self.options_dict)]
 
+        self.apply_hooks(result)
         return result
-
+    
             
     def multiply_attach(self, tree):
         """
