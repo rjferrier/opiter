@@ -68,7 +68,7 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
 
     def test_other_node_name_from_absolute_index_in_dict(self):
         """
-        The absolute index might be supplied via a dictionary of entries
+        The absolute index might be supplied via a dictionary of items
         in the form {array_name: index}.  A deficient dictionary will
         cause the node name to default.
         """
@@ -78,7 +78,7 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
 
     def test_other_node_name_from_relative_index_in_dict(self):
         """
-        The relative index might be supplied via a dictionary of entries
+        The relative index might be supplied via a dictionary of items
         in the form {array_name: index}.  A deficient dictionary will
         cause the node name to default.
         """

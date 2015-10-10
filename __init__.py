@@ -5,8 +5,8 @@ from options_node import OptionsNode
 from options_array import OptionsArray
 
 # provide some useful stuff
-from options_dict import CallableEntry, Lookup, GetString, \
-    transform_entries, unlink, Check, Remove, \
+from options_dict import CallableOption, Lookup, GetString, \
+    transform_items, unlink, Check, Remove, \
     missing_dependencies, unpicklable
 from options_array import OptionsArrayFactory
 from options_tree_elements import product

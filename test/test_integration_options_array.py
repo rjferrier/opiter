@@ -78,7 +78,7 @@ class TestOptionsArrayBasics(unittest.TestCase):
         self.assertEqual(str(node), '<baz>')
         self.assertEqual(dict(node.collapse()[0]), {'random': 'baz'})
 
-    def test_create_options_node_from_node_and_entries(self):
+    def test_create_options_node_from_node_and_items(self):
         src = OptionsNode('baz', {'a': 0})
         node = self.array.create_options_node(src, {'b': 1})
         self.assertIsInstance(node, OptionsNode)

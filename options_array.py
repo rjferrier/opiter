@@ -37,7 +37,7 @@ class ArrayNodeInfo(NodeInfo):
         however, this shall not apply when a relative index is given.
 
         The optional arguments may also be supplied as dicts with
-        entries of the form {array_name: index}.  In this case, the
+        items of the form {array_name: index}.  In this case, the
         the indices will be dereferenced if possible using the present
         array name.
 
@@ -83,7 +83,7 @@ class OptionsArray(OptionsTreeElement):
 
         If a given element is not already an OptionsNode, a new
         OptionsNode is created whose embedded dictionary includes the
-        entry {array_name: element}.  This feature is useful for
+        item {array_name: element}.  This feature is useful for
         setting up an independent variable with an associated array of
         values.
 
@@ -203,12 +203,12 @@ class OptionsArray(OptionsTreeElement):
         return sum([el.count_leaves() for el in self.nodes])
 
         
-    def update(self, entries):
+    def update(self, items):
         """
-        Updates the leaf dictionaries with entries.
+        Updates the leaf dictionaries with items.
         """
         for el in self:
-            el.update(entries)
+            el.update(items)
 
 
     def update_node_info(self):

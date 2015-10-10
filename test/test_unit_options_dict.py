@@ -5,7 +5,7 @@ from types import MethodType
 
 
 def bump(target_dict, key):
-    "For testing transform_entries"
+    "For testing transform_items"
     try:
         target_dict[key] += 1
     except TypeError:
@@ -20,7 +20,7 @@ class TestOptionsDictCreation(unittest.TestCase):
         """
         UnitOptionsDict({'foo': 'bar'})
 
-    def test_create_from_dependent_entries(self):
+    def test_create_from_dependent_items(self):
         """
         When I create an OptionsDict from an iterable of functions, there
         is no error.
@@ -51,7 +51,7 @@ class TestOptionsDictCreation(unittest.TestCase):
 
     def test_create_with_attribute_name_clash(self):
         """
-        When I create an OptionsDict and one of my entries has the same
+        When I create an OptionsDict and one of my items has the same
         name as a preexisting attribute, an error should be raised.
         """
         create_od = lambda: UnitOptionsDict({'get_string': 'hello'})
@@ -59,7 +59,7 @@ class TestOptionsDictCreation(unittest.TestCase):
 
     def test_create_with_underscore_prefixed_item_name(self):
         """
-        When I create an OptionsDict and one of my entries has the same
+        When I create an OptionsDict and one of my items has the same
         name as a preexisting attribute, an error should be raised.
         """
         create_od = lambda: UnitOptionsDict({'_foo': 'bar'})
@@ -70,7 +70,7 @@ class TestOptionsDictBasics(unittest.TestCase):
     
     def setUp(self):
         "I create an anonymous OptionsDict."
-        self.od = UnitOptionsDict(entries={'foo': 'bar'})
+        self.od = UnitOptionsDict(items={'foo': 'bar'})
         
     def test_equal(self):
         self.assertEqual(self.od, UnitOptionsDict({'foo': 'bar'}))
@@ -107,8 +107,8 @@ class TestOptionsDictBasics(unittest.TestCase):
 
     def test_compare_with_options_dict_from_class(self):
         """
-        This can be done as long as there aren't any dependent entries.
-        Dependent entries are created from functions, and functions
+        This can be done as long as there aren't any dependent items.
+        Dependent items are created from functions, and functions
         created in different contexts aren't equal.
         """
         class basis:
@@ -117,13 +117,13 @@ class TestOptionsDictBasics(unittest.TestCase):
         self.assertEqual(self.od, od_from_class)
         
         
-class TestOptionsDictDependentEntries(unittest.TestCase):
+class TestOptionsDictDependentItems(unittest.TestCase):
     
     def setUp(self):
         """
         I create an OptionsDict with two variables: kinematic_viscosity
         and pipe_diameter.  I define Reynolds_number, which is a dependent
-        entry dependent on velocity, pipe_diameter and
+        item dependent on velocity, pipe_diameter and
         kinematic_viscosity.  I haven't defined velocity yet.
         """
         self.od = UnitOptionsDict({
@@ -142,7 +142,7 @@ class TestOptionsDictDependentEntries(unittest.TestCase):
         self.assertRaises(KeyError, 
                           lambda: self.od['Reynolds_number'])
 
-    def test_dependent_entry(self):
+    def test_dependent_item(self):
         """
         I define velocity and change one the variables.
         Reynolds_number should update automatically.
@@ -152,9 +152,9 @@ class TestOptionsDictDependentEntries(unittest.TestCase):
         self.od['pipe_diameter'] = 0.15
         self.assertAlmostEqual(self.od['Reynolds_number'], 3000.)
 
-    def test_twice_removed_dependent_entry(self):
+    def test_twice_removed_dependent_item(self):
         """
-        I add an 'observation' entry which depends on Reynolds_number.
+        I add an 'observation' item which depends on Reynolds_number.
         When velocity is changed, observation should update
         automatically.
         """
@@ -184,7 +184,7 @@ class TestOptionsDictDependentEntries(unittest.TestCase):
         # test for equivalence and non-identity
         self.assertEqual(dd, self.od)
         self.assertFalse(dd is self.od)
-        # try changing the new object.  Its options entries should
+        # try changing the new object.  Its options items should
         # update accordingly, while the old object should be unaffected
         dd['velocity'] = 0.02
         self.assertAlmostEqual(dd['Reynolds_number'], 2000.)
@@ -219,16 +219,16 @@ class TestNestedOptionsDictBasics(unittest.TestCase):
     def test_getitem_dot_syntax(self):
         self.assertEqual(self.od.bar.baz, 2)
 
-    def test_nonrecursive_transform_entries(self):
-        self.od.transform_entries(bump)
+    def test_nonrecursive_transform_items(self):
+        self.od.transform_items(bump)
         expected = UnitOptionsDict({
             'foo': 2,
             'bar': UnitOptionsDict({
                 'baz': 2})})
         self.assertEqual(self.od, expected)
 
-    def test_recursive_transform_entries(self):
-        self.od.transform_entries(bump, recursive=True)
+    def test_recursive_transform_items(self):
+        self.od.transform_items(bump, recursive=True)
         expected = UnitOptionsDict({
             'foo': 2,
             'bar': UnitOptionsDict({
@@ -236,7 +236,7 @@ class TestNestedOptionsDictBasics(unittest.TestCase):
         self.assertEqual(self.od, expected)
 
         
-class TestNestedOptionsDictDependentEntries(unittest.TestCase):
+class TestNestedOptionsDictDependentItems(unittest.TestCase):
     
     def setUp(self):
         inner_od = UnitOptionsDict({
@@ -246,27 +246,27 @@ class TestNestedOptionsDictDependentEntries(unittest.TestCase):
             'inner': inner_od,
             'baz': lambda self: self['inner']['bar'] + 1})
 
-    def test_nested_dependent_entry(self):
+    def test_nested_dependent_item(self):
         self.od['inner']['foo'] = 2
         self.assertEqual(self.od['inner']['bar'], 3)
         self.assertEqual(self.od['baz'], 4)
 
         
         
-class TestOptionsDictFromClassDependentEntries(unittest.TestCase):
+class TestOptionsDictFromClassDependentItems(unittest.TestCase):
 
-    def check_dependent_entries(self):
+    def check_dependent_items(self):
         self.od['velocity'] = 0.02
         self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
         self.od['pipe_diameter'] = 0.15
         self.assertAlmostEqual(self.od['Reynolds_number'], 3000.)
         
-    def test_dependent_entry_from_simple_class(self):
+    def test_dependent_item_from_simple_class(self):
         """
-        I repeat the setup and a key test in TestOptionsDictDependentEntries,
+        I repeat the setup and a key test in TestOptionsDictDependentItems,
         but I use a class with attributes and methods to construct the
         OptionsDict.  Ideally an equality check would be used to check the
-        state of this OptionsDict, but functions and hence dependent entries
+        state of this OptionsDict, but functions and hence dependent items
         created in different contexts are never equal.
         """
         class basis:
@@ -276,11 +276,11 @@ class TestOptionsDictFromClassDependentEntries(unittest.TestCase):
                 return self['velocity'] * self['pipe_diameter'] / \
                     self['kinematic_viscosity']
         self.od = UnitOptionsDict(basis)
-        self.check_dependent_entries()
+        self.check_dependent_items()
 
-    def test_dependent_entry_from_inheritance(self):
+    def test_dependent_item_from_inheritance(self):
         """
-        This time the dependent entry is inherited from a base class.
+        This time the dependent item is inherited from a base class.
         """
         class parent_basis:
             def Reynolds_number(self):
@@ -290,11 +290,11 @@ class TestOptionsDictFromClassDependentEntries(unittest.TestCase):
             kinematic_viscosity = 1.e-6
             pipe_diameter = 0.1
         self.od = UnitOptionsDict(child_basis)
-        self.check_dependent_entries()
+        self.check_dependent_items()
 
-    def test_dependent_entry_from_multiple_inheritance(self):
+    def test_dependent_item_from_multiple_inheritance(self):
         """
-        This time the dependent entry is inherited from one of two parallel
+        This time the dependent item is inherited from one of two parallel
         base classes.
         """
         class parent_basis_1:
@@ -310,11 +310,11 @@ class TestOptionsDictFromClassDependentEntries(unittest.TestCase):
             kinematic_viscosity = 1.e-6
             pipe_diameter = 0.1
         self.od = UnitOptionsDict(child_basis)
-        self.check_dependent_entries()
+        self.check_dependent_items()
 
-    def test_dependent_entry_from_extended_inheritance(self):
+    def test_dependent_item_from_extended_inheritance(self):
         """
-        This time the entries are spread over an extended inheritance
+        This time the items are spread over an extended inheritance
         hierarchy.
         """
         class grandparent_basis:
@@ -326,7 +326,7 @@ class TestOptionsDictFromClassDependentEntries(unittest.TestCase):
         class child_basis(parent_basis):
             pipe_diameter = 0.1
         self.od = UnitOptionsDict(child_basis)
-        self.check_dependent_entries()
+        self.check_dependent_items()
             
 
 class TestOptionsDictTemplateExpansion(unittest.TestCase):
@@ -342,7 +342,7 @@ class TestOptionsDictTemplateExpansion(unittest.TestCase):
         expected = "water has a melting point of 0 degrees C."
         self.assertEqual(self.od.expand_template_string(template), expected)
 
-    def test_expand_string_missing_entry(self):
+    def test_expand_string_missing_item(self):
         template = "$fluid has a density of $density kg/m^3."
         self.assertRaises(KeyError,
                           lambda: self.od.expand_template_string(template))

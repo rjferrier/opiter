@@ -52,7 +52,7 @@ class TestOrphanNodeInfoString(unittest.TestCase):
 
     def test_other_node_name_from_absolute_index_in_dict(self):
         """
-        The absolute index might be supplied via a dictionary of entries
+        The absolute index might be supplied via a dictionary of items
         in the form {collection_name: index}.  Here the node name will
         default.
         """
@@ -60,7 +60,7 @@ class TestOrphanNodeInfoString(unittest.TestCase):
 
     def test_other_node_name_from_relative_index_in_dict(self):
         """
-        The relative index might be supplied via a dictionary of entries
+        The relative index might be supplied via a dictionary of items
         in the form {collection_name: index}.  Here the node name will
         default.
         """

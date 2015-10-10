@@ -38,10 +38,10 @@ options_tree *= OptionsArray('fluid', [water, ethanol])
 ```
 
 An options tree may be collapsed to form a single list of options
-dictionaries.  Each of these `OptionsDict`s merges a combination of
-options which can be accessed either through the usual dictionary
-syntax or through the dot operator.  There is also a `get_string`
-method which can be used to identify the combination.
+dictionaries.  Each `OptionsDict` merges a combination of items
+which can be accessed either through the usual dictionary syntax or
+through the dot operator.  There is also a `get_string` method which
+can be used to identify the combination.
   
 ```python
 options_dicts = options_tree.collapse()
@@ -70,9 +70,9 @@ Reynolds_numbers = p.map(calculate_Re, options_dicts)
 In practice, the client may have to deal with many dependent variables
 that would clutter the function body.  For this reason, an
 `OptionsDict` has some extra functionality compared to a conventional
-dict.  Entries can be defined as dependent, updating automatically
-according to the values of others.  Such dependent entries may be
-defined by (possibly inherited) methods in the classes used to
+dict.  Items can be defined as dependent, with their values updating
+automatically according to the values of others.  Such dependent items
+may be defined by (possibly inherited) methods in the classes used to
 construct the options...
 
 ```python
@@ -93,7 +93,7 @@ options_tree = pipe_dias * velocities * fluids
 ```
 
 ...or they may be defined by lambdas or free functions.  The options
-tree structure has an update method for broadcasting new entries to
+tree structure has an update method for broadcasting new items to
 all of its nodes.
 
 ```python
@@ -111,17 +111,17 @@ def observation(opt):
 options_tree.update([observation])
 ```
  
-A caveat is that dependent entries may have to be converted back to
-independent values before multiprocessing.  This is because Python's
+A caveat is that dependent items may have to be converted back to
+independent ones before multiprocessing.  This is because Python's
 `pickle` module has trouble serialising anonymous and locally defined
 functions.  Template engines such as Jinja2 may also need dependent
-entries to be converted back to regular dictionary entries.  A
-`transform_entries` function is provided for such a purpose.  It
-accepts function objects such as `unlink`, `Check` and `Remove` to
-help the user deal with troublesome entries.
+items to be converted back to regular dictionary items.  A
+`transform_items` function is provided for such a purpose.  It accepts
+function objects such as `unlink`, `Check` and `Remove` to help the
+user deal with troublesome items.
 
 ```python
 options_dicts = options_tree.collapse()
 Reynolds_numbers = p.map(Lookup('Reynolds_number'),
-                         transform_entries(options_dicts, unlink))
+                         transform_items(options_dicts, unlink))
 ```

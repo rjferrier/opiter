@@ -21,10 +21,10 @@ class UnitOptionsNode(OptionsNode):
     This is OptionsNode decoupled from the OptionsDict and
     OrphanNodeInfo implementations for unit testing purposes.
     """
-    def create_options_dict(self, entries={}):
+    def create_options_dict(self, items={}):
         """
         Throwaway implementation.  Don't expect it to do anything with
-        the passed in entries.
+        the passed in items.
         """
         class FakeOptionsDict(dict):
             def set_node_info(self, node_info):

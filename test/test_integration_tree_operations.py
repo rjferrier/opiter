@@ -2,7 +2,7 @@ import unittest
 from options_tree_elements import product
 from options_array import OptionsArray
 from options_array import OptionsNode
-from options_dict import OptionsDict, Lookup, transform_entries, unlink
+from options_dict import OptionsDict, Lookup, transform_items, unlink
 from multiprocessing import Pool
 from copy import deepcopy
 
@@ -13,10 +13,10 @@ from copy import deepcopy
 def pool():
     return Pool(2)
 
-def add_dependent_entry(tree_element):
+def add_dependent_item(tree_element):
     """
-    Implements a dependent entry which returns the product of 'letter'
-    and 'number' entries, treating A, B, C as 1, 2, 3.
+    Implements a dependent item which returns the product of 'letter'
+    and 'number' items, treating A, B, C as 1, 2, 3.
     """
     tree_element.update({'product': lambda opt: \
                          (1 + 'ABC'.index(opt['letter'])) * opt['number']})
@@ -269,8 +269,8 @@ A
 
     def test_collapse_mp_safe(self):
         self.node.update({'letter': 'A', 'number': 2})
-        add_dependent_entry(self.node)
-        ods = transform_entries(self.node.collapse(), unlink)
+        add_dependent_item(self.node)
+        ods = transform_items(self.node.collapse(), unlink)
         results = pool().map(Lookup('product'), ods)
         self.assertEqual(results, [2])
 
@@ -433,8 +433,8 @@ letter: C
 
     def test_collapse_and_remove_links(self):
         self.array.update({'number': 2})
-        add_dependent_entry(self.array)
-        ods = transform_entries(self.array.collapse(), unlink)
+        add_dependent_item(self.array)
+        ods = transform_items(self.array.collapse(), unlink)
         results = pool().map(Lookup('product'), ods)
         expected = [2, 4, 6]
         self.assertEqual(results, expected)
@@ -496,9 +496,9 @@ class TestTreeOperations(unittest.TestCase):
     def setUp(self):
         letters = OptionsArray('letter', ['A', 'B'])
         numbers = OptionsArray('number', range(2))
-        # putting dependent entries on the leaves is the most rigorous
+        # putting dependent items on the leaves is the most rigorous
         # way of testing them after a tree collapse
-        add_dependent_entry(numbers)
+        add_dependent_item(numbers)
         self.tree = letters * numbers
         self.node = OptionsNode('i')
         self.array = OptionsArray('subnumber', ['i', 'ii', 'iii'])
@@ -693,7 +693,7 @@ letter: B
                          ['A_0_ii', 'A_1_ii', 'B_0_ii', 'B_1_ii'])
 
     def test_collapse_and_remove_links(self):
-        ods = transform_entries(self.tree.collapse(), unlink)
+        ods = transform_items(self.tree.collapse(), unlink)
         results = pool().map(Lookup('product'), ods)
         expected = [0, 1, 0, 2]
         self.assertEqual(results, expected)
@@ -771,7 +771,7 @@ class TestTreeWithRootNodeOperations(unittest.TestCase):
         letters = OptionsArray('letter', ['A', 'B'])
         numbers = OptionsArray('number', range(2))
         # way of testing them after a tree collapse
-        add_dependent_entry(numbers)
+        add_dependent_item(numbers)
         self.tree = root * letters * numbers
         self.node = OptionsNode('i')
 

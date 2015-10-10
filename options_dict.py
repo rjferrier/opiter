@@ -20,7 +20,7 @@ class OptionsDict(dict):
     An OptionsDict inherits from a conventional dict, but it has a few
     enhancements:
     
-    (1) In a similar way to Django and Jinja2, entries can be set and
+    (1) In a similar way to Django and Jinja2, items can be set and
         accessed using attribute setter/getter (dot) syntax.  
         For example, as an alternative to
             opt['foo'] = 'bar'
@@ -38,8 +38,8 @@ class OptionsDict(dict):
 
         As an added convenience, the OptionsDict can be constructed or
         updated from a class whose attributes represent the new
-        entries.  Any class methods will go on to become dependent
-        entries (see next note).
+        items.  Any class methods will go on to become dependent
+        items (see next note).
             class basis:
                 foo = 'bar'
                 def baz(self):
@@ -54,12 +54,12 @@ class OptionsDict(dict):
         with a list of functions instead of the usual key-value pairs,
         in which case the functions' names become the keys.
 
-        N.B.  If dependent entries are created using more exotic
+        N.B.  If dependent items are created using more exotic
         constructs such lambdas or closures, it will be necessary to
-        call OptionsDict.transform_entries(unlink) before using the
+        call OptionsDict.transform_items(unlink) before using the
         multiprocessing module, because it seems that such constructs
-        cause pickling problems.  transform_entries(unlink) gets
-        around the problems by converting the dependent entries back
+        cause pickling problems.  transform_items(unlink) gets
+        around the problems by converting the dependent items back
         to independent ones.
 
     (3) An OptionsDict can be given 'node information' which lends the
@@ -84,39 +84,39 @@ class OptionsDict(dict):
     protected_attributes = [
         'donate_copy', 'indent', 'create_node_info_formatter', 
         'expand_template_string', 'get_position', 'get_node_info', 
-        'get_string', 'set_node_info',  'transform_entries', 'update']
+        'get_string', 'set_node_info',  'transform_items', 'update']
     
-    def __init__(self, entries={}):
+    def __init__(self, items={}):
         """
-        Returns an OptionsDict with no node information.  The entries
+        Returns an OptionsDict with no node information.  The items
         argument can be more than just key-value pairs; see the update
         method for more information.
         """
-        # With just an entries argument, treat as a simple dict.  Set
+        # With just an items argument, treat as a simple dict.  Set
         # the node_info list first.  This is necessary to prevent
-        # dependent entries from possibly referencing the component
+        # dependent items from possibly referencing the component
         # before it exists.
         self._node_info = []
-        self.update(entries)
+        self.update(items)
 
     
-    def update(self, entries):
+    def update(self, items):
         """
-        As with conventional dicts, updates entries with the key-value
-        pairs given in the entries argument.  Alternatively, a list of
+        As with conventional dicts, updates items with the key-value
+        pairs given in the items argument.  Alternatively, a list of
         functions may be supplied which will go on to become dependent
-        entries, or a class may be supplied whose attributes and
-        methods will go on to become conventional and dependent entries,
+        items, or a class may be supplied whose attributes and
+        methods will go on to become conventional and dependent items,
         respectively.
         """
         default_err = OptionsDictException(
-            "\nArgument must be a dict, an iterable of dependent entries "+\
+            "\nArgument must be a dict, an iterable of dependent items "+\
             "(i.e. functions),\nor a class with attributes and/or methods.")
         for strategy in [self._update_from_dict,
-                         self._update_from_dependent_entries,
+                         self._update_from_dependent_items,
                          self._update_from_class]:
             try:
-                strategy(entries, default_err)
+                strategy(items, default_err)
                 return
             except (AttributeError, TypeError):
                 # tolerate certain exceptions by moving onto the next
@@ -128,10 +128,10 @@ class OptionsDict(dict):
         raise default_err
 
     
-    def transform_entries(self, function, recursive=False):
+    def transform_items(self, function, recursive=False):
         """
         Applies a function, which takes arguments of a dictionary and a
-        key, to the entries in the present OptionsDict.  If recursive
+        key, to the items in the present OptionsDict.  If recursive
         is set to True then the function will be applied to nested
         dictionaries as well.
         """
@@ -305,7 +305,7 @@ class OptionsDict(dict):
         dict.update(self, other)
 
         
-    def _update_from_dependent_entries(self, functions, default_error):
+    def _update_from_dependent_items(self, functions, default_error):
         for func in functions:
             if not isinstance(func, FunctionType):
                 raise default_error
@@ -322,11 +322,11 @@ class OptionsDict(dict):
 
         # ignore magic/hidden attributes, which are prefixed with
         # a double underscore
-        entries = {k: basis_class.__dict__[k] \
+        items = {k: basis_class.__dict__[k] \
                    for k in basis_class.__dict__.keys() \
                    if '__' not in k}
         # can now call update again
-        self.update(entries)
+        self.update(items)
 
         
     def _check_new_item_name(self, name):
@@ -382,10 +382,10 @@ class OptionsDict(dict):
             raise
         # recurse until the return value is no longer a function
         if isinstance(value, FunctionType):
-            # dependent entry
+            # dependent item
             return value(self)
         else:
-            # normal entry
+            # normal item
             return value
 
 
@@ -395,7 +395,7 @@ def dict_key_pairs(this_dict, key=None, recursive=False):
     recursive is True, nested dicts are included; otherwise only the
     given dict and its keys are returned.
     """
-    # get the first entry, which could be a sub-dictionary
+    # get the first item, which could be a sub-dictionary
     try:
         subdict = this_dict[key] if key else this_dict
         if isinstance(subdict, dict):
@@ -412,37 +412,37 @@ def dict_key_pairs(this_dict, key=None, recursive=False):
             yield this_dict, key
             
     except (KeyError, AttributeError):
-        # the first entry could also be a dependent entry with missing
+        # the first item could also be a dependent item with missing
         # dependency, in which case a KeyError or AttributeError will
         # be raised
         yield this_dict, key
         
 
     
-def transform_entries(options_dicts, function, recursive=False):
+def transform_items(options_dicts, function, recursive=False):
     """
     Applies a function, which takes arguments of a dictionary and a
-    key, to the entries in options_dicts.  If recursive is set to True
+    key, to the items in options_dicts.  If recursive is set to True
     then the function will be applied to nested dictionaries as well.
     A fresh deep copy is made so that the original options_dicts are
     not mutated.
     """
     result = deepcopy(options_dicts)
     for d in result:
-        d.transform_entries(function, recursive=recursive)
+        d.transform_items(function, recursive=recursive)
     return result
 
 
 def unlink(target_dict, key):
     """
-    Removes the dependence of target_dict[key] on other entries.
+    Removes the dependence of target_dict[key] on other items.
     """
     target_dict[key] = target_dict[key]
 
 
 class Check:
     """
-    Raises an OptionsDictException if an entry tests positive
+    Raises an OptionsDictException if an item tests positive
     according to some test function.  The function accepts a
     dictionary and a key as arguments and may return a string to
     customise the exception message.
@@ -453,7 +453,7 @@ class Check:
         result = self.test(target_dict, key)
         if result:
             msg = result if isinstance(result, str) else \
-                  "this entry did not pass the criteria of " + \
+                  "this item did not pass the criteria of " + \
                   self.test.__name__
             raise OptionsDictException(msg)
         return None
@@ -461,7 +461,7 @@ class Check:
 
 class Remove:
     """
-    Removes an entry if it tests positive according to some test
+    Removes an item if it tests positive according to some test
     function.  The function accepts a dictionary and a key as
     arguments.
     """
@@ -478,7 +478,7 @@ def missing_dependencies(target_dict, key):
         target_dict[key]
         return None
     except (KeyError, AttributeError) as e:
-        return "{} is dependent on missing entry {}".format(key, e)
+        return "{} is dependent on missing item {}".format(key, e)
 
     
 def unpicklable(target_dict, key):
@@ -499,7 +499,7 @@ class Sequence:
             func(target_dict, key)
 
 
-class CallableEntry:
+class CallableOption:
     """
     Because the OptionsDict works by evaluating all function objects
     recursively, it is not able to return other functions specified by

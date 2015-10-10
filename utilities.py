@@ -37,14 +37,14 @@ def pretty_print(options_tree, keys=[]):
 def smap(functor, options_tree, message=None, preprocessing=[]):
     """
     Serial processing.  The user may specify custom transformations on
-    the entries in the preprocessing list (e.g. [unlink]).
+    the items in the preprocessing list (e.g. [unlink]).
     """
     functor.check_processing(False)
     options_dicts = options_tree.collapse()
 
     # apply transforms
     for opt in options_dicts:
-        opt.transform_entries(Sequence(preprocessing), recursive=True)
+        opt.transform_items(Sequence(preprocessing), recursive=True)
 
     functor.preamble(options_dicts[0])
     if message:
@@ -61,11 +61,11 @@ def pmap(functor, options_tree, message=None, nprocs_max=None,
     """
     Parallel processing.
 
-    Default preprocessing functions that are applied to each entry
+    Default preprocessing functions that are applied to each item
     include checking for missing dependencies, unlinking, and checking
-    that the entry is picklable.  The user may remove the checks by
+    that the item is picklable.  The user may remove the checks by
     supplying an empty preprocessing argument, but unlinking will
-    always be performed since dependent entries cause pickling
+    always be performed since dependent items cause pickling
     problems.
     """
     
@@ -76,7 +76,7 @@ def pmap(functor, options_tree, message=None, nprocs_max=None,
     if unlink not in preprocessing:
         preprocessing.append(unlink)
     for opt in options_dicts:
-        opt.transform_entries(Sequence(preprocessing), recursive=True)
+        opt.transform_items(Sequence(preprocessing), recursive=True)
         
     if in_reverse:
         options_dicts.reverse()
@@ -280,9 +280,9 @@ class Jinja2TemplateEngine:
         "Creates and returns a closure that can be executed with no args"
         
         def operation():
-            # need to convert the nonstandard dictionary entries
+            # need to convert the nonstandard dictionary items
             # otherwise jinja2 will get confused
-            options.transform_entries(unlink, recursive=True)
+            options.transform_items(unlink, recursive=True)
             self.render(source_filename, target_filename, 
                         source_dir, target_dir, **options)
             

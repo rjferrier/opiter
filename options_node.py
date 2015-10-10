@@ -72,13 +72,13 @@ class OptionsNode(OptionsTreeElement):
         Possible candidates for the arguments, and consequent node
         attributes, are:
         
-          arg         node name        options dict entries
+          arg         node name        options dict items
           -----       ---------        --------------------
           name        name             array_name: name
           value       str(value)       array_name: value
           class       class.__name_    array_name: class.__name__,
                                        **class.__dict__
-          entries                      **entries
+          items                        **items
         """
 
         # try and infer a name from the first arg 
@@ -167,11 +167,11 @@ class OptionsNode(OptionsTreeElement):
                 self.options_dict.update({array_name: arg})
 
         
-    def create_options_dict(self, entries={}):
+    def create_options_dict(self, items={}):
         """
         Overrideable factory method, used by OptionsNode.set_options_dict.
         """
-        od = OptionsDict(entries)
+        od = OptionsDict(items)
         od.set_node_info(self.create_info())
         return od
 
@@ -267,14 +267,14 @@ class OptionsNode(OptionsTreeElement):
             return 1
 
                 
-    def update(self, entries):
+    def update(self, items):
         """
-        Updates the leaf dictionaries with entries.
+        Updates the leaf dictionaries with items.
         """
         if self.child:
-            self.child.update(entries)
+            self.child.update(items)
         else:
-            self.options_dict.update(entries)
+            self.options_dict.update(items)
 
     
     def update_info(self, node_info=None):

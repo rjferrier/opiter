@@ -1,12 +1,12 @@
 import unittest
 from options_dict import Lookup, GetString, dict_key_pairs, \
-    transform_entries, unlink, OptionsDictException, Check, Remove, \
+    transform_items, unlink, OptionsDictException, Check, Remove, \
     Sequence, missing_dependencies, unpicklable
 
 
-class MixedEntries:
+class MixedItems:
     """
-    Class synthesising a dictionary with dependent entries.
+    Class synthesising a dictionary with dependent items.
     """
     def __init__(self, items):
         self.items = items
@@ -27,7 +27,7 @@ def not_bumpable(dictionary, key):
         val += 1
         return None
     except TypeError:
-        return "this entry cannot be bumped by 1."
+        return "this item cannot be bumped by 1."
 
     
 def picklable_function(self):
@@ -65,18 +65,18 @@ class TestOptionsDictHelpers(unittest.TestCase):
 
 
 
-class TestTransformEntryFunctors(unittest.TestCase):
+class TestTransformItemFunctors(unittest.TestCase):
 
     def test_unlink(self):
-        mixed_entries = MixedEntries([0, lambda self: self[0] + 1])
-        # is MixedEntries working?
-        self.assertEqual(mixed_entries[1], 1)
-        mixed_entries[0] = 1
-        self.assertEqual(mixed_entries[1], 2)
+        mixed_items = MixedItems([0, lambda self: self[0] + 1])
+        # is MixedItems working?
+        self.assertEqual(mixed_items[1], 1)
+        mixed_items[0] = 1
+        self.assertEqual(mixed_items[1], 2)
         # now try unlinking.
-        unlink(mixed_entries, 1)
-        mixed_entries[0] = 2
-        self.assertEqual(mixed_entries[1], 2)
+        unlink(mixed_items, 1)
+        mixed_items[0] = 2
+        self.assertEqual(mixed_items[1], 2)
         
     def test_check(self):
         tgt = {'a': 1,
@@ -85,7 +85,7 @@ class TestTransformEntryFunctors(unittest.TestCase):
         check = Check(not_bumpable)
         for i in 'abc':
             if i == 'b':
-                # this entry should raise an error
+                # this item should raise an error
                 self.assertRaises(OptionsDictException,
                                   lambda: check(tgt, i))
             else:
@@ -113,22 +113,22 @@ class TestTransformEntryFunctors(unittest.TestCase):
 class TestTestFunctors(unittest.TestCase):
 
     def test_missing_dependencies(self):
-        mixed_entries = MixedEntries({'a': 1,
-                                      'b': lambda self: self['c'] + 1})
+        mixed_items = MixedItems({'a': 1,
+                                  'b': lambda self: self['c'] + 1})
         self.assertFalse(
-            missing_dependencies(mixed_entries, 'a'))
+            missing_dependencies(mixed_items, 'a'))
         self.assertTrue(
-            missing_dependencies(mixed_entries, 'b'))
+            missing_dependencies(mixed_items, 'b'))
 
     def test_unpicklable(self):
         def unpicklable_function(self):
             return "This function was declared in a method."
-        entries = {'f1': picklable_function,
+        items = {'f1': picklable_function,
                    'f2': unpicklable_function}
         self.assertFalse(
-            unpicklable(entries, 'f1'))
+            unpicklable(items, 'f1'))
         self.assertTrue(
-            unpicklable(entries, 'f2'))
+            unpicklable(items, 'f2'))
     
 
     

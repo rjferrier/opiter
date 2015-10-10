@@ -5,29 +5,29 @@ from options_dict import OptionsDict
 
 class TestOptionsNodeCreation(unittest.TestCase):
     
-    def check_name_and_entries(self, node, expected_name, expected_entries={}):
+    def check_name_and_items(self, node, expected_name, expected_items={}):
         self.assertEqual(str(node), expected_name)
-        self.assertEqual(dict(node.collapse()[0]), expected_entries)
+        self.assertEqual(dict(node.collapse()[0]), expected_items)
     
     def test_create_node_from_class(self):
         class a_node:
             foo = 'bar'
         node = OptionsNode(a_node)
-        self.check_name_and_entries(node, 'a_node', {'foo': 'bar'})
+        self.check_name_and_items(node, 'a_node', {'foo': 'bar'})
         
     def test_create_node_from_class_and_array(self):
         class a_node:
             foo = 'bar'
         node = OptionsNode(a_node, array_name='an_array')
-        self.check_name_and_entries(node, 'a_node',
-                                    {'an_array': 'a_node',
-                                     'foo': 'bar'})
+        self.check_name_and_items(node, 'a_node',
+                                  {'an_array': 'a_node',
+                                   'foo': 'bar'})
         
     def test_create_node_from_name_and_format_function_and_array(self):
         name_format = lambda s: '<'+s+'>'
         node = OptionsNode('a_node', array_name='an_array',
                            name_format=name_format)
-        self.check_name_and_entries(node, '<a_node>', {'an_array': 'a_node'})
+        self.check_name_and_items(node, '<a_node>', {'an_array': 'a_node'})
         
     
         

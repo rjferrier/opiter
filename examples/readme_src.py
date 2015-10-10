@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 from __init__ import OptionsNode, OptionsArray, OptionsDict, Lookup, \
-    GetString, transform_entries, unlink
+    GetString, transform_items, unlink
 import multiprocessing
 
 # setup
@@ -46,7 +46,7 @@ for descr, Re in zip(map(GetString(), options_tree.collapse()),
     print '{:20s}: Reynolds number = {:.2e}'.format(descr, Re)
     
 
-print "\nUsing dependent entries:\n"
+print "\nUsing dependent items:\n"
 
 class fluid:
     def kinematic_viscosity(self):
@@ -76,11 +76,11 @@ options_tree.update([observation])
 
 options_dicts = options_tree.collapse()
 Reynolds_numbers = p.map(Lookup('Reynolds_number'),
-                         transform_entries(options_dicts, unlink))
+                         transform_items(options_dicts, unlink))
 
 # for completeness...
 observations = p.map(Lookup('observation'),
-                     transform_entries(options_dicts, unlink))
+                     transform_items(options_dicts, unlink))
 for descr, Re, obs in \
     zip(map(GetString(), options_tree.collapse()),
         Reynolds_numbers, observations):

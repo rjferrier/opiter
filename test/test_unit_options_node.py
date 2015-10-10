@@ -5,48 +5,48 @@ from copy import deepcopy
 
 class TestOptionsNodeCreation(unittest.TestCase):
 
-    def check_name_and_entries(self, node, expected_name, expected_entries={}):
+    def check_name_and_items(self, node, expected_name, expected_items={}):
         self.assertEqual(str(node), expected_name)
-        self.assertEqual(node.collapse()[0], expected_entries)
+        self.assertEqual(node.collapse()[0], expected_items)
     
     def test_create_node_from_name(self):
         node = UnitOptionsNode('a_node')
-        self.check_name_and_entries(node, 'a_node', {})
+        self.check_name_and_items(node, 'a_node', {})
         
     def test_create_node_from_name_and_array(self):
         node = UnitOptionsNode('a_node', array_name='an_array')
-        self.check_name_and_entries(node, 'a_node', {'an_array': 'a_node'})
+        self.check_name_and_items(node, 'a_node', {'an_array': 'a_node'})
         
     def test_create_node_from_name_and_format_function_and_array(self):
         name_format = lambda s: '<'+s+'>'
         node = UnitOptionsNode('a_node', array_name='an_array',
                                name_format=name_format)
-        self.check_name_and_entries(node, '<a_node>', {'an_array': 'a_node'})
+        self.check_name_and_items(node, '<a_node>', {'an_array': 'a_node'})
         
     def test_create_node_from_value_and_format_string(self):
         name_format = '{:.2f}'
         node = UnitOptionsNode(1./7, name_format=name_format)
-        self.check_name_and_entries(node, '0.14')
+        self.check_name_and_items(node, '0.14')
         
     def test_create_node_from_value_and_format_function_and_array(self):
         name_format = lambda x: str(x + 1)
         node = UnitOptionsNode(1, name_format=name_format, array_name='num')
-        self.check_name_and_entries(node, '2', {'num': 1})
+        self.check_name_and_items(node, '2', {'num': 1})
         
     def test_create_node_from_name_and_value_and_array(self):
         node = UnitOptionsNode('a_node', 3, array_name='an_array')
-        self.check_name_and_entries(node, 'a_node', {'an_array': 3})
+        self.check_name_and_items(node, 'a_node', {'an_array': 3})
         
-    def test_create_node_from_entries(self):
+    def test_create_node_from_items(self):
         node = UnitOptionsNode({'foo': 'bar'}, array_name='num')
-        self.check_name_and_entries(node, '', {'foo': 'bar'})
+        self.check_name_and_items(node, '', {'foo': 'bar'})
         
     def test_create_node_from_node_and_format_function_and_array(self):
         name_format = lambda s: '<'+s+'>'
         src = UnitOptionsNode('a_node')
         node = UnitOptionsNode(src, array_name='an_array',
                                name_format=name_format)
-        self.check_name_and_entries(node, '<a_node>', {'an_array': 'a_node'})
+        self.check_name_and_items(node, '<a_node>', {'an_array': 'a_node'})
 
     def test_create_node_with_bad_child(self):
         """
@@ -60,9 +60,9 @@ class TestOptionsNodeCreation(unittest.TestCase):
 class TestOptionsNodeBasics(unittest.TestCase):
 
     @staticmethod
-    def make_node(name='foo', entries={'bar': 1},
+    def make_node(name='foo', items={'bar': 1},
                   child=UnitOptionsNode('qux')):
-        return UnitOptionsNode(name, entries, child)
+        return UnitOptionsNode(name, items, child)
     
     def setUp(self):
         self.node = self.make_node()
@@ -76,7 +76,7 @@ class TestOptionsNodeBasics(unittest.TestCase):
 
     def test_unequal_dicts(self):
         self.assertNotEqual(self.node, 
-                            self.make_node(entries={'bar': 2}))
+                            self.make_node(items={'bar': 2}))
 
     def test_unequal_dicts(self):
         self.assertNotEqual(self.node, 

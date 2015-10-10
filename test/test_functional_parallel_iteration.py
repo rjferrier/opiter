@@ -2,7 +2,7 @@ import unittest
 from test_functional_common import \
     TestOptionsDictCartesianProductIteration, \
     TestOptionsDictTreeIteration
-from options_dict import Lookup, GetString, transform_entries, unlink
+from options_dict import Lookup, GetString, transform_items, unlink
 from multiprocessing import Pool
 
 
@@ -25,19 +25,19 @@ class TestOptionsDictCartesianProductParallelIteration(
         """
         options_dicts = self.tree.collapse()
         results = pool().map(distance_func,
-                             transform_entries(options_dicts, unlink))
+                             transform_items(options_dicts, unlink))
         self.assertAlmostEqual(results, self.expected_distances)
             
-    def test_mapping_with_extra_dict_and_dependent_entry(self):
+    def test_mapping_with_extra_dict_and_dependent_item(self):
         """
-        I define distance as a dependent entry and pass a corresponding
+        I define distance as a dependent item and pass a corresponding
         Lookup functor to a multiprocessing map.
         """
         self.tree.update({'distance': lambda opt: \
                           opt['speed'] * opt['travel_time']})
         options_dicts = self.tree.collapse()
         results = pool().map(Lookup('distance'),
-                             transform_entries(options_dicts, unlink))
+                             transform_items(options_dicts, unlink))
         self.assertAlmostEqual(results, self.expected_distances)
 
 
@@ -46,12 +46,12 @@ class TestOptionsDictTreeParallelIteration(
             
     def test_mapping_and_name_check(self):
         resulting_names = pool().map(
-            GetString(), transform_entries(self.options_dicts, unlink))
+            GetString(), transform_items(self.options_dicts, unlink))
         self.check_names(resulting_names)
             
     def test_mapping_and_lookup(self):
         resulting_times = pool().map(
-            Lookup('cost'), transform_entries(self.options_dicts, unlink))
+            Lookup('cost'), transform_items(self.options_dicts, unlink))
         self.check_times(resulting_times)
 
             
