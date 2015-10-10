@@ -329,7 +329,6 @@ class OptionsArray(OptionsTreeElement):
         return str(self.name)
 
 
-# TESTME
 class OptionsArrayFactory:
     """
     Provides an OptionsArray constructor with an alternative system
@@ -346,28 +345,49 @@ class OptionsArrayFactory:
 
     produces nodes named ['A00', 'A01'] and ['B00', 'B01', 'B02'].
     """
-    def __init__(self, array_index_formatter=None, node_index_formatter=None):
+    def __init__(self, array_index_format=None, node_index_format=None):
         self.array_index = 0
-        if not array_index_formatter:
-            self.array_index_formatter = self.default_array_index_formatter
-        if not node_index_formatter:
-            self.node_index_formatter = self.default_node_index_formatter
+        if array_index_format:
+            self.array_index_format = array_index_format
+        else:
+            self.array_index_format = self.default_array_index_format
+        if node_index_format:
+            self.node_index_format = node_index_format
+        else:
+            self.node_index_format = self.default_node_index_format
 
     @staticmethod
-    def default_array_index_formatter(i):
+    def default_array_index_format(i):
         "Converts 0, 1, 2,... to A, B, C,... "
-        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[i]
+        if i >= 26:
+            raise OptionsArrayException(
+                'the current array index format only takes numbers up to 26')
+        return chr(i + 65)
 
     @staticmethod
-    def default_node_index_formatter(i):
+    def default_node_index_format(i):
         "Converts 0, 1, 2,... to 00, 01, 02,... "
+        if i >= 100:
+            raise OptionsArrayException(
+                'the current node index format only takes double digits')
         return '{:02d}'.format(i)
-        
+
+    @staticmethod
+    def apply_formatting(index_format, index):
+        try:
+            # try applying fmt as a function
+            return index_format(index)
+        except TypeError:
+            # apply fmt as a format string
+            return index_format.format(index)
+    
     def __call__(self, array_name, elements):
         nodes = []
         for node_index, el in enumerate(elements):
-            node_name = self.array_index_formatter(self.array_index) +\
-                        self.node_index_formatter(node_index)
+            node_name = self.apply_formatting(
+                self.array_index_format, self.array_index)
+            node_name += self.apply_formatting(
+                self.node_index_format, node_index)
             nodes.append(
                 OptionsNode(node_name, el, array_name=array_name))
 

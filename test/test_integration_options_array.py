@@ -1,5 +1,6 @@
 import unittest
-from options_array import OptionsArray, OptionsArrayException, ArrayNodeInfo
+from options_array import OptionsArray, OptionsArrayException, ArrayNodeInfo, \
+    OptionsArrayFactory
 from options_node import OptionsNode, OrphanNodeInfo
 from options_dict import OptionsDict
     
@@ -270,6 +271,61 @@ class TestOptionsArrayWithHooks(unittest.TestCase):
         for od, i in zip(ods, [1, 2, 3]):
             self.assertEqual(od['A'], i)
 
+
+class TestOptionsArrayFactory(unittest.TestCase):
+
+    def test_apply_formatting_with_format_string(self):
+        self.assertEqual(
+            OptionsArrayFactory.apply_formatting('{:.2f}', 1./3), '0.33')
+
+    def test_apply_formatting_with_function(self):
+        self.assertEqual(
+            OptionsArrayFactory.apply_formatting(lambda i: str(i**2), 2), '4')
+
+    def check_names(self, array, expected_names):
+        names = [str(node) for node in array]
+        self.assertEqual(names, expected_names)
+
+    def check_items(self, array, key, expected_values):
+        values = [od[key] for od in array.collapse()]
+        self.assertEqual(values, expected_values)
+        
+    def test_default_factory_first_array(self):
+        factory = OptionsArrayFactory()
+        array = factory('colour', ['red', 'yellow', 'blue'])
+        self.check_names(array, ['A00', 'A01', 'A02'])
+        self.check_items(array, 'colour', ['red', 'yellow', 'blue'])
+
+    def test_default_factory_second_array(self):
+        factory = OptionsArrayFactory()
+        array1 = factory('colour', ['red', 'yellow', 'blue'])
+        array2 = factory('object', ['lolly', 'lorry'])
+        self.check_names(array2, ['B00', 'B01'])
+        self.check_items(array2, 'object', ['lolly', 'lorry'])
+
+    def test_default_factory_too_many_nodes(self):
+        factory = OptionsArrayFactory()
+        self.assertRaises(OptionsArrayException,
+                          lambda: factory('foo', range(101)))
+
+    def test_default_factory_too_many_arrays(self):
+        factory = OptionsArrayFactory()
+        for i in range(26):
+            array = factory('foo', ['bar'])
+        self.assertRaises(OptionsArrayException,
+                          lambda: factory('foo', ['bar']))
+
+    def test_other_array_index_format(self):
+        factory = OptionsArrayFactory(array_index_format='{:1d}-')
+        array = factory('foo', range(3))
+        self.check_names(array, ['0-00', '0-01', '0-02'])
+
+    def test_other_node_index_format(self):
+        factory = OptionsArrayFactory(node_index_format=lambda i: (i + 1)*'i')
+        array = factory('foo', range(3))
+        self.check_names(array, ['Ai', 'Aii', 'Aiii'])
+
+        
             
 if __name__ == '__main__':
     unittest.main()
