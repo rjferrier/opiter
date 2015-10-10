@@ -220,7 +220,7 @@ class TestNestedOptionsDictBasics(unittest.TestCase):
         self.assertEqual(self.od.bar.baz, 2)
 
     def test_nonrecursive_transform_items(self):
-        self.od.transform_items(bump)
+        self.od.transform_items(bump, recursive=False)
         expected = UnitOptionsDict({
             'foo': 2,
             'bar': UnitOptionsDict({
@@ -228,7 +228,7 @@ class TestNestedOptionsDictBasics(unittest.TestCase):
         self.assertEqual(self.od, expected)
 
     def test_recursive_transform_items(self):
-        self.od.transform_items(bump, recursive=True)
+        self.od.transform_items(bump)
         expected = UnitOptionsDict({
             'foo': 2,
             'bar': UnitOptionsDict({

@@ -98,7 +98,7 @@ class TestOptionsDictDependentItems(unittest.TestCase):
         self.assertAlmostEqual(self.od['Reynolds_number'], 2000.)
         self.assertAlmostEqual(
             self.od['fluid']['kinematic_viscosity'], 1.e-6)
-        self.od.transform_items(unlink)
+        self.od.transform_items(unlink, recursive=False)
         
         self.od['fluid']['density'] = 500.
         self.assertAlmostEqual(
@@ -115,10 +115,10 @@ class TestOptionsDictDependentItems(unittest.TestCase):
         undefined.
         """
         self.od['velocity'] = 0.02
-        self.assertRaises(KeyError,
-                          lambda: self.od.transform_items(unlink))
+        self.assertRaises(
+            KeyError, lambda: self.od.transform_items(unlink, recursive=False))
         self.od['fluid']['density'] = 1000.
-        self.od.transform_items(unlink)
+        self.od.transform_items(unlink, recursive=False)
 
         
     def test_recursive_unlink(self):
@@ -130,7 +130,7 @@ class TestOptionsDictDependentItems(unittest.TestCase):
         self.od['velocity'] = 0.02
         self.od['fluid']['density'] = 1000.
         self.od['fluid']['bulk_modulus'] = 2.
-        self.od.transform_items(unlink, recursive=True)
+        self.od.transform_items(unlink)
         self.od['fluid']['density'] = 500.
         self.assertAlmostEqual(
             self.od['fluid']['kinematic_viscosity'], 1.e-6)
@@ -158,9 +158,9 @@ class TestOptionsDictDependentItems(unittest.TestCase):
         self.od['velocity'] = 0.02
         self.assertRaises(OptionsDictException,
                           lambda: self.od.transform_items(
-                              Check(missing_dependencies)))
+                              Check(missing_dependencies), recursive=False))
         self.od['fluid']['density'] = 1000.
-        self.od.transform_items(Check(missing_dependencies))
+        self.od.transform_items(Check(missing_dependencies), recursive=False)
         
         
     def test_recursive_check_missing_dependency(self):
@@ -173,7 +173,7 @@ class TestOptionsDictDependentItems(unittest.TestCase):
         self.od['fluid']['density'] = 1000.
         self.assertRaises(OptionsDictException,
                           lambda: self.od.transform_items(
-                              Check(missing_dependencies), recursive=True))
+                              Check(missing_dependencies)))
 
         
     def test_nonrecursive_remove_missing_dependencies(self):
@@ -185,7 +185,7 @@ class TestOptionsDictDependentItems(unittest.TestCase):
         KeyError.
         """
         self.od['velocity'] = 0.02
-        self.od.transform_items(Remove(missing_dependencies))
+        self.od.transform_items(Remove(missing_dependencies), recursive=False)
         self.assertRaises(KeyError,
                           lambda: self.od['speed_of_sound'])
 
@@ -199,8 +199,7 @@ class TestOptionsDictDependentItems(unittest.TestCase):
         """
         self.od['velocity'] = 0.02
         self.od['fluid']['density'] = 1000.
-        self.od.transform_items(Remove(missing_dependencies),
-                                  recursive=True)
+        self.od.transform_items(Remove(missing_dependencies))
         self.od['Reynolds_number']
         self.assertRaises(KeyError,
                           lambda: self.od['speed_of_sound'])
@@ -239,7 +238,7 @@ class TestOptionsDictDependentItemsWithDotSyntax(unittest.TestCase):
         self.assertAlmostEqual(self.od.Reynolds_number, 2000.)
         self.assertAlmostEqual(
             self.od.fluid.kinematic_viscosity, 1.e-6)
-        self.od.transform_items(unlink)
+        self.od.transform_items(unlink, recursive=False)
         self.od.fluid.density = 500.
         self.assertAlmostEqual(
             self.od.fluid.kinematic_viscosity, 2.e-6)
@@ -248,17 +247,18 @@ class TestOptionsDictDependentItemsWithDotSyntax(unittest.TestCase):
         
     def test_nonrecursive_unlink_with_missing_dependencies(self):
         self.od.velocity = 0.02
-        self.assertRaises(AttributeError,
-                          lambda: self.od.transform_items(unlink))
+        self.assertRaises(
+            AttributeError,
+            lambda: self.od.transform_items(unlink, recursive=False))
         self.od.fluid.density = 1000.
-        self.od.transform_items(unlink)
+        self.od.transform_items(unlink, recursive=False)
 
         
     def test_recursive_unlink(self):
         self.od.velocity = 0.02
         self.od.fluid.density = 1000.
         self.od.fluid.bulk_modulus = 2.
-        self.od.transform_items(unlink, recursive=True)
+        self.od.transform_items(unlink)
         self.od.fluid.density = 500.
         self.assertAlmostEqual(
             self.od.fluid.kinematic_viscosity, 1.e-6)
@@ -269,30 +269,29 @@ class TestOptionsDictDependentItemsWithDotSyntax(unittest.TestCase):
         self.od.velocity = 0.02
         self.od.fluid.density = 1000.
         self.assertRaises(AttributeError,
-                          lambda: self.od.transform_items(
-                              unlink, recursive=True))
+                          lambda: self.od.transform_items(unlink))
         
 
     def test_nonrecursive_check_missing_dependencies(self):
         self.od.velocity = 0.02
         self.assertRaises(OptionsDictException,
                           lambda: self.od.transform_items(
-                              Check(missing_dependencies)))
+                              Check(missing_dependencies), recursive=False))
         self.od.fluid.density = 1000.
-        self.od.transform_items(Check(missing_dependencies))
+        self.od.transform_items(Check(missing_dependencies), recursive=False)
         
         
     def test_recursive_check_missing_dependency(self):
         self.od.velocity = 0.02
         self.od.fluid.density = 1000.
-        self.assertRaises(OptionsDictException,
-                          lambda: self.od.transform_items(
-                              Check(missing_dependencies), recursive=True))
+        self.assertRaises(
+            OptionsDictException,
+            lambda: self.od.transform_items(Check(missing_dependencies)))
 
         
     def test_nonrecursive_remove_missing_dependencies(self):
         self.od.velocity = 0.02
-        self.od.transform_items(Remove(missing_dependencies))
+        self.od.transform_items(Remove(missing_dependencies), recursive=False)
         self.assertRaises(AttributeError,
                           lambda: self.od.speed_of_sound)
 
@@ -300,8 +299,7 @@ class TestOptionsDictDependentItemsWithDotSyntax(unittest.TestCase):
     def test_recursive_remove_missing_dependencies(self):
         self.od.velocity = 0.02
         self.od.fluid.density = 1000.
-        self.od.transform_items(Remove(missing_dependencies),
-                                  recursive=True)
+        self.od.transform_items(Remove(missing_dependencies))
         self.od.Reynolds_number
         self.assertRaises(AttributeError,
                           lambda: self.od.speed_of_sound)
@@ -375,7 +373,7 @@ class TestTransformElementsFreeFunction(unittest.TestCase):
                       create_nested(4, 5, 6)]
 
     def test_nonrecursive_transform_items(self):
-        result = transform_items(self.dicts, bump)
+        result = transform_items(self.dicts, bump, recursive=False)
         self.assertEqual(result, [create_nested(2, 2, 3),
                                   create_nested(5, 5, 6)])
         # make sure we haven't mutated the original
@@ -383,7 +381,7 @@ class TestTransformElementsFreeFunction(unittest.TestCase):
                                       create_nested(4, 5, 6)])
 
     def test_recursive_transform_items(self):
-        result = transform_items(self.dicts, bump, recursive=True)
+        result = transform_items(self.dicts, bump)
         self.assertEqual(result, [create_nested(2, 3, 4),
                                   create_nested(5, 6, 7)])
         # make sure we haven't mutated the original

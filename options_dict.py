@@ -128,7 +128,7 @@ class OptionsDict(dict):
         raise default_err
 
     
-    def transform_items(self, function, recursive=False):
+    def transform_items(self, function, recursive=True):
         """
         Applies a function, which takes arguments of a dictionary and a
         key, to the items in the present OptionsDict.  If recursive
@@ -389,7 +389,7 @@ class OptionsDict(dict):
             return value
 
 
-def dict_key_pairs(this_dict, key=None, recursive=False):
+def dict_key_pairs(this_dict, key=None, recursive=True):
     """
     Generator that yields dict-key pairs for a given dict.  When
     recursive is True, nested dicts are included; otherwise only the
@@ -419,7 +419,7 @@ def dict_key_pairs(this_dict, key=None, recursive=False):
         
 
     
-def transform_items(options_dicts, function, recursive=False):
+def transform_items(options_dicts, function, recursive=True):
     """
     Applies a function, which takes arguments of a dictionary and a
     key, to the items in options_dicts.  If recursive is set to True

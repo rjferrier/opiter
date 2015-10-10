@@ -46,7 +46,7 @@ def smap(functor, options_tree, message=None, dict_hooks=[], item_hooks=[]):
     for opt in options_dicts:
         for func in dict_hooks:
             func(opt)
-        opt.transform_items(Sequence(item_hooks), recursive=True)
+        opt.transform_items(Sequence(item_hooks))
 
     # processing
     functor.preamble(options_dicts[0])
@@ -82,7 +82,7 @@ def pmap(functor, options_tree, message=None, nprocs_max=None,
     for opt in options_dicts:
         for func in dict_hooks:
             func(opt)
-        opt.transform_items(Sequence(item_hooks), recursive=True)
+        opt.transform_items(Sequence(item_hooks))
 
     if in_reverse:
         options_dicts.reverse()
@@ -289,7 +289,7 @@ class Jinja2TemplateEngine:
         def operation():
             # need to convert the nonstandard dictionary items
             # otherwise jinja2 will get confused
-            options.transform_items(unlink, recursive=True)
+            options.transform_items(unlink)
             self.render(source_filename, target_filename, 
                         source_dir, target_dir, **options)
             

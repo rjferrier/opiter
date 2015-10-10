@@ -7,10 +7,6 @@
         Consider deprecating/removing the former.
   - [ ] Add a branch narrowing method (inverse of del)
 
-- [x] OptionsDict behaviour
-  - [x] Implement clean and check functors with "not picklable" and
-        "missing dependencies" criteria
-
 - [ ] Tidy up
   - [ ] Review/update docstrings
   - [ ] Replace isinstance tests with try-except blocks
@@ -25,5 +21,3 @@
 - [ ] Misc
   - [ ] Consider changing the license
   - [ ] Check Python version compatibility
-  - [ ] Make expand_template_string more conservative (use substitute instead
-        of safe_substitute); in utilities, warn about unexpanded placeholders

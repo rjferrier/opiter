@@ -64,7 +64,6 @@ class TestOptionsDictHelpers(unittest.TestCase):
         self.assertEqual(results, ['abcde'] * 3)
 
 
-
 class TestTransformItemFunctors(unittest.TestCase):
 
     def test_unlink(self):
@@ -143,27 +142,27 @@ class TestDictKeyPairsGenerator(unittest.TestCase):
                     'E': 3}}}
 
     def test_nonrecursive_dict_key_pairs(self):
-        self.assertEqual([d[k] for d, k in dict_key_pairs(self.dict)],
-                         [1, {'C': 2, 'D': {'E': 3}}])
+        self.assertEqual(
+            [d[k] for d, k in dict_key_pairs(self.dict, recursive=False)],
+            [1, {'C': 2, 'D': {'E': 3}}])
 
     def test_nonrecursive_dict_key_pairs_given_key(self):
-        self.assertEqual([d[k] for d, k in dict_key_pairs(self.dict, 'A')],
-                         [1])
-        self.assertEqual([d[k] for d, k in dict_key_pairs(self.dict, 'B')],
-                         [2, {'E': 3}])
+        self.assertEqual(
+            [d[k] for d, k in dict_key_pairs(self.dict, 'A', recursive=False)],
+            [1])
+        self.assertEqual(
+            [d[k] for d, k in dict_key_pairs(self.dict, 'B', recursive=False)],
+            [2, {'E': 3}])
 
     def test_recursive_dict_key_pairs(self):
         self.assertEqual(
-            [d[k] for d, k in dict_key_pairs(self.dict, recursive=True)],
-            [1, 2, 3])
+            [d[k] for d, k in dict_key_pairs(self.dict)], [1, 2, 3])
 
     def test_recursive_dict_key_pairs_given_key(self):
         self.assertEqual(
-            [d[k] for d, k in dict_key_pairs(self.dict, 'A', recursive=True)],
-            [1])
+            [d[k] for d, k in dict_key_pairs(self.dict, 'A')], [1])
         self.assertEqual(
-            [d[k] for d, k in dict_key_pairs(self.dict, 'B', recursive=True)],
-            [2, 3])
+            [d[k] for d, k in dict_key_pairs(self.dict, 'B')], [2, 3])
 
         
 if __name__ == '__main__':
