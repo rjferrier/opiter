@@ -1,11 +1,12 @@
-from base import OptionsBaseException
-from options_tree_elements import OptionsTreeElement, NodeInfo, Position
+from options_tree_elements import OptionsTreeElement, \
+    OptionsTreeElementException
+from node_info import NodeInfo, Position
 from options_dict import OptionsDict
 from copy import deepcopy
 from warnings import warn
 
 
-class OptionsNodeException(OptionsBaseException):
+class OptionsNodeException(OptionsTreeElementException):
     pass
 
 

@@ -1,4 +1,5 @@
 from base import OptionsBaseException
+from node_info import NodeInfoException
 from formatters import SimpleFormatter, TreeFormatter
 from types import FunctionType
 from string import Template
@@ -9,9 +10,6 @@ from pickle import dumps, PicklingError
 
 
 class OptionsDictException(OptionsBaseException):
-    pass
-
-class NodeInfoException(OptionsBaseException):
     pass
         
 

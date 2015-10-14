@@ -1,5 +1,5 @@
 import unittest
-from options_tree_elements import Position
+from node_info import Position
 
 
 class TestPosition(unittest.TestCase):

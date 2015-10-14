@@ -1,5 +1,6 @@
 from base import OptionsBaseException
-from options_tree_elements import OptionsTreeElement, NodeInfo, Position
+from options_tree_elements import OptionsTreeElement
+from node_info import NodeInfo, Position
 from options_node import OptionsNode, OptionsNodeException
 from copy import deepcopy
 from warnings import warn
