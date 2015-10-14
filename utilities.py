@@ -77,8 +77,8 @@ def pmap(functor, options_tree, message=None, nprocs_max=None,
     nprocs = get_nprocs(len(options_dicts), nprocs_max)
 
     # default and apply hooks
-    if unlink not in preprocessing:
-        preprocessing.append(unlink)
+    if unlink not in item_hooks:
+        item_hooks.append(unlink)
     for opt in options_dicts:
         for func in dict_hooks:
             func(opt)

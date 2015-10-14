@@ -101,8 +101,10 @@ class OptionsNode(OptionsTreeElement):
 
         
     @classmethod
-    def another(Class, arg1={}, arg2={}, child=None):
-        return Class(arg1, arg2, child)
+    def another(Class, arg1={}, arg2={}, child=None,
+                dict_hooks=[], item_hooks=[]):
+        return Class(arg1, arg2, child,
+                     dict_hooks=dict_hooks, item_hooks=item_hooks)
 
         
     def set_name_general(self, arg, name_format):

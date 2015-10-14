@@ -128,10 +128,11 @@ class OptionsArray(OptionsTreeElement):
 
 
     @classmethod
-    def another(Class, array_name, elements, 
-                names=None, name_format='{}'):
+    def another(Class, array_name, elements, names=None, name_format='{}',
+                dict_hooks=[], item_hooks=[]):
         return Class(array_name, elements, names=names,
-                     name_format=name_format)
+                     name_format=name_format,
+                     dict_hooks=dict_hooks, item_hooks=item_hooks)
 
     
     def create_options_node(self, arg1={}, arg2={}, names=None,
