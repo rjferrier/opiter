@@ -14,9 +14,8 @@ class OrphanNodeInfo(NodeInfo):
     """
     Describes a node which is not part of any collection.
     """
-    def __init__(self, node_name):
-        # treat orphan nodes as belonging to a one-node collection
-        NodeInfo.__init__(self, 0, 0)
+    def __init__(self, node_name, tags=[]):
+        NodeInfo.__init__(self, 0, 0, tags=tags)
         self.node_name = node_name
 
     def belongs_to(self, collection_name):
@@ -54,7 +53,7 @@ class OptionsNode(OptionsTreeElement):
     OptionsTreeElement, hence forming a tree structure.
     """
     def __init__(self, arg1={}, arg2={}, child=None, name_format='{}',
-                 array_name=None, dict_hooks=[], item_hooks=[]):
+                 array_name=None, tags=[], dict_hooks=[], item_hooks=[]):
         """
         Constructs an OptionsNode, inferring a name from arg1 and an
         options dictionary from arg1 and arg2, if present.
@@ -84,15 +83,16 @@ class OptionsNode(OptionsTreeElement):
         OptionsTreeElement.__init__(self, dict_hooks=dict_hooks,
                                     item_hooks=item_hooks)
 
-        # try and infer a name from the first arg 
+        # try and infer a name from the first arg; set tags
         self.set_name_general(arg1, name_format)
+        self.tags = tags
         
         # instantiate the options dict and update from both args (with
         # arg2 taking precedence over arg1)
         self.options_dict = self.create_options_dict()
         self.update_options_dict_general(arg2, array_name)
         self.update_options_dict_general(arg1, array_name)
-        
+
         # Set the child.  The type check is not ideal but it prevents
         # bad things happening later.
         if child is not None and not isinstance(child, OptionsTreeElement):
@@ -102,9 +102,9 @@ class OptionsNode(OptionsTreeElement):
 
         
     @classmethod
-    def another(Class, arg1={}, arg2={}, child=None,
+    def another(Class, arg1={}, arg2={}, child=None, tags=[],
                 dict_hooks=[], item_hooks=[]):
-        return Class(arg1, arg2, child,
+        return Class(arg1, arg2, child, tags=tags,
                      dict_hooks=dict_hooks, item_hooks=item_hooks)
 
         
@@ -186,7 +186,7 @@ class OptionsNode(OptionsTreeElement):
         Overrideable factory method, used by
         OptionsNode.create_options_dict.
         """
-        return OrphanNodeInfo(self.name)
+        return OrphanNodeInfo(self.name, tags=self.tags)
 
         
     def collapse(self):

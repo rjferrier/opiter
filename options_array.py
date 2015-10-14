@@ -14,8 +14,8 @@ class ArrayNodeInfo(NodeInfo):
     """
     Describes a node which is part of an array (or sequence).
     """
-    def __init__(self, array_name, node_names, node_index):
-        NodeInfo.__init__(self, node_index, len(node_names))
+    def __init__(self, array_name, node_names, node_index, tags=[]):
+        NodeInfo.__init__(self, node_index, len(node_names), tags=tags)
         self.array_name = array_name
         self.node_names = node_names
         self.node_index = node_index
@@ -78,7 +78,7 @@ class OptionsArray(OptionsTreeElement):
     """
 
     def __init__(self, array_name, elements, names=None, name_format='{}',
-                 dict_hooks=[], item_hooks=[]):
+                 tags=[], dict_hooks=[], item_hooks=[]):
         """
         Returns an OptionsArray, wrapping the given elements as
         OptionsNodes where necessary.
@@ -107,13 +107,14 @@ class OptionsArray(OptionsTreeElement):
         OptionsTreeElement.__init__(self, dict_hooks=dict_hooks,
                                     item_hooks=item_hooks)
         self.name = array_name
+        self.tags = tags
         self.nodes = []
         
         if names:
             arg_list = zip(names, elements)
         else:
             arg_list = zip(elements)
-            
+        
         # instantiate and record OptionsNodes
         for args in arg_list:
             try:
@@ -130,9 +131,9 @@ class OptionsArray(OptionsTreeElement):
 
     @classmethod
     def another(Class, array_name, elements, names=None, name_format='{}',
-                dict_hooks=[], item_hooks=[]):
+                 tags=[], dict_hooks=[], item_hooks=[]):
         return Class(array_name, elements, names=names,
-                     name_format=name_format,
+                     name_format=name_format, tags=tags,
                      dict_hooks=dict_hooks, item_hooks=item_hooks)
 
     
@@ -151,7 +152,7 @@ class OptionsArray(OptionsTreeElement):
             return node
         else:
             return OptionsNode(arg1, arg2, name_format=name_format,
-                               array_name=self.name)
+                               array_name=self.name, tags=self.tags)
 
         
     def collapse(self):
@@ -237,7 +238,7 @@ class OptionsArray(OptionsTreeElement):
         OptionsArray.update_node_info.
         """
         node_names = [str(node) for node in self.nodes]
-        return ArrayNodeInfo(self.name, node_names, index)
+        return ArrayNodeInfo(self.name, node_names, index, tags=self.tags)
 
 
     def append(self, item):
@@ -272,7 +273,8 @@ class OptionsArray(OptionsTreeElement):
             indices = subscript.indices(len(self.nodes))
 
             # return an array
-            return self.another(self.name, self.nodes[subscript])
+            return self.another(self.name, self.nodes[subscript],
+                                tags=self.tags)
 
         except AttributeError:
             try:

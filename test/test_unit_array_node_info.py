@@ -18,13 +18,6 @@ class TestArrayNodeInfoBasics(unittest.TestCase):
         """
         self.assertTrue(self.node_info.belongs_to('seq'))
         self.assertFalse(self.node_info.belongs_to('B'))
-
-    def test_belongs_to_any(self):
-        """
-        Similar to belongs_to test.
-        """
-        self.assertTrue(self.node_info.belongs_to_any(['seq', 'B']))
-        self.assertFalse(self.node_info.belongs_to_any(['A', 'B']))
         
     def test_node_name(self):
         """

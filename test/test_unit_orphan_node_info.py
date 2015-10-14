@@ -1,5 +1,5 @@
 import unittest
-from unit_options_node import UnitOrphanNodeInfo
+from unit_options_node import UnitOrphanNodeInfo, OptionsNodeException
 
 
 class TestOrphanNodeInfoString(unittest.TestCase):
@@ -15,12 +15,6 @@ class TestOrphanNodeInfoString(unittest.TestCase):
         The node should test negative for belonging to anything.
         """
         self.assertFalse(self.node_info.belongs_to('A'))
-
-    def test_belongs_to_any(self):
-        """
-        Similar to belongs_to test.
-        """
-        self.assertFalse(self.node_info.belongs_to_any(['A', 'B']))
 
     def test_node_name(self):
         """
