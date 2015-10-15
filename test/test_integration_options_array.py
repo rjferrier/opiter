@@ -325,6 +325,12 @@ class TestOptionsArrayFactory(unittest.TestCase):
         array = factory('foo', range(3))
         self.check_names(array, ['Ai', 'Aii', 'Aiii'])
 
+    def test_blank_array_index_format(self):
+        "Having no prefix at all should be possible."
+        factory = OptionsArrayFactory(array_index_format='')
+        array = factory('foo', range(3))
+        self.check_names(array, ['00', '01', '02'])
+
         
             
 if __name__ == '__main__':

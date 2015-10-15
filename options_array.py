@@ -351,14 +351,16 @@ class OptionsArrayFactory:
     """
     def __init__(self, array_index_format=None, node_index_format=None):
         self.array_index = 0
-        if array_index_format:
-            self.array_index_format = array_index_format
-        else:
+        
+        if array_index_format is None:
             self.array_index_format = self.default_array_index_format
-        if node_index_format:
-            self.node_index_format = node_index_format
         else:
+            self.array_index_format = array_index_format
+            
+        if node_index_format is None:
             self.node_index_format = self.default_node_index_format
+        else:
+            self.node_index_format = node_index_format
 
     @staticmethod
     def default_array_index_format(i):
