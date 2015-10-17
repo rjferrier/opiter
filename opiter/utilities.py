@@ -140,11 +140,15 @@ def check_file_exists(input_filename):
 class ChDir:
     "Context manager that temporarily changes working directory"
     def __init__(self, new_path):
-        self.new_path = os.path.expanduser(new_path)
+        self.new_path = os.path.abspath(os.path.expanduser(new_path))
     def __enter__(self):
         self.saved_path = os.getcwd()
         os.chdir(self.new_path)
+        # IMPORTANT: it seems some programs see the PWD environment
+        # variable and not the working dir according to os
+        os.environ['PWD'] = self.new_path
     def __exit__(self, etype, value, traceback):
+        os.environ['PWD'] = self.saved_path
         os.chdir(self.saved_path)
 
 
@@ -373,8 +377,6 @@ class RunProgram(ParallelFunctor):
         else:
             error_filename = None
 
-        # WARNING: working_dir doesn't seem to be respected.  To be
-        # investigated.
         if self.working_dir_key:
             working_dir = options[self.working_dir_key]
         else:
