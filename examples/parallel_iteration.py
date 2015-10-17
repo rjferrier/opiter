@@ -1,8 +1,5 @@
-import sys
-sys.path.append('..')
-
 import numpy as np
-from __init__ import OptionsArray
+from opiter import OptionsArray
 
 from multiprocessing import Pool
 from time import time, sleep

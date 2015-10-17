@@ -1,5 +1,5 @@
 import unittest
-from options_array import ArrayNodeInfo
+from opiter.options_array import ArrayNodeInfo
 
 
 class TestArrayNodeInfoPosition(unittest.TestCase):

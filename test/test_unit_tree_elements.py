@@ -1,5 +1,5 @@
 import unittest
-from options_tree_elements import OptionsTreeElement
+from opiter.options_tree_elements import OptionsTreeElement
 
 
 class FakeOptionsDict(dict):

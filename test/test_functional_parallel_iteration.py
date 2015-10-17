@@ -2,7 +2,7 @@ import unittest
 from test_functional_common import \
     TestOptionsDictCartesianProductIteration, \
     TestOptionsDictTreeIteration
-from options_dict import Lookup, GetString, transform_items, unlink
+from opiter import Lookup, GetString, transform_items, unlink
 from multiprocessing import Pool
 
 

@@ -1,5 +1,5 @@
 import unittest
-from formatters import SimpleFormatter, TreeFormatter
+from opiter.formatters import SimpleFormatter, TreeFormatter
 from itertools import product
 
 

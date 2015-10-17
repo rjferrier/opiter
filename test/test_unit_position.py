@@ -1,5 +1,5 @@
 import unittest
-from node_info import Position
+from opiter.node_info import Position
 
 
 class TestPosition(unittest.TestCase):

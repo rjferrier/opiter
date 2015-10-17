@@ -1,4 +1,4 @@
-from options_dict import OptionsDict, OptionsDictException, \
+from opiter.options_dict import OptionsDict, OptionsDictException, \
     NodeInfoException
 
 

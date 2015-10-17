@@ -1,6 +1,6 @@
 import unittest
-from options_node import OptionsNode, OrphanNodeInfo
-from options_dict import OptionsDict
+from opiter.options_node import OptionsNode, OrphanNodeInfo
+from opiter.options_dict import OptionsDict
     
 
 def list_function(l):

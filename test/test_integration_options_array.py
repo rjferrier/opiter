@@ -1,8 +1,8 @@
 import unittest
-from options_array import OptionsArray, OptionsArrayException, ArrayNodeInfo, \
-    OptionsArrayFactory
-from options_node import OptionsNode, OrphanNodeInfo
-from options_dict import OptionsDict
+from opiter.options_array import OptionsArray, OptionsArrayException, \
+    ArrayNodeInfo, OptionsArrayFactory
+from opiter.options_node import OptionsNode, OrphanNodeInfo
+from opiter.options_dict import OptionsDict
     
 
 def list_function(l):

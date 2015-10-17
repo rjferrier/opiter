@@ -1,8 +1,8 @@
 import unittest
-from options_tree_elements import product
-from options_array import OptionsArray
-from options_array import OptionsNode
-from options_dict import OptionsDict, Lookup, transform_items, unlink
+from opiter.options_tree_elements import product
+from opiter.options_array import OptionsArray
+from opiter.options_array import OptionsNode
+from opiter.options_dict import OptionsDict, Lookup, transform_items, unlink
 from multiprocessing import Pool
 from copy import deepcopy
 

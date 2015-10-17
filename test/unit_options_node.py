@@ -1,4 +1,5 @@
-from options_node import OrphanNodeInfo, OptionsNode, OptionsNodeException
+from opiter.options_node import OrphanNodeInfo, OptionsNode, \
+    OptionsNodeException
 
 
 class UnitOrphanNodeInfo(OrphanNodeInfo):

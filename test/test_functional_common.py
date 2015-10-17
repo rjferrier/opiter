@@ -4,8 +4,7 @@ test_functional_parallel_iteration.
 """
 
 import unittest
-from options_array import OptionsArray
-from options_node import OptionsNode
+from opiter import OptionsArray, OptionsNode
 
     
 class TestOptionsDictCartesianProductIteration(unittest.TestCase):

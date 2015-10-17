@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-from __init__ import OptionsNode, OptionsArray, OptionsDict, Lookup, \
+from opiter import OptionsNode, OptionsArray, OptionsDict, Lookup, \
     GetString, transform_items, unlink
 import multiprocessing
 

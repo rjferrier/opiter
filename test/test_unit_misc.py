@@ -1,5 +1,5 @@
 import unittest
-from options_dict import Lookup, GetString, dict_key_pairs, \
+from opiter.options_dict import Lookup, GetString, dict_key_pairs, \
     transform_items, unlink, OptionsDictException, Check, Remove, \
     Sequence, missing_dependencies, unpicklable
 

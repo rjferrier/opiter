@@ -1,10 +1,10 @@
 import unittest
-from options_dict import OptionsDict, CallableOption, OptionsDictException, \
-    transform_items, unlink, Check, Remove, Sequence, \
+from opiter.options_dict import OptionsDict, CallableOption, \
+    OptionsDictException, transform_items, unlink, Check, Remove, Sequence, \
     missing_dependencies, unpicklable
-from options_node import OptionsNode
-from options_array import OptionsArray
-from formatters import SimpleFormatter, TreeFormatter
+from opiter.options_node import OptionsNode
+from opiter.options_array import OptionsArray
+from opiter.formatters import SimpleFormatter, TreeFormatter
 from copy import deepcopy
 from math import sqrt
 

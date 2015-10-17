@@ -14,5 +14,8 @@ clean:
 	rm *~ -f
 	cd test && $(MAKE) $@
 
+examples/%:
+	python $@.py
+
 t%: clean
 	cd test && $(MAKE) $@

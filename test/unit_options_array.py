@@ -1,4 +1,5 @@
-from options_array import ArrayNodeInfo, OptionsArray, OptionsArrayException
+from opiter.options_array import ArrayNodeInfo, OptionsArray, \
+    OptionsArrayException
 from unit_options_node import UnitOptionsNode
 
 

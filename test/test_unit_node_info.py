@@ -1,5 +1,5 @@
 import unittest
-from node_info import NodeInfo, NodeInfoException
+from opiter.node_info import NodeInfo, NodeInfoException
 
 
 class UnitNodeInfo(NodeInfo):
