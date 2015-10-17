@@ -78,7 +78,7 @@ class OptionsArray(OptionsTreeElement):
     """
 
     def __init__(self, array_name, elements, names=None, name_format='{}',
-                 tags=[], dict_hooks=[], item_hooks=[]):
+                 tags=[], list_hooks=[], dict_hooks=[], item_hooks=[]):
         """
         Returns an OptionsArray, wrapping the given elements as
         OptionsNodes where necessary.
@@ -104,7 +104,8 @@ class OptionsArray(OptionsTreeElement):
         string or a callable that takes the element value and returns
         a string.
         """
-        OptionsTreeElement.__init__(self, dict_hooks=dict_hooks,
+        OptionsTreeElement.__init__(self, list_hooks=list_hooks,
+                                    dict_hooks=dict_hooks,
                                     item_hooks=item_hooks)
         self.name = array_name
         self.tags = tags
@@ -131,10 +132,11 @@ class OptionsArray(OptionsTreeElement):
 
     @classmethod
     def another(Class, array_name, elements, names=None, name_format='{}',
-                 tags=[], dict_hooks=[], item_hooks=[]):
+                 tags=[], list_hooks=[], dict_hooks=[], item_hooks=[]):
         return Class(array_name, elements, names=names,
                      name_format=name_format, tags=tags,
-                     dict_hooks=dict_hooks, item_hooks=item_hooks)
+                     list_hooks=list_hooks, dict_hooks=dict_hooks,
+                     item_hooks=item_hooks)
 
     
     def create_options_node(self, arg1={}, arg2={}, names=None,

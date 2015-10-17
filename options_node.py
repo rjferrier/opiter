@@ -53,7 +53,8 @@ class OptionsNode(OptionsTreeElement):
     OptionsTreeElement, hence forming a tree structure.
     """
     def __init__(self, arg1={}, arg2={}, child=None, name_format='{}',
-                 array_name=None, tags=[], dict_hooks=[], item_hooks=[]):
+                 array_name=None, tags=[], list_hooks=[], dict_hooks=[],
+                 item_hooks=[]):
         """
         Constructs an OptionsNode, inferring a name from arg1 and an
         options dictionary from arg1 and arg2, if present.
@@ -80,7 +81,8 @@ class OptionsNode(OptionsTreeElement):
                                        **class.__dict__
           items                        **items
         """
-        OptionsTreeElement.__init__(self, dict_hooks=dict_hooks,
+        OptionsTreeElement.__init__(self, list_hooks=list_hooks,
+                                    dict_hooks=dict_hooks,
                                     item_hooks=item_hooks)
 
         # try and infer a name from the first arg; set tags
@@ -103,9 +105,10 @@ class OptionsNode(OptionsTreeElement):
         
     @classmethod
     def another(Class, arg1={}, arg2={}, child=None, tags=[],
-                dict_hooks=[], item_hooks=[]):
+                list_hooks=[], dict_hooks=[], item_hooks=[]):
         return Class(arg1, arg2, child, tags=tags,
-                     dict_hooks=dict_hooks, item_hooks=item_hooks)
+                     list_hooks=list_hooks, dict_hooks=dict_hooks,
+                     item_hooks=item_hooks)
 
         
     def set_name_general(self, arg, name_format):

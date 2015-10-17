@@ -19,8 +19,14 @@ def item_function_1(d, k):
 def item_function_2(d, k):
     d[k] *= 2
 
+def list_function_1(l):
+    l.reverse()
+
+def list_function_2(l):
+    del l[0]
+
     
-class TestOptionsTreeElement(unittest.TestCase):
+class TestOptionsTreeElementWithSingleDict(unittest.TestCase):
 
     def setUp(self):
         self.options_dict = FakeOptionsDict({'a': 1, 'b': 2})
@@ -48,6 +54,30 @@ class TestOptionsTreeElement(unittest.TestCase):
             item_hooks=[item_function_1, item_function_2])
         tree_el.apply_hooks([self.options_dict])
         self.assertEqual(self.options_dict, {'a': 4, 'b': 6})
+
+        
+class TestOptionsTreeElementWithMultipleDicts(unittest.TestCase):
+
+    def setUp(self):
+        self.options_dicts = [
+            FakeOptionsDict({'a': 1}),
+            FakeOptionsDict({'b': 2}),
+            FakeOptionsDict({'c': 3})]
+
+    def test_apply_single_list_hook(self):
+        tree_el = OptionsTreeElement(
+            list_hooks=[list_function_1])
+        tree_el.apply_hooks(self.options_dicts)
+        self.assertEqual(self.options_dicts, [
+            {'c': 3}, {'b': 2}, {'a': 1}])
+
+    def test_apply_multiple_list_hooks(self):
+        tree_el = OptionsTreeElement(
+            list_hooks=[list_function_1, list_function_2])
+        tree_el.apply_hooks(self.options_dicts)
+        self.assertEqual(self.options_dicts, [{'b': 2}, {'a': 1}])
+
+        
 
         
 if __name__ == '__main__':

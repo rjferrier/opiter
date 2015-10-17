@@ -3,6 +3,10 @@ from options_node import OptionsNode, OrphanNodeInfo
 from options_dict import OptionsDict
     
 
+def list_function(l):
+    "For testing apply_hooks"
+    del l[0]
+
 def dict_function(d):
     "For testing apply_hooks"
     d.update({'bar': 'baz'})
@@ -143,6 +147,11 @@ class TestOptionsNodeWithChild(unittest.TestCase):
 
 
 class TestOptionsNodeWithHooks(unittest.TestCase):
+
+    def test_apply_list_hooks(self):
+        node = OptionsNode('foo', {'bar': 1}, list_hooks=[list_function])
+        ods = node.collapse()
+        self.assertEqual(ods, [])
 
     def test_apply_dict_hooks(self):
         node = OptionsNode('foo', {'bar': 1}, dict_hooks=[dict_function])

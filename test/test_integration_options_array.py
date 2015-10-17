@@ -5,6 +5,10 @@ from options_node import OptionsNode, OrphanNodeInfo
 from options_dict import OptionsDict
     
 
+def list_function(l):
+    "For testing apply_hooks"
+    l.reverse()
+
 def dict_function(d):
     "For testing apply_hooks"
     d.update({'A': -1})
@@ -259,17 +263,20 @@ class TestOptionsArraySlice(unittest.TestCase):
             
 class TestOptionsArrayWithHooks(unittest.TestCase):
     
+    def test_apply_list_hooks(self):
+        array = OptionsArray('A', range(3), list_hooks=[list_function])
+        ods = array.collapse()
+        self.assertEqual([od['A'] for od in ods], [2, 1, 0])
+    
     def test_apply_dict_hooks(self):
         array = OptionsArray('A', range(3), dict_hooks=[dict_function])
         ods = array.collapse()
-        for od in ods:
-            self.assertEqual(od['A'], -1)
+        self.assertEqual([od['A'] for od in ods], [-1, -1, -1])
 
     def test_apply_item_hooks(self):
         array = OptionsArray('A', range(3), item_hooks=[item_function])
         ods = array.collapse()
-        for od, i in zip(ods, [1, 2, 3]):
-            self.assertEqual(od['A'], i)
+        self.assertEqual([od['A'] for od in ods], [1, 2, 3])
 
 
 class TestOptionsArrayFactory(unittest.TestCase):
