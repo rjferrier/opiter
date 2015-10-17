@@ -7,6 +7,7 @@ import os
 import multiprocessing
 import subprocess
 import sys
+import errno
 from options_dict import Sequence, unlink, Check, Remove, \
     unpicklable, missing_dependencies
 
@@ -311,6 +312,7 @@ class ExpandTemplate(SerialFunctor):
         self.engine = engine
         self.source_dir_key = source_dir_key
         self.target_dir_key = target_dir_key
+        self.auto_make_target_dir = True
 
     def __call__(self, options):
         source_filename = options[self.source_filename_key]
@@ -325,6 +327,13 @@ class ExpandTemplate(SerialFunctor):
             target_dir = options[self.target_dir_key]
         else:
             target_dir = '.'
+
+        if self.auto_make_target_dir:
+            try:
+                os.makedirs(target_dir)
+            except OSError as exc:
+                if exc.errno != errno.EEXIST:
+                    raise
             
         operation = self.engine.get_operation(
             options, source_filename, target_filename,
