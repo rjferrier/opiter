@@ -154,7 +154,7 @@ class OptionsArray(OptionsTreeElement):
             return node
         else:
             return OptionsNode(arg1, arg2, name_format=name_format,
-                               array_name=self.name, tags=self.tags)
+                               node_key=self.name, tags=self.tags)
 
         
     def collapse(self):
@@ -397,7 +397,7 @@ class OptionsArrayFactory:
             node_name += self.apply_formatting(
                 self.node_index_format, node_index)
             nodes.append(
-                OptionsNode(node_name, el, array_name=array_name))
+                OptionsNode(node_name, el, node_key=array_name))
 
         # bump the array counter for next time
         self.array_index += 1

@@ -53,7 +53,7 @@ class OptionsNode(OptionsTreeElement):
     OptionsTreeElement, hence forming a tree structure.
     """
     def __init__(self, arg1={}, arg2={}, child=None, name_format='{}',
-                 array_name=None, tags=[], list_hooks=[], dict_hooks=[],
+                 node_key=None, tags=[], list_hooks=[], dict_hooks=[],
                  item_hooks=[]):
         """
         Constructs an OptionsNode, inferring a name from arg1 and an
@@ -63,21 +63,21 @@ class OptionsNode(OptionsTreeElement):
         may take the form of a one-argument function or a format
         string.
 
-        If array_name is given, a representative value taken from
+        If node_key is given, a representative value taken from
         either of the arguments will be stored in the dictionary under
-        array_name - i.e. {array_name: representative_value}.  arg2
+        node_key - i.e. {node_key: representative_value}.  arg2
         takes precedence over arg1; this allows initialisations such
         as OptionsNode(node_name, representative_value,
-        array_name=array_name).
+        node_key=node_key).
         
         Possible candidates for the arguments, and consequent node
         attributes, are:
         
           arg         node name        options dict items
           -----       ---------        --------------------
-          name        name             array_name: name
-          value       str(value)       array_name: value
-          class       class.__name_    array_name: class.__name__,
+          name        name             node_key: name
+          value       str(value)       node_key: value
+          class       class.__name_    node_key: class.__name__,
                                        **class.__dict__
           items                        **items
         """
@@ -92,8 +92,8 @@ class OptionsNode(OptionsTreeElement):
         # instantiate the options dict and update from both args (with
         # arg2 taking precedence over arg1)
         self.options_dict = self.create_options_dict()
-        self.update_options_dict_general(arg2, array_name)
-        self.update_options_dict_general(arg1, array_name)
+        self.update_options_dict_general(arg2, node_key)
+        self.update_options_dict_general(arg1, node_key)
 
         # Set the child.  The type check is not ideal but it prevents
         # bad things happening later.
@@ -146,7 +146,7 @@ class OptionsNode(OptionsTreeElement):
                 format(name_format))
             
 
-    def update_options_dict_general(self, arg, array_name):
+    def update_options_dict_general(self, arg, node_key):
         # Try and update the options dictionary directly from the
         # arg.  Tolerate failures silently since the arg may not
         # be intended for this purpose.
@@ -156,23 +156,23 @@ class OptionsNode(OptionsTreeElement):
             pass
         
         # Try and infer a representative value to be stored under
-        # array_name, if one doesn't already exist
-        if array_name and array_name not in self.options_dict:
+        # node_key, if one doesn't already exist
+        if node_key and node_key not in self.options_dict:
             if hasattr(arg, 'name'):
                 # if the arg is another OptionsNode or something with
                 # a 'name' attribute, make that name the
                 # representative value
-                self.options_dict.update({array_name: arg.name})
+                self.options_dict.update({node_key: arg.name})
                 
             elif hasattr(arg, '__name__'):
                 # if the arg is a class, make its name the
                 # representative value
-                self.options_dict.update({array_name: arg.__name__})
+                self.options_dict.update({node_key: arg.__name__})
             
             elif not hasattr(arg, '__iter__'):
                 # for all other non-iterable types, store the value
                 # directly
-                self.options_dict.update({array_name: arg})
+                self.options_dict.update({node_key: arg})
 
         
     def create_options_dict(self, items={}):

@@ -20,7 +20,7 @@ class UnitOptionsArray(OptionsArray):
     def create_options_node(self, arg1={}, arg2={}, names=None,
                             name_format='{}'):
         return UnitOptionsNode(arg1, arg2, name_format=name_format,
-                               array_name=self.name)
+                               node_key=self.name)
 
     def create_node_info(self, index):
         "Throwaway implementation."

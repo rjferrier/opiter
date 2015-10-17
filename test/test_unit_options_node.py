@@ -14,12 +14,12 @@ class TestOptionsNodeCreation(unittest.TestCase):
         self.check_name_and_items(node, 'a_node', {})
         
     def test_create_node_from_name_and_array(self):
-        node = UnitOptionsNode('a_node', array_name='an_array')
+        node = UnitOptionsNode('a_node', node_key='an_array')
         self.check_name_and_items(node, 'a_node', {'an_array': 'a_node'})
         
     def test_create_node_from_name_and_format_function_and_array(self):
         name_format = lambda s: '<'+s+'>'
-        node = UnitOptionsNode('a_node', array_name='an_array',
+        node = UnitOptionsNode('a_node', node_key='an_array',
                                name_format=name_format)
         self.check_name_and_items(node, '<a_node>', {'an_array': 'a_node'})
         
@@ -30,21 +30,21 @@ class TestOptionsNodeCreation(unittest.TestCase):
         
     def test_create_node_from_value_and_format_function_and_array(self):
         name_format = lambda x: str(x + 1)
-        node = UnitOptionsNode(1, name_format=name_format, array_name='num')
+        node = UnitOptionsNode(1, name_format=name_format, node_key='num')
         self.check_name_and_items(node, '2', {'num': 1})
         
     def test_create_node_from_name_and_value_and_array(self):
-        node = UnitOptionsNode('a_node', 3, array_name='an_array')
+        node = UnitOptionsNode('a_node', 3, node_key='an_array')
         self.check_name_and_items(node, 'a_node', {'an_array': 3})
         
     def test_create_node_from_items(self):
-        node = UnitOptionsNode({'foo': 'bar'}, array_name='num')
+        node = UnitOptionsNode({'foo': 'bar'}, node_key='num')
         self.check_name_and_items(node, '', {'foo': 'bar'})
         
     def test_create_node_from_node_and_format_function_and_array(self):
         name_format = lambda s: '<'+s+'>'
         src = UnitOptionsNode('a_node')
-        node = UnitOptionsNode(src, array_name='an_array',
+        node = UnitOptionsNode(src, node_key='an_array',
                                name_format=name_format)
         self.check_name_and_items(node, '<a_node>', {'an_array': 'a_node'})
 

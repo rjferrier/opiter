@@ -31,14 +31,14 @@ class TestOptionsNodeCreation(unittest.TestCase):
     def test_create_node_from_class_and_array(self):
         class a_node:
             foo = 'bar'
-        node = OptionsNode(a_node, array_name='an_array')
+        node = OptionsNode(a_node, node_key='an_array')
         self.check_name_and_items(node, 'a_node',
                                   {'an_array': 'a_node',
                                    'foo': 'bar'})
         
     def test_create_node_from_name_and_format_function_and_array(self):
         name_format = lambda s: '<'+s+'>'
-        node = OptionsNode('a_node', array_name='an_array',
+        node = OptionsNode('a_node', node_key='an_array',
                            name_format=name_format)
         self.check_name_and_items(node, '<a_node>', {'an_array': 'a_node'})
         
