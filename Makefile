@@ -2,8 +2,8 @@ export PYTHONPATH=$(CURDIR)
 export PYTHON=python
 
 # Any test subset can be run by calling make with an appropriate stem,
-# e.g. test_int will run test_integration_options_dict_array_nodes.py,
-# test_integration_options_dict_misc.py, etc.
+# e.g. test_int will run test_integration_array_node_info.py,
+# test_integration_options_array.py, etc.
 
 default: test
 

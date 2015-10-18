@@ -17,6 +17,7 @@
   - [ ] The Unit<...> classes that override original classes' factory methods
         to enable decoupling are unsafe when the signatures change.  Find
         a more robust alternative.
+  - [ ] Extend test coverage to utilities.py.
 
 - [ ] Misc
   - [ ] Consider changing the license

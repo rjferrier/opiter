@@ -1,7 +1,6 @@
-"""
-Note: the functions and classes in this module are *not* supported
-by tests.  Consider them recipes rather than part of the source code.
-"""
+# The functions and classes in this module were originally intended as
+# recipes rather than part of the source code.  As such, they are
+# *not* currently supported by tests.
 
 import os
 import multiprocessing
@@ -338,14 +337,14 @@ class ExpandTemplate(SerialFunctor):
             except OSError as exc:
                 if exc.errno != errno.EEXIST:
                     raise
-            
+        
         operation = self.engine.get_operation(
             options, source_filename, target_filename,
             source_dir, target_dir)
 
-        self.boilerplate(
-            options, [operation], [source_filename],
-            target_name=target_filename)
+        self.boilerplate(options, [operation],
+                         ['{}/{}'.format(source_dir, source_filename)],
+                         target_name=target_filename)
 
 
 class RunProgram(ParallelFunctor):
