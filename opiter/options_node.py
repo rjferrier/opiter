@@ -103,14 +103,6 @@ class OptionsNode(OptionsTreeElement):
         self.child = child
 
         
-    @classmethod
-    def another(Class, arg1={}, arg2={}, child=None, tags=[],
-                list_hooks=[], dict_hooks=[], item_hooks=[]):
-        return Class(arg1, arg2, child, tags=tags,
-                     list_hooks=list_hooks, dict_hooks=dict_hooks,
-                     item_hooks=item_hooks)
-
-        
     def set_name_general(self, arg, name_format):
         if hasattr(arg, 'name'):
             # if we have another OptionsNode or something with a

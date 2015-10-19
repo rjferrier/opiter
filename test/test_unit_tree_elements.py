@@ -78,8 +78,27 @@ class TestOptionsTreeElementWithMultipleDicts(unittest.TestCase):
         self.assertEqual(self.options_dicts, [{'b': 2}, {'a': 1}])
 
         
+class SubOptionsTreeElement(OptionsTreeElement):
+    """
+    For testing classmethods and deepcopy methods of
+    OptionsTreeElement.
+    """
+    def __init__(self, some_attr, **kwargs):
+        OptionsTreeElement.__init__(self, **kwargs)
+        self.some_attr = some_attr
 
+        
+class TestSubOptionsTreeElement(unittest.TestCase):
+    
+    def setUp(self):
+        self.tree_el = SubOptionsTreeElement('foo', dict_hooks=[dict_function_1])
+        
+    def test_another(self):
+        other = self.tree_el.another('bar', dict_hooks=[dict_function_2])
+        self.assertIsInstance(other, SubOptionsTreeElement)
+        self.assertEqual(other.some_attr, 'bar')
+        self.assertEqual(other.dict_hooks, [dict_function_2])
+        
         
 if __name__ == '__main__':
     unittest.main()
-        

@@ -40,6 +40,10 @@ class OptionsTreeElement:
         self.list_hooks = list_hooks
         self.dict_hooks = dict_hooks
         self.item_hooks = item_hooks
+
+    @classmethod
+    def another(Class, *args, **kwargs):
+        return Class(*args, **kwargs)
         
     def apply_hooks(self, options_dicts):
         """

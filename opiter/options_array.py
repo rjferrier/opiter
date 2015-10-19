@@ -129,15 +129,6 @@ class OptionsArray(OptionsTreeElement):
         # any preexisting node information.
         self.update_node_info()
 
-
-    @classmethod
-    def another(Class, array_name, elements, names=None, name_format='{}',
-                 tags=[], list_hooks=[], dict_hooks=[], item_hooks=[]):
-        return Class(array_name, elements, names=names,
-                     name_format=name_format, tags=tags,
-                     list_hooks=list_hooks, dict_hooks=dict_hooks,
-                     item_hooks=item_hooks)
-
     
     def create_options_node(self, arg1={}, arg2={}, names=None,
                             name_format='{}'):
