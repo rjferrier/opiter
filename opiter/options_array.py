@@ -219,7 +219,7 @@ class OptionsArray(OptionsTreeElement):
         """
         for i, node in enumerate(self.nodes):
             try:
-                node.update_info(self.create_node_info(i))
+                node.update_node_info(self.create_node_info(i))
             except:
                 print node
                 raise
@@ -243,7 +243,7 @@ class OptionsArray(OptionsTreeElement):
     def pop(self):
         node = self.nodes.pop()
         # update node info on both sides
-        node.update_info()
+        node.update_node_info()
         self.update_node_info()
         return node
         

@@ -220,6 +220,7 @@ class OptionsNode(OptionsTreeElement):
             self.child.multiply_attach(tree)
         except AttributeError:
             self.child = deepcopy(tree)
+            self.child.update_node_info()
 
             
     def attach(self, tree):
@@ -240,6 +241,7 @@ class OptionsNode(OptionsTreeElement):
                 # polymorphic implementation, needed for handling
                 # embedded node info correctly
                 self.child, remainder = tree.donate_copy(self.child)
+                self.child.update_node_info()
                 return remainder
             except AttributeError:
                 # manual implementation, for native iterables
@@ -276,18 +278,18 @@ class OptionsNode(OptionsTreeElement):
             self.options_dict.update(items)
 
     
-    def update_info(self, node_info=None):
+    def update_node_info(self, new_node_info=None):
         """
         Updates the nodes with node information.  If the argument is
         omitted, node info appropriate to an OptionsNode is
         constructed.
         """
         # default node info
-        if not node_info:
-            node_info = self.create_info()
+        if not new_node_info:
+            new_node_info = self.create_info()
         # delegate
         try:
-            self.options_dict.set_node_info(node_info)
+            self.options_dict.set_node_info(new_node_info)
         except AttributeError:
             raise OptionsNodeException(str(type(self.options_dict)) + ' '+\
                                        repr(self.options_dict))

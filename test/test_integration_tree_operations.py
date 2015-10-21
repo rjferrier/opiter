@@ -77,12 +77,14 @@ class Times(BinaryOp):
 # ---------------------------------------------------------------------
         
 class IncrementalOp(Operation):
-    def __init__(self, left_operand, right_operand, subscript=None):
+    def __init__(self, left_operand, right_operand, subscript=None,
+                 other_subscript=None):
         self.result = left_operand
         self.right_operand = right_operand
         self.result_init = deepcopy(left_operand)
         self.right_operand_init = deepcopy(right_operand)
         self.subscript = subscript
+        self.other_subscript = other_subscript
 
     def check_operand_states(self, test_case):
         test_case.assertNotEqual(self.result, self.result_init)
@@ -90,17 +92,23 @@ class IncrementalOp(Operation):
         
 class PlusEquals(IncrementalOp):
     def __call__(self):
+        ro = self.right_operand
+        if self.other_subscript:
+            ro = ro[self.other_subscript]
         if self.subscript:
-            self.result[self.subscript] += self.right_operand
+            self.result[self.subscript] += ro
         else:
-            self.result += self.right_operand
+            self.result += ro
             
 class TimesEquals(IncrementalOp):
     def __call__(self):
+        ro = self.right_operand
+        if self.other_subscript:
+            ro = ro[self.other_subscript]
         if self.subscript:
-            self.result[self.subscript] *= self.right_operand
+            self.result[self.subscript] *= ro
         else:
-            self.result *= self.right_operand
+            self.result *= ro
 
 # ---------------------------------------------------------------------
         
@@ -442,8 +450,8 @@ letter: C
         
     # now test set-item operations.  Let's not linger on these.  If we
     # get what we expect for one or two operators, for both single
-    # item and slice accessors, then OptionsArray.__setitem__ is doing
-    # its job.
+    # item and slice accessors (and for both operands), then
+    # OptionsArray.__setitem__ is doing its job.
 
     def test_item_incremental_addition_with_node(self):
         expected_names = ['A', 'B_0', 'C']
@@ -489,7 +497,55 @@ letter: C
         op.check(self, expected_names, expected_tree_str)
 
 
+    def test_item_incremental_addition_with_array_item(self):
+        expected_names = ['A', 'B_1', 'C']
+        expected_tree_str = """
+letter: A
+letter: B
+    1
+letter: C"""
+        op = PlusEquals(self.array, self.other_array, subscript=1,
+                        other_subscript=1)
+        op.check(self, expected_names, expected_tree_str)
 
+
+    def test_item_incremental_addition_with_array_slice(self):
+        expected_names = ['A', 'B_1', 'C']
+        expected_tree_str = """
+letter: A
+letter: B
+    number: 1
+letter: C"""
+        op = PlusEquals(self.array, self.other_array, subscript=1,
+                        other_subscript=slice(1, 3))
+        op.check(self, expected_names, expected_tree_str)
+
+
+    def test_item_incremental_multiplication_with_array_item(self):
+        expected_names = ['A', 'B_1', 'C']
+        expected_tree_str = """
+letter: A
+letter: B
+    1
+letter: C"""
+        op = TimesEquals(self.array, self.other_array, subscript=1,
+                         other_subscript=1)
+        op.check(self, expected_names, expected_tree_str)
+
+
+    def test_item_incremental_multiplication_with_array_slice(self):
+        expected_names = ['A', 'B_1', 'B_2', 'C']
+        expected_tree_str = """
+letter: A
+letter: B
+    number: 1
+    number: 2
+letter: C"""
+        op = TimesEquals(self.array, self.other_array, subscript=1,
+                         other_subscript=slice(1, 3))
+        op.check(self, expected_names, expected_tree_str)
+
+        
         
 class TestTreeOperations(unittest.TestCase):
 
