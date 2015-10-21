@@ -187,10 +187,7 @@ class OptionsArray(OptionsTreeElement):
 
 
     def donate_copy(self, acceptor):
-        # It is nice to preserve array information, so grab a
-        # one-element slice rather than a node.  The slice preserves
-        # the OptionsArray type.
-        one_node_array = self[0:1]
+        one_node_array = deepcopy(self[0])
         one_node_array.update_node_info()
         if acceptor:
             acceptor.attach(one_node_array)
@@ -233,7 +230,7 @@ class OptionsArray(OptionsTreeElement):
         node_names = [str(node) for node in self.nodes]
         return ArrayNodeInfo(self.name, node_names, index, tags=self.tags)
 
-
+    
     def append(self, item):
         if not isinstance(item, OptionsNode):
             raise OptionsArrayException("item needs to be an OptionsNode")

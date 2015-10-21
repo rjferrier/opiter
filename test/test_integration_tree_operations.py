@@ -187,13 +187,13 @@ A
         """
         Adding many nodes on the right (R) to a single node on the left
         (L) should work, but the surplus right hand nodes will get
-        discarded (to leave L_R).  Array information (for R) should be
-        preserved.
+        discarded (to leave L_R).  Array information (for R) will not
+        be preserved.
         """
         expected_names = ['A_0']
         expected_tree_str = """
 A
-    number: 0"""
+    0"""
         operation.check(self, expected_names, expected_tree_str)
         
     def test_addition_with_array(self):
@@ -256,7 +256,6 @@ A
     def test_sum_with_list(self):
         self.help_test_addition_with_list(
             Sum([self.node, self.node_list]))
-
         
     def test_update_with_options_dict(self):
         self.node.update(self.od)
@@ -343,11 +342,11 @@ letter: C
         expected_names = ['A_0', 'B_1', 'C_2']
         expected_tree_str = """
 letter: A
-    number: 0
+    0
 letter: B
-    number: 1
+    1
 letter: C
-    number: 2"""
+    2"""
         operation.check(self, expected_names, expected_tree_str)
         
     def test_addition_with_array(self):
@@ -514,7 +513,7 @@ letter: C"""
         expected_tree_str = """
 letter: A
 letter: B
-    number: 1
+    1
 letter: C"""
         op = PlusEquals(self.array, self.other_array, subscript=1,
                         other_subscript=slice(1, 3))
@@ -640,12 +639,12 @@ letter: B
         expected_tree_str = """
 letter: A
     number: 0
-        subnumber: i
+        i
     number: 1
-        subnumber: ii
+        ii
 letter: B
     number: 0
-        subnumber: iii
+        iii
     number: 1"""
         operation.check(self, expected_names, expected_tree_str)
 

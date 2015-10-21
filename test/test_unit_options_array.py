@@ -154,7 +154,7 @@ class TestOptionsDictArrayBasics(unittest.TestCase):
         array_init = deepcopy(self.array)
         acceptor = UnitOptionsNode('baz')
         acceptor, remainder = self.array.donate_copy(acceptor)
-        self.assertEqual(acceptor.child, array_init[0:1])
+        self.assertEqual(acceptor.child, array_init[0])
         self.assertEqual(len(remainder), 3)
 
     def test_count_leaves(self):
