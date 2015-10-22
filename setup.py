@@ -16,5 +16,5 @@ setup(
         'Intended Audience :: Science/Research',
         'Programming Language :: Python :: 2.7'
         'License :: OSI Approved :: GNU Lesser General Public License v2'+\
-        ' or later (LGPLv2+)',
-    ])
+        ' or later (LGPLv2+)'],
+    license = 'LGPLv2+')

@@ -1,4 +1,4 @@
-# Options Iteration
+# opiter: Options Iteration Toolkit
 
 The classes in this package can be used to assemble and iterate over
 combinations of options.  Each set of options is represented by a

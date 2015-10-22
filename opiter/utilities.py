@@ -205,7 +205,7 @@ class SerialFunctor(Functor):
                 try:
                     if not state.successful:
                         # failure
-                        sep = ' -- '
+                        sep = ' !! '
                 except AttributeError:
                     pass
             else:
