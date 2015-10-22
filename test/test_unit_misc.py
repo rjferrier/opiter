@@ -1,7 +1,7 @@
 import unittest
 from opiter.options_dict import Lookup, GetString, dict_key_pairs, \
     transform_items, unlink, OptionsDictException, Check, Remove, \
-    Sequence, missing_dependencies, unpicklable
+    Sequence, missing_dependencies, unpicklable, NodeInfoException
 
 
 class MixedItems:
@@ -18,6 +18,12 @@ class MixedItems:
             return val
     def __setitem__(self, i, val):
         self.items[i] = val
+    def get_node_info(self, i):
+        try:
+            self[i]
+            return "item {} has some node info"
+        except KeyError:
+            raise NodeInfoException("missing node info")
 
                 
 def not_bumpable(dictionary, key):
@@ -118,6 +124,16 @@ class TestTestFunctors(unittest.TestCase):
             missing_dependencies(mixed_items, 'a'))
         self.assertTrue(
             missing_dependencies(mixed_items, 'b'))
+
+    def test_missing_dependencies_with_node_info_exception(self):
+        mixed_items = MixedItems({
+            'a': 1,
+            'b': lambda self: str(self.get_node_info('a')),
+            'c': lambda self: str(self.get_node_info('d'))})
+        self.assertFalse(
+            missing_dependencies(mixed_items, 'b'))
+        self.assertTrue(
+            missing_dependencies(mixed_items, 'c'))
 
     def test_unpicklable(self):
         def unpicklable_function(self):

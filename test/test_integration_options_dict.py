@@ -203,6 +203,8 @@ class TestOptionsDictDependentItems(unittest.TestCase):
         self.od['Reynolds_number']
         self.assertRaises(KeyError,
                           lambda: self.od['speed_of_sound'])
+
+    # TODO: test check/remove missing dependencies involving NodeInfoExceptions
         
         
 class TestOptionsDictDependentItemsWithDotSyntax(unittest.TestCase):
@@ -304,7 +306,9 @@ class TestOptionsDictDependentItemsWithDotSyntax(unittest.TestCase):
         self.assertRaises(AttributeError,
                           lambda: self.od.speed_of_sound)
         
-        
+    # TODO: test check/remove missing dependencies involving NodeInfoExceptions
+
+    
 class TestOptionsDictInteractionsWithNode(unittest.TestCase):
 
     def setUp(self):

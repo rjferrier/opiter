@@ -9,9 +9,12 @@ from itertools import chain
 from pickle import dumps, PicklingError
 
 
+MissingDependencyExceptions = (KeyError, AttributeError, NodeInfoException)
+
+
 class OptionsDictException(OptionsBaseException):
     pass
-        
+
 
 class OptionsDict(dict):
     """
@@ -409,10 +412,9 @@ def dict_key_pairs(this_dict, key=None, recursive=True):
         else:
             yield this_dict, key
             
-    except (KeyError, AttributeError):
+    except MissingDependencyExceptions:
         # the first item could also be a dependent item with missing
-        # dependency, in which case a KeyError or AttributeError will
-        # be raised
+        # dependency, in which case an error will be raised
         yield this_dict, key
         
 
@@ -470,14 +472,14 @@ class Remove:
         if self.test(target_dict, key):
             del target_dict[key]
 
-
+            
 def missing_dependencies(target_dict, key):
     try:
         target_dict[key]
         return None
-    except (KeyError, AttributeError) as e:
-        return "{} is dependent on missing item {}".format(key, e)
-
+    except MissingDependencyExceptions as e:
+        return "{} has a missing dependency: {}".format(key, e)
+        
     
 def unpicklable(target_dict, key):
     try:
